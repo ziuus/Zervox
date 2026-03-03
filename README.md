@@ -2,6 +2,8 @@
   <h1>🚀 Zervox AI</h1>
   <p><strong>The world's first autonomous AI Site Reliability Engineer (SRE).</strong></p>
   <p>Zervox is a PM2-style daemon that monitors your Node.js apps, catches crashes in real-time, and uses Google Gemini AI to analyze the stack trace and instantly apply a fix.</p>
+  <br/>
+  <img src="/home/zius/.gemini/antigravity/brain/8057868e-2a02-40f4-8f31-90e198ae9036/zervox_launch_promo_video_svg_1772567266137.webp" alt="Zervox Launch Promo" width="800"/>
 </div>
 
 ---
