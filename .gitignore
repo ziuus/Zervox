@@ -1,0 +1,10 @@
+.env
+node_modules
+.vscode
+.idea
+dist
+build
+coverage
+*.log
+.DS_Store
+*.tgz

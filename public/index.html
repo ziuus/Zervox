@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zervox Live Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="dashboard-layout">
+      <!-- Sidebar for Process List -->
+      <aside class="sidebar glass-panel">
+        <div class="brand">🚀 Zervox Daemon</div>
+        <div class="process-list" id="processList">
+          <!-- Processes populated via JS -->
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <header class="top-nav glass-panel">
+          <h2 id="activeProcessName">Select a Process</h2>
+          <div class="status-indicator">
+            <span class="dot" id="headerDot"></span>
+            <span id="headerStatus">Waiting</span>
+          </div>
+        </header>
+
+        <div class="content-grid" id="mainWorkspace" style="display: none">
+          <!-- Terminal Container -->
+          <div class="terminal-container glass-panel">
+            <div class="terminal-header">
+              <span>Terminal Output</span>
+              <span class="restarts-badge" id="restartsBadge">0 Restarts</span>
+            </div>
+            <pre id="terminal"></pre>
+          </div>
+
+          <!-- Right Column: AI Solutions & Config -->
+          <div class="right-column">
+            <div
+              class="ai-panel glass-panel alert-box"
+              id="aiPanel"
+              style="display: none"
+            >
+              <h3>🚨 AI Crash Analysis</h3>
+              <p class="error-reason" id="crashReason"></p>
+              <div id="solutionsList"></div>
+            </div>
+
+            <div class="settings-panel glass-panel">
+              <h3>⚙️ Global Agent Config</h3>
+              <label>Mode</label>
+              <select id="modeSelect" onchange="window.updateConfig()">
+                <option value="INTERACTIVE">Interactive (Ask Me)</option>
+                <option value="AUTO_FIX">Auto-Fix</option>
+                <option value="NOTIFY_ONLY">Notify-Only</option>
+              </select>
+
+              <label>Webhook URL (Slack/Discord)</label>
+              <input
+                type="text"
+                id="webhookInput"
+                placeholder="https://hooks.slack.com/..."
+                onchange="window.updateConfig()"
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      let processes = [];
+      let activeProcessId = null;
+
+      const processListEl = document.getElementById("processList");
+      const terminal = document.getElementById("terminal");
+      const aiPanel = document.getElementById("aiPanel");
+      const crashReason = document.getElementById("crashReason");
+      const solutionsList = document.getElementById("solutionsList");
+      const activeProcessName = document.getElementById("activeProcessName");
+      const mainWorkspace = document.getElementById("mainWorkspace");
+      const headerDot = document.getElementById("headerDot");
+      const headerStatus = document.getElementById("headerStatus");
+      const restartsBadge = document.getElementById("restartsBadge");
+      const modeSelect = document.getElementById("modeSelect");
+      const webhookInput = document.getElementById("webhookInput");
+
+      // Configuration Sync
+      socket.on("config_update", (config) => {
+        modeSelect.value = config.mode;
+        webhookInput.value = config.webhookUrl || "";
+      });
+
+      window.updateConfig = () => {
+        socket.emit("update_config", {
+          mode: modeSelect.value,
+          webhookUrl: webhookInput.value,
+        });
+      };
+
+      // State Initialization
+      socket.on("init_state", (data) => {
+        processes = data.processes || [];
+        renderProcessList();
+        if (processes.length > 0 && !activeProcessId) {
+          selectProcess(processes[0].id);
+        }
+      });
+
+      socket.on("process_new", (proc) => {
+        processes.push(proc);
+        renderProcessList();
+        if (!activeProcessId) selectProcess(proc.id);
+      });
+
+      socket.on("process_update", (updatedProc) => {
+        const idx = processes.findIndex((p) => p.id === updatedProc.id);
+        if (idx !== -1) {
+          processes[idx].status = updatedProc.status;
+          processes[idx].restarts = updatedProc.restarts;
+
+          // Let's do a trick: if process in active detail view crashed, and lastCrash is now populated,
+          // we might not get it from process_update alone, so we re-fetch details if it crashed
+          if (
+            activeProcessId === updatedProc.id &&
+            updatedProc.status === "crashed"
+          ) {
+            socket.emit("get_process_details", updatedProc.id);
+          }
+
+          renderProcessList();
+          if (activeProcessId === updatedProc.id) {
+            updateHeaderStatus(updatedProc);
+          }
+        }
+      });
+
+      // Handle Active Process Details
+      function selectProcess(id) {
+        activeProcessId = id;
+        const proc = processes.find((p) => p.id === id);
+        if (!proc) return;
+
+        renderProcessList(); // update active class
+        mainWorkspace.style.display = "grid";
+        activeProcessName.innerText = proc.file;
+        updateHeaderStatus(proc);
+
+        // Clear current views
+        terminal.innerHTML = "Fetching logs...\n";
+        aiPanel.style.display = "none";
+
+        // Request details
+        socket.emit("get_process_details", id);
+      }
+
+      function updateHeaderStatus(proc) {
+        headerStatus.innerText = proc.status.toUpperCase();
+        headerDot.className = "dot " + proc.status;
+        restartsBadge.innerText = proc.restarts + " Restarts";
+      }
+
+      socket.on("process_details", (data) => {
+        if (data.id !== activeProcessId) return;
+
+        terminal.innerHTML = (data.logs || []).join("\n") + "\n";
+        terminal.scrollTop = terminal.scrollHeight;
+
+        // Cache the last crash object locally so applySolution can read from it
+        const proc = processes.find((p) => p.id === data.id);
+        if (proc) {
+          proc.lastCrash = data.lastCrash;
+        }
+
+        if (data.lastCrash) {
+          showCrash(data.lastCrash);
+        } else {
+          aiPanel.style.display = "none";
+        }
+      });
+
+      socket.on("log", (data) => {
+        // data: { id, file, line }
+        if (data.id === activeProcessId) {
+          terminal.innerHTML += data.line + "\n";
+          terminal.scrollTop = terminal.scrollHeight;
+        }
+      });
+
+      socket.on("crash", (data) => {
+        // data: { id, file, reason, solutions }
+        const proc = processes.find((p) => p.id === data.id);
+        if (proc) proc.lastCrash = data;
+
+        if (data.id === activeProcessId) {
+          showCrash(data);
+        }
+      });
+
+      function showCrash(data) {
+        aiPanel.style.display = "flex";
+        crashReason.innerText = data.reason;
+        solutionsList.innerHTML = "";
+
+        data.solutions.forEach((sol) => {
+          const card = document.createElement("div");
+          card.className = "solution-card glass-panel-inner";
+          card.innerHTML = `
+          <h4>${sol.description}</h4>
+          ${sol.command ? `<code>$ ${sol.command}</code>` : ""}
+          <div class="actions">
+            <button onclick="applySolution(${sol.id})">✨ Auto-Fix</button>
+          </div>
+        `;
+          solutionsList.appendChild(card);
+        });
+      }
+
+      window.applySolution = (solutionId) => {
+        const proc = processes.find((p) => p.id === activeProcessId);
+        if (!proc || !proc.lastCrash) return;
+
+        const solution = proc.lastCrash.solutions.find(
+          (s) => s.id === solutionId,
+        );
+        if (solution) {
+          socket.emit("apply_solution", {
+            processId: activeProcessId,
+            solutionId,
+            solution,
+          });
+          aiPanel.style.display = "none";
+          terminal.innerHTML += `\n[Web] Applying fix: ${solution.description}\n`;
+        }
+      };
+
+      function renderProcessList() {
+        processListEl.innerHTML = "";
+        processes.forEach((p) => {
+          const item = document.createElement("div");
+          item.className =
+            "process-item " + (p.id === activeProcessId ? "active" : "");
+          item.onclick = () => selectProcess(p.id);
+
+          // Extract filename from path for cleaner display
+          const fileName = p.file.split(/[\\/]/).pop();
+
+          item.innerHTML = `
+          <div class="process-info">
+            <span class="process-name">${fileName}</span>
+            <span class="process-id">ID: ${p.id}</span>
+          </div>
+          <span class="dot ${p.status}"></span>
+        `;
+          processListEl.appendChild(item);
+        });
+      }
+    </script>
+  </body>
+</html>
