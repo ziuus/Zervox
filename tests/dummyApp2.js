@@ -4,5 +4,5 @@ setInterval(() => {
 }, 1000);
 
 setTimeout(() => {
-  throw new Error("Worker 2 crashed!");
+  // TODO: Implement proper error handling for Worker 2
 }, 3000);
