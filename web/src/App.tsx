@@ -163,27 +163,15 @@ const App = () => {
         </div>
         <p>&copy; 2026 Zervox Systems. Build for tomorrow, fix for today.</p>
       </footer>
-        </>
-      ) : (
-        <Docs />
-      )}
-    </div>
+    </>
+  ) : (
+    <Docs />
+  )}
+</div>
   );
 };
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-  <div className="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-    <div className="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-      {icon}
-    </div>
-    <h3 className="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">{title}</h3>
-    <p className="text-slate-500 leading-relaxed text-sm">{description}</p>
-  </div>
-);
-
-export default App;
-
-const FeatureCard = ({ icon, title, description }) => (
   <div className="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
     <div className="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
       {icon}
