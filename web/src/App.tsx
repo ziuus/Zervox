@@ -163,6 +163,7 @@ const App = () => {
         </div>
         <p>&copy; 2026 Zervox Systems. Build for tomorrow, fix for today.</p>
       </footer>
+        </>
       ) : (
         <Docs />
       )}
