@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Markdown from 'markdown-to-jsx';
-import { ChevronRight, Home, Book, FileText } from 'lucide-react';
+import { ChevronRight, Home, Book, FileText, Zap, Shield, Cpu, Terminal, Globe } from 'lucide-react';
 
 const Docs = () => {
   const [content, setContent] = useState('');
