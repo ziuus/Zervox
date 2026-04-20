@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "workspace": {
+    "name": "Zervox",
+    "createdAt": 1774198707285,
+    "preset": "starter"
+  },
+  "authorizedRoots": [
+    "/home/zius/Projects/Zervox"
+  ]
+}
