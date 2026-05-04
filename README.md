@@ -132,6 +132,31 @@ Still needed before a serious public release:
 3. TUI or web dashboard
 4. More platform testing outside Linux/systemd
 
+## Install from release
+
+After publishing a GitHub release:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+```
+
+Or install a specific version:
+
+```bash
+VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+```
+
+## Release
+
+Tag a version to trigger the Linux binary release workflow:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow uploads `zervox-x86_64-unknown-linux-gnu.tar.gz` and a SHA256 file.
+
 ## Development
 
 ```bash

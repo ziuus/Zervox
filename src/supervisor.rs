@@ -7,7 +7,10 @@ use std::{
     io::{BufRead, BufReader, Write},
     path::PathBuf,
     process::{Command, Stdio},
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, AtomicU32, Ordering},
+        Arc, Mutex,
+    },
     thread,
     time::Duration,
 };
@@ -56,9 +59,28 @@ pub fn supervise(name: String, config: WatchConfig) -> Result<()> {
         ),
     )?;
 
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let current_child = Arc::new(AtomicU32::new(0));
+    install_signal_handler(
+        name.clone(),
+        log_path.clone(),
+        Arc::clone(&shutdown),
+        Arc::clone(&current_child),
+    )?;
+
     let mut attempts = 0;
     loop {
-        let result = run_child_logged(&name, &config, &log_path)?;
+        if shutdown.load(Ordering::SeqCst) {
+            mark_stopped(&name)?;
+            return Ok(());
+        }
+        let result = run_child_logged(
+            &name,
+            &config,
+            &log_path,
+            Arc::clone(&shutdown),
+            Arc::clone(&current_child),
+        )?;
         if result.success {
             RuntimeStore::load_default()?.update(&name, |r| {
                 r.status = RuntimeStatus::Stopped;
@@ -99,7 +121,13 @@ pub fn supervise(name: String, config: WatchConfig) -> Result<()> {
                 config.max_restarts
             ),
         )?;
-        thread::sleep(Duration::from_secs(delay));
+        for _ in 0..delay {
+            if shutdown.load(Ordering::SeqCst) {
+                mark_stopped(&name)?;
+                return Ok(());
+            }
+            thread::sleep(Duration::from_secs(1));
+        }
     }
 }
 
@@ -119,6 +147,43 @@ pub fn stop_runtime(name: &str) -> Result<()> {
     Ok(())
 }
 
+fn install_signal_handler(
+    name: String,
+    log_path: PathBuf,
+    shutdown: Arc<AtomicBool>,
+    current_child: Arc<AtomicU32>,
+) -> Result<()> {
+    ctrlc::set_handler(move || {
+        shutdown.store(true, Ordering::SeqCst);
+        let pid = current_child.load(Ordering::SeqCst);
+        if pid > 0 {
+            terminate_pid(pid);
+        }
+        let _ = append_log(
+            &log_path,
+            "shutdown signal received; terminating child and marking stopped\n",
+        );
+        let _ = RuntimeStore::load_default().and_then(|mut store| {
+            store.update(&name, |r| {
+                r.status = RuntimeStatus::Stopped;
+                r.child_pid = None;
+            })
+        });
+    })
+    .context("failed to install signal handler")
+}
+
+fn terminate_pid(pid: u32) {
+    let _ = kill(Pid::from_raw(pid as i32), Signal::SIGTERM);
+}
+
+fn mark_stopped(name: &str) -> Result<()> {
+    RuntimeStore::load_default()?.update(name, |r| {
+        r.status = RuntimeStatus::Stopped;
+        r.child_pid = None;
+    })
+}
+
 #[derive(Debug)]
 struct ChildResult {
     success: bool,
@@ -126,7 +191,13 @@ struct ChildResult {
     recent_lines: Vec<String>,
 }
 
-fn run_child_logged(name: &str, config: &WatchConfig, log_path: &PathBuf) -> Result<ChildResult> {
+fn run_child_logged(
+    name: &str,
+    config: &WatchConfig,
+    log_path: &PathBuf,
+    shutdown: Arc<AtomicBool>,
+    current_child: Arc<AtomicU32>,
+) -> Result<ChildResult> {
     let (program, args) = config.command.split_first().context("empty command")?;
     let mut command = Command::new(program);
     command
@@ -144,6 +215,7 @@ fn run_child_logged(name: &str, config: &WatchConfig, log_path: &PathBuf) -> Res
     let mut child = command
         .spawn()
         .with_context(|| format!("failed to spawn {}", config.command.join(" ")))?;
+    current_child.store(child.id(), Ordering::SeqCst);
     RuntimeStore::load_default()?.update(name, |r| {
         r.status = RuntimeStatus::Online;
         r.child_pid = Some(child.id());
@@ -158,19 +230,27 @@ fn run_child_logged(name: &str, config: &WatchConfig, log_path: &PathBuf) -> Res
     let log2 = log_path.clone();
     let recent2 = Arc::clone(&recent);
     let h2 = thread::spawn(move || stream_to_log(err, "stderr", log2, recent2));
-    let status = child.wait().context("failed to wait for child")?;
-    let _ = h1.join();
-    let _ = h2.join();
-    append_log(
-        log_path,
-        &format!("child exited code={:?}\n", status.code()),
-    )?;
-    let recent_lines = recent.lock().expect("recent log lock poisoned").clone();
-    Ok(ChildResult {
-        success: status.success(),
-        code: status.code(),
-        recent_lines,
-    })
+    loop {
+        if shutdown.load(Ordering::SeqCst) {
+            terminate_pid(child.id());
+        }
+        if let Some(status) = child.try_wait().context("failed to poll child")? {
+            current_child.store(0, Ordering::SeqCst);
+            let _ = h1.join();
+            let _ = h2.join();
+            append_log(
+                log_path,
+                &format!("child exited code={:?}\n", status.code()),
+            )?;
+            let recent_lines = recent.lock().expect("recent log lock poisoned").clone();
+            return Ok(ChildResult {
+                success: status.success(),
+                code: status.code(),
+                recent_lines,
+            });
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
 }
 
 fn stream_to_log<R: std::io::Read>(
