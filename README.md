@@ -1,10 +1,10 @@
 # Zervox
 
-A small Rust process watchdog for Node.js apps and long-running development commands.
+A Rust watchdog for Node.js apps and long-running development commands.
 
-Zervox runs a command, streams its output, detects crashes from non-zero exits, keeps the latest logs, prints a useful failure summary, and can restart the command a limited number of times.
+Zervox can run commands in the foreground for quick checks, or start a detached supervisor that keeps runtime state, tracks PIDs, writes persistent logs, restarts crashed processes with backoff, and reports useful crash hints.
 
-This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rust rewrite is now the primary direction.
+This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rust implementation is now the primary direction.
 
 ## Why Rust
 
@@ -12,28 +12,29 @@ This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rus
 - Lower memory footprint than a Node daemon
 - Better fit for long-running process supervision
 - Easier to install on servers and developer machines
-- Good foundation for future native features like signals, log files, systemd integration, and desktop notifications
+- Strong foundation for native process control, systemd integration, and safe AI-assisted diagnostics
 
-## Current MVP
-
-Implemented:
+## Implemented
 
 - `zervox check -- <command>` - run once and summarize failures
-- `zervox start -- <command>` - run and restart on crash
+- `zervox start -- <command>` - foreground watchdog with restart limit
+- `zervox start --detach --name <name> -- <command>` - background supervisor
 - `zervox add <name> -- <command>` - save a command locally
-- `zervox list` - list tracked commands
-- `zervox run <name>` - run a tracked command
-- `zervox remove <name>` - remove a tracked command
-- `zervox doctor` - show local state location
+- `zervox up <name>` - start a saved command in detached mode
+- `zervox status [name]` - show runtime status, supervisor PID, child PID, restarts, and log path
+- `zervox logs <name>` - tail persistent logs
+- `zervox stop <name>` - stop supervisor and child process
+- `zervox restart <name>` - restart a saved supervised process
+- `zervox list`, `zervox run`, `zervox remove`, `zervox doctor`
 - Crash hints for common Node errors like port conflicts, missing modules, permission issues, and syntax errors
 
-Not implemented yet:
+## Runtime files
 
-- Background daemon mode
-- Web dashboard
-- AI-assisted fix suggestions
-- Log file persistence
-- systemd service generation
+- Config: `~/.config/zervox/processes.json`
+- Runtime state: `~/.local/state/zervox/runtime.json`
+- Logs: `~/.local/state/zervox/logs/<name>.log`
+
+Use `zervox doctor` to print the exact paths on your machine.
 
 ## Build
 
@@ -55,10 +56,25 @@ Run a command once:
 zervox check -- node server.js
 ```
 
-Start a command and restart it up to five times:
+Run in the foreground and restart it up to five times:
 
 ```bash
 zervox start --max-restarts 5 -- node server.js
+```
+
+Start as a detached supervised process:
+
+```bash
+zervox start --detach --name api --max-restarts 5 -- node server.js
+```
+
+Inspect and operate it:
+
+```bash
+zervox status api
+zervox logs api -n 50
+zervox restart api
+zervox stop api
 ```
 
 JavaScript entry files are automatically run with Node:
@@ -67,18 +83,18 @@ JavaScript entry files are automatically run with Node:
 zervox start server.js
 ```
 
-Track a command:
+Track a command for later:
 
 ```bash
 zervox add api --max-restarts 5 -- node server.js
 zervox list
-zervox run api
+zervox up api
 ```
 
 Run in another directory:
 
 ```bash
-zervox start --cwd ./apps/api -- npm run dev
+zervox start --detach --name api --cwd ./apps/api -- npm run dev
 ```
 
 ## Example crash summary
@@ -93,18 +109,32 @@ recent output
   Error: listen EADDRINUSE: address already in use :::3000
 ```
 
-## Roadmap
+## Production-readiness status
 
-1. Background daemon with PID tracking and `stop`/`restart` commands
-2. Persistent per-process logs under `~/.local/state/zervox`
-3. Optional AI analysis provider with safe, review-before-run fixes
-4. Web or TUI dashboard
-5. Release pipeline for Linux binaries
+Zervox now has the core pieces of a production watchdog:
+
+- Detached supervisor process
+- PID tracking for supervisor and child
+- Persistent runtime state
+- Persistent per-process logs
+- Stop/restart/status/log commands
+- Restart limit and exponential backoff
+- Strict Rust checks passing
+
+Still needed before a serious public release:
+
+1. Integration test suite around detached processes and stop/restart behavior
+2. Stale PID detection and runtime state cleanup after machine reboot
+3. systemd service generation
+4. Binary release pipeline for Linux
+5. Optional AI diagnostics with review-before-run safety controls
+6. TUI or web dashboard
 
 ## Development
 
 ```bash
-cargo fmt
-cargo test
+cargo fmt --check
+cargo test --all-targets
+cargo clippy --all-targets --all-features -- -D warnings
 cargo run -- check -- node -e "console.log('ok')"
 ```

@@ -159,8 +159,8 @@ fn print_crash_summary(command: &[String], code: Option<i32>, recent_lines: &[St
     eprintln!();
 }
 
-fn classify_failure(lines: &[String]) -> Option<&'static str> {
-    let joined = lines.join("\n").to_lowercase();
+pub fn classify_failure_text(text: &str) -> Option<&'static str> {
+    let joined = text.to_lowercase();
     if joined.contains("eaddrinuse") || joined.contains("address already in use") {
         Some("port conflict detected. Stop the existing process or change PORT.")
     } else if joined.contains("cannot find module") || joined.contains("module_not_found") {
@@ -172,6 +172,10 @@ fn classify_failure(lines: &[String]) -> Option<&'static str> {
     } else {
         None
     }
+}
+
+fn classify_failure(lines: &[String]) -> Option<&'static str> {
+    classify_failure_text(&lines.join("\n"))
 }
 
 #[cfg(test)]

@@ -88,6 +88,15 @@ impl Store {
     }
 }
 
+pub fn state_dir() -> Result<PathBuf> {
+    let base = dirs::state_dir()
+        .or_else(dirs::data_local_dir)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let dir = base.join("zervox");
+    fs::create_dir_all(&dir).with_context(|| format!("failed to create {}", dir.display()))?;
+    Ok(dir)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
