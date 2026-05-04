@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  rust:
+    name: Rust checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Run tests
+        run: cargo test --all-targets --locked
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features --locked -- -D warnings
+      - name: Build release
+        run: cargo build --release --locked
+      - name: Validate installer syntax
+        run: bash -n scripts/install.sh

@@ -134,16 +134,28 @@ Still needed before a serious public release:
 
 ## Install from release
 
-After publishing a GitHub release:
+The recommended public install path is a one-line installer script. The script downloads the prebuilt release binary, verifies the SHA256 checksum when available, and installs `zervox` into `~/.local/bin` by default.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
 ```
 
-Or install a specific version:
+Install a specific version:
 
 ```bash
 VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+```
+
+Install somewhere else:
+
+```bash
+BIN_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+```
+
+Uninstall:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash -s -- --uninstall
 ```
 
 ## Release
