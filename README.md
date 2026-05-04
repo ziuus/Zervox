@@ -1,43 +1,110 @@
-# 🤖 Zervox AI
+# Zervox
 
-> **Autonomous AI Site Reliability Engineer (SRE) — A self-healing daemon that monitors, analyzes, and repairs Node.js applications in real-time.**
+A small Rust process watchdog for Node.js apps and long-running development commands.
 
-Zervox is a next-generation, PM2-style daemon designed for high-performance autonomous systems. It goes beyond simple process management by integrating **Gemini-2.0** intelligence directly into the runtime. When an application crashes, Zervox autonomously captures the stack trace, diagnoses the root cause, and applies executable terminal fixes to restore service instantly.
+Zervox runs a command, streams its output, detects crashes from non-zero exits, keeps the latest logs, prints a useful failure summary, and can restart the command a limited number of times.
 
-## ⚡ Core Features
+This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rust rewrite is now the primary direction.
 
-- **AI-Driven Self-Healing**: Real-time crash detection with automated LLM analysis and executable patch suggestions.
-- **Agentic SRE Pipeline**: Automatically handles dependency resolution, port conflicts, and configuration errors without human intervention.
-- **Ultra-Premium Dashboard**: A cinematic, glassmorphic control plane built on **Antigravity Master UI** principles for fleet monitoring.
-- **Process Persistence**: Robust background daemon architecture that ensures 100% uptime for mission-critical Node.js services.
-- **Notification Intelligence**: Instant, human-readable post-mortems delivered via Slack or Discord.
+## Why Rust
 
-## 🛠 Tech Stack
+- Ships as a single binary
+- Lower memory footprint than a Node daemon
+- Better fit for long-running process supervision
+- Easier to install on servers and developer machines
+- Good foundation for future native features like signals, log files, systemd integration, and desktop notifications
 
-- **Runtime**: Node.js (TypeScript)
-- **Intelligence**: Google Gemini-2.0
-- **UI/UX**: React + Antigravity Master UI (Glassmorphism)
-- **Communication**: Inter-Process Communication (IPC) + REST API
+## Current MVP
 
-## 🚀 Quick Start
+Implemented:
 
-1. **Global Installation**:
-   ```bash
-   npm install -g zervox-agent
-   ```
+- `zervox check -- <command>` - run once and summarize failures
+- `zervox start -- <command>` - run and restart on crash
+- `zervox add <name> -- <command>` - save a command locally
+- `zervox list` - list tracked commands
+- `zervox run <name>` - run a tracked command
+- `zervox remove <name>` - remove a tracked command
+- `zervox doctor` - show local state location
+- Crash hints for common Node errors like port conflicts, missing modules, permission issues, and syntax errors
 
-2. **Configure Intelligence**:
-   ```bash
-   export GEMINI_API_KEY="your_api_key_here"
-   ```
+Not implemented yet:
 
-3. **Deploy Services**:
-   ```bash
-   zervox start server.js
-   ```
+- Background daemon mode
+- Web dashboard
+- AI-assisted fix suggestions
+- Log file persistence
+- systemd service generation
 
-4. **Access Control Plane**:
-   Open **[http://localhost:4040](http://localhost:4040)** to monitor your autonomous fleet.
+## Build
 
----
-*Zervox: Zero-Latency Reliability for the Agentic Era.*
+```bash
+cargo build --release
+```
+
+The binary will be available at:
+
+```bash
+./target/release/zervox
+```
+
+## Usage
+
+Run a command once:
+
+```bash
+zervox check -- node server.js
+```
+
+Start a command and restart it up to five times:
+
+```bash
+zervox start --max-restarts 5 -- node server.js
+```
+
+JavaScript entry files are automatically run with Node:
+
+```bash
+zervox start server.js
+```
+
+Track a command:
+
+```bash
+zervox add api --max-restarts 5 -- node server.js
+zervox list
+zervox run api
+```
+
+Run in another directory:
+
+```bash
+zervox start --cwd ./apps/api -- npm run dev
+```
+
+## Example crash summary
+
+```text
+Crash detected
+command: node server.js
+exit code: 1
+hint: port conflict detected. Stop the existing process or change PORT.
+
+recent output
+  Error: listen EADDRINUSE: address already in use :::3000
+```
+
+## Roadmap
+
+1. Background daemon with PID tracking and `stop`/`restart` commands
+2. Persistent per-process logs under `~/.local/state/zervox`
+3. Optional AI analysis provider with safe, review-before-run fixes
+4. Web or TUI dashboard
+5. Release pipeline for Linux binaries
+
+## Development
+
+```bash
+cargo fmt
+cargo test
+cargo run -- check -- node -e "console.log('ok')"
+```
