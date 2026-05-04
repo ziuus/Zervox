@@ -9,6 +9,7 @@ use crate::store::{state_dir, ProcessRecord, Store};
 use crate::supervisor::{
     print_runtime_status, spawn_detached_supervisor, stop_runtime, supervise, tail_log,
 };
+use crate::systemd::{generate_user_service, install_user_service};
 
 #[derive(Parser, Debug)]
 #[command(name = "zervox")]
@@ -74,6 +75,14 @@ enum Commands {
         #[arg(short = 'n', long, default_value_t = 80)]
         lines: usize,
     },
+    /// Generate or install a user-level systemd service for a tracked command.
+    Systemd {
+        name: String,
+        #[arg(long)]
+        install: bool,
+    },
+    /// Remove stopped runtime records and mark stale PIDs.
+    Cleanup,
     /// Internal command used by detached supervisors.
     #[command(hide = true)]
     Supervise { name: String, config_json: String },
@@ -211,7 +220,8 @@ pub fn run() -> Result<()> {
             Ok(())
         }
         Commands::Status { name } => {
-            let store = RuntimeStore::load_default()?;
+            let mut store = RuntimeStore::load_default()?;
+            let _ = store.reconcile_stale_processes()?;
             if let Some(name) = name {
                 let record = store
                     .find(&name)
@@ -224,6 +234,26 @@ pub fn run() -> Result<()> {
                     print_runtime_status(record);
                 }
             }
+            Ok(())
+        }
+        Commands::Systemd { name, install } => {
+            if install {
+                let path = install_user_service(&name)?;
+                println!("{} installed {}", "✓".green(), path.display());
+                println!("enable: systemctl --user enable --now zervox-{name}.service");
+            } else {
+                print!("{}", generate_user_service(&name)?);
+            }
+            Ok(())
+        }
+        Commands::Cleanup => {
+            let mut store = RuntimeStore::load_default()?;
+            let _ = store.reconcile_stale_processes()?;
+            let removed = store.prune_stopped()?;
+            println!(
+                "{} removed {removed} stopped runtime record(s)",
+                "✓".green()
+            );
             Ok(())
         }
         Commands::Logs { name, lines } => {

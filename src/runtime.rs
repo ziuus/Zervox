@@ -1,4 +1,6 @@
 use anyhow::{Context, Result};
+use nix::sys::signal::kill;
+use nix::unistd::Pid;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::PathBuf};
 use time::OffsetDateTime;
@@ -158,4 +160,43 @@ pub fn runtime_log_path(name: &str) -> Result<PathBuf> {
         })
         .collect();
     Ok(logs_dir()?.join(format!("{safe}.log")))
+}
+
+pub fn pid_exists(pid: u32) -> bool {
+    kill(Pid::from_raw(pid as i32), None).is_ok()
+}
+
+impl RuntimeStore {
+    pub fn reconcile_stale_processes(&mut self) -> Result<bool> {
+        let mut changed = false;
+        for process in &mut self.processes {
+            if matches!(
+                process.status,
+                RuntimeStatus::Online | RuntimeStatus::Restarting | RuntimeStatus::Starting
+            ) && !pid_exists(process.supervisor_pid)
+            {
+                process.status = RuntimeStatus::Crashed;
+                process.child_pid = None;
+                process.last_error_hint =
+                    Some("supervisor process is not running; state was marked stale".into());
+                process.touch();
+                changed = true;
+            }
+        }
+        if changed {
+            self.save()?;
+        }
+        Ok(changed)
+    }
+
+    pub fn prune_stopped(&mut self) -> Result<usize> {
+        let before = self.processes.len();
+        self.processes
+            .retain(|p| !matches!(p.status, RuntimeStatus::Stopped));
+        let removed = before - self.processes.len();
+        if removed > 0 {
+            self.save()?;
+        }
+        Ok(removed)
+    }
 }

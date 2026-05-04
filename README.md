@@ -4,8 +4,6 @@ A Rust watchdog for Node.js apps and long-running development commands.
 
 Zervox can run commands in the foreground for quick checks, or start a detached supervisor that keeps runtime state, tracks PIDs, writes persistent logs, restarts crashed processes with backoff, and reports useful crash hints.
 
-This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rust implementation is now the primary direction.
-
 ## Why Rust
 
 - Ships as a single binary
@@ -25,6 +23,9 @@ This repo still contains the earlier TypeScript prototype in `src/*.ts`. The Rus
 - `zervox logs <name>` - tail persistent logs
 - `zervox stop <name>` - stop supervisor and child process
 - `zervox restart <name>` - restart a saved supervised process
+- `zervox cleanup` - remove stopped runtime records and mark stale supervisors
+- `zervox systemd <name>` - print a user-level systemd unit for a tracked command
+- `zervox systemd <name> --install` - install the user-level systemd unit
 - `zervox list`, `zervox run`, `zervox remove`, `zervox doctor`
 - Crash hints for common Node errors like port conflicts, missing modules, permission issues, and syntax errors
 
@@ -119,16 +120,17 @@ Zervox now has the core pieces of a production watchdog:
 - Persistent per-process logs
 - Stop/restart/status/log commands
 - Restart limit and exponential backoff
+- Stale PID detection for killed supervisors or rebooted machines
+- User-level systemd unit generation
+- Integration tests around the real CLI and detached lifecycle
 - Strict Rust checks passing
 
 Still needed before a serious public release:
 
-1. Integration test suite around detached processes and stop/restart behavior
-2. Stale PID detection and runtime state cleanup after machine reboot
-3. systemd service generation
-4. Binary release pipeline for Linux
-5. Optional AI diagnostics with review-before-run safety controls
-6. TUI or web dashboard
+1. GitHub Actions release pipeline for Linux binaries
+2. Optional AI diagnostics with review-before-run safety controls
+3. TUI or web dashboard
+4. More platform testing outside Linux/systemd
 
 ## Development
 
