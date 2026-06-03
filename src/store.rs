@@ -8,15 +8,24 @@ pub struct ProcessRecord {
     pub command: Vec<String>,
     pub cwd: Option<String>,
     pub max_restarts: u32,
+    #[serde(default)]
+    pub auto_fix: bool,
 }
 
 impl ProcessRecord {
-    pub fn new(name: String, command: Vec<String>, cwd: Option<String>, max_restarts: u32) -> Self {
+    pub fn new(
+        name: String,
+        command: Vec<String>,
+        cwd: Option<String>,
+        max_restarts: u32,
+        auto_fix: bool,
+    ) -> Self {
         Self {
             name,
             command,
             cwd,
             max_restarts,
+            auto_fix,
         }
     }
 }
@@ -112,15 +121,18 @@ mod tests {
             vec!["node".into(), "a.js".into()],
             None,
             1,
+            false,
         ));
         store.upsert(ProcessRecord::new(
             "api".into(),
             vec!["node".into(), "b.js".into()],
             Some("/tmp".into()),
             2,
+            true,
         ));
         assert_eq!(store.processes.len(), 1);
         assert_eq!(store.processes[0].command, vec!["node", "b.js"]);
         assert_eq!(store.processes[0].max_restarts, 2);
+        assert!(store.processes[0].auto_fix);
     }
 }

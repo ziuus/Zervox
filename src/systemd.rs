@@ -14,6 +14,7 @@ pub fn generate_user_service(name: &str) -> Result<String> {
         cwd: record.cwd,
         max_restarts: record.max_restarts,
         restart_delay: 1,
+        auto_fix: record.auto_fix,
     };
     let config_json = serde_json::to_string(&config)?;
     let escaped = shell_escape(&config_json);

@@ -33,6 +33,9 @@ enum Commands {
         cwd: Option<String>,
         #[arg(long)]
         name: Option<String>,
+        /// Attempt guarded dependency-install repairs after crashes.
+        #[arg(long)]
+        auto_fix: bool,
         /// Run as a background supervisor and record PID/status/logs.
         #[arg(long)]
         detach: bool,
@@ -53,6 +56,9 @@ enum Commands {
         cwd: Option<String>,
         #[arg(long, default_value_t = 3)]
         max_restarts: u32,
+        /// Attempt guarded dependency-install repairs after crashes.
+        #[arg(long)]
+        auto_fix: bool,
     },
 
     /// List tracked commands.
@@ -88,6 +94,12 @@ enum Commands {
     Supervise { name: String, config_json: String },
     /// Print Zervox state locations.
     Doctor,
+    /// Start the web dashboard and API server
+    Web {
+        /// Port to bind the web server to
+        #[arg(long, default_value_t = 3000)]
+        port: u16,
+    },
 }
 
 pub fn run() -> Result<()> {
@@ -99,6 +111,7 @@ pub fn run() -> Result<()> {
             restart_delay,
             cwd,
             name,
+            auto_fix,
             detach,
         } => {
             let command = normalize_command(command)?;
@@ -107,11 +120,18 @@ pub fn run() -> Result<()> {
                 cwd: cwd.clone(),
                 max_restarts,
                 restart_delay,
+                auto_fix,
             };
             if detach {
                 let name = name.context("--detach requires --name <name>")?;
                 let mut store = Store::load_default()?;
-                store.upsert(ProcessRecord::new(name.clone(), command, cwd, max_restarts));
+                store.upsert(ProcessRecord::new(
+                    name.clone(),
+                    command,
+                    cwd,
+                    max_restarts,
+                    auto_fix,
+                ));
                 store.save()?;
                 let pid = spawn_detached_supervisor(&name, &config)?;
                 println!(
@@ -129,6 +149,7 @@ pub fn run() -> Result<()> {
                     command.clone(),
                     cwd.clone(),
                     max_restarts,
+                    auto_fix,
                 ));
                 store.save()?;
             }
@@ -139,16 +160,24 @@ pub fn run() -> Result<()> {
             cwd,
             max_restarts: 0,
             restart_delay: 0,
+            auto_fix: false,
         }),
         Commands::Add {
             name,
             command,
             cwd,
             max_restarts,
+            auto_fix,
         } => {
             let command = normalize_command(command)?;
             let mut store = Store::load_default()?;
-            store.upsert(ProcessRecord::new(name.clone(), command, cwd, max_restarts));
+            store.upsert(ProcessRecord::new(
+                name.clone(),
+                command,
+                cwd,
+                max_restarts,
+                auto_fix,
+            ));
             store.save()?;
             println!("{} tracked command '{}'", "✓".green(), name.bold());
             Ok(())
@@ -173,6 +202,7 @@ pub fn run() -> Result<()> {
                 cwd: record.cwd,
                 max_restarts: record.max_restarts,
                 restart_delay: 1,
+                auto_fix: record.auto_fix,
             })
         }
         Commands::Up { name } => {
@@ -184,6 +214,7 @@ pub fn run() -> Result<()> {
                 cwd: record.cwd,
                 max_restarts: record.max_restarts,
                 restart_delay: 1,
+                auto_fix: record.auto_fix,
             };
             let pid = spawn_detached_supervisor(&name, &config)?;
             println!(
@@ -209,6 +240,7 @@ pub fn run() -> Result<()> {
                 cwd: record.cwd,
                 max_restarts: record.max_restarts,
                 restart_delay: 1,
+                auto_fix: record.auto_fix,
             };
             let pid = spawn_detached_supervisor(&name, &config)?;
             println!(
@@ -276,6 +308,16 @@ pub fn run() -> Result<()> {
             println!("tip: zervox start --detach --name api -- node server.js");
             Ok(())
         }
+        Commands::Web { port } => {
+            println!("Starting web dashboard on port {}", port);
+
+            let rt = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .context("Failed to build Tokio runtime")?;
+
+            rt.block_on(async { crate::web::start_server(port).await })
+        }
     }
 }
 
@@ -288,10 +330,11 @@ fn list_tracked() -> Result<()> {
     println!("{}", "Tracked commands".bold());
     for p in store.processes {
         println!(
-            "- {}  {}  restarts={} cwd={}",
+            "- {}  {}  restarts={} auto_fix={} cwd={}",
             p.name.cyan(),
             p.command.join(" "),
             p.max_restarts,
+            p.auto_fix,
             p.cwd.unwrap_or_else(|| ".".into())
         );
     }

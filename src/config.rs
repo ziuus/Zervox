@@ -6,4 +6,6 @@ pub struct WatchConfig {
     pub cwd: Option<String>,
     pub max_restarts: u32,
     pub restart_delay: u64,
+    #[serde(default)]
+    pub auto_fix: bool,
 }

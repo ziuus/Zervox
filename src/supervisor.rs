@@ -100,6 +100,17 @@ pub fn supervise(name: String, config: WatchConfig) -> Result<()> {
             r.last_error_hint = hint.clone();
         })?;
 
+        if config.auto_fix {
+            if let Err(error) = crate::autofix::run_auto_fix(
+                &name,
+                config.cwd.as_deref(),
+                &result.recent_lines,
+                &log_path,
+            ) {
+                append_log(&log_path, &format!("[Zervox auto-fix] failed: {error:#}\n"))?;
+            }
+        }
+
         if attempts >= config.max_restarts {
             append_log(
                 &log_path,
