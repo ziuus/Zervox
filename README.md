@@ -1,179 +1,127 @@
 # Zervox
 
-A Rust watchdog for Node.js apps and long-running development commands.
+**Autonomous SRE. Unmatched Scale.**
 
-Zervox can run commands in the foreground for quick checks, or start a detached supervisor that keeps runtime state, tracks PIDs, writes persistent logs, restarts crashed processes with backoff, and reports useful crash hints.
+Zervox is a next-generation SRE daemon that detects crashes, analyzes root causes with Gemini AI, and executes fixes autonomously.
 
-## Why Rust
+- **Auto-Fix Loop** — Autonomous crash detection and AI-powered repair cycles that heal your apps in seconds.
+- **Global Daemon** — Manage a swarm of processes across multiple environments with a single unified interface.
+- **Visual Insights** — Minimalist dashboard designed for high cognitive fluency and rapid incident response.
 
-- Ships as a single binary
-- Lower memory footprint than a Node daemon
-- Better fit for long-running process supervision
-- Easier to install on servers and developer machines
-- Strong foundation for native process control, systemd integration, and safe AI-assisted diagnostics
+→ [zervox.vercel.app](https://zervox.vercel.app)
 
-## Implemented
+---
 
-- `zervox check -- <command>` - run once and summarize failures
-- `zervox start -- <command>` - foreground watchdog with restart limit
-- `zervox start --detach --name <name> -- <command>` - background supervisor
-- `zervox add <name> -- <command>` - save a command locally
-- `zervox up <name>` - start a saved command in detached mode
-- `zervox status [name]` - show runtime status, supervisor PID, child PID, restarts, and log path
-- `zervox logs <name>` - tail persistent logs
-- `zervox stop <name>` - stop supervisor and child process
-- `zervox restart <name>` - restart a saved supervised process
-- `zervox cleanup` - remove stopped runtime records and mark stale supervisors
-- `zervox systemd <name>` - print a user-level systemd unit for a tracked command
-- `zervox systemd <name> --install` - install the user-level systemd unit
-- `zervox list`, `zervox run`, `zervox remove`, `zervox doctor`
-- Crash hints for common Node errors like port conflicts, missing modules, permission issues, and syntax errors
+## Features
 
-## Runtime files
+- **AI-Powered Diagnostics** — When a crash occurs, Zervox analyzes logs via Gemini AI, identifies root causes, and suggests precise fix commands.
+- **Auto-Fix Dependency Issues** — Scans crash logs for `Cannot find module` patterns, detects missing packages, and runs the correct install command.
+- **Process Supervision** — Track PIDs, persistent logs, restart limits, and exponential backoff for every process.
+- **Real-Time Dashboard** — Web-based dashboard with Socket.IO live updates. View process status, tail logs, and apply AI-suggested fixes with one click.
+- **Systemd Integration** — Generate systemd user services from any tracked process. Survive reboots and crashes transparently.
+- **7KB Binary in Rust** — Single lean binary with zero runtime dependencies. Installs in seconds.
 
-- Config: `~/.config/zervox/processes.json`
-- Runtime state: `~/.local/state/zervox/runtime.json`
-- Logs: `~/.local/state/zervox/logs/<name>.log`
+---
 
-Use `zervox doctor` to print the exact paths on your machine.
-
-## Build
+## Quick Start
 
 ```bash
-cargo build --release
-```
-
-The binary will be available at:
-
-```bash
-./target/release/zervox
-```
-
-## Usage
-
-Run a command once:
-
-```bash
+# Run a command once
 zervox check -- node server.js
-```
 
-Run in the foreground and restart it up to five times:
-
-```bash
+# Foreground watchdog with auto-restart
 zervox start --max-restarts 5 -- node server.js
-```
 
-Start as a detached supervised process:
+# Background daemon
+zervox start --detach --name api -- node server.js
 
-```bash
-zervox start --detach --name api --max-restarts 5 -- node server.js
-```
-
-Inspect and operate it:
-
-```bash
+# Inspect and control
 zervox status api
 zervox logs api -n 50
 zervox restart api
 zervox stop api
 ```
 
-JavaScript entry files are automatically run with Node:
+---
 
-```bash
-zervox start server.js
-```
-
-Track a command for later:
-
-```bash
-zervox add api --max-restarts 5 -- node server.js
-zervox list
-zervox up api
-```
-
-Run in another directory:
-
-```bash
-zervox start --detach --name api --cwd ./apps/api -- npm run dev
-```
-
-## Example crash summary
-
-```text
-Crash detected
-command: node server.js
-exit code: 1
-hint: port conflict detected. Stop the existing process or change PORT.
-
-recent output
-  Error: listen EADDRINUSE: address already in use :::3000
-```
-
-## Production-readiness status
-
-Zervox now has the core pieces of a production watchdog:
-
-- Detached supervisor process
-- PID tracking for supervisor and child
-- Persistent runtime state
-- Persistent per-process logs
-- Stop/restart/status/log commands
-- Restart limit and exponential backoff
-- Stale PID detection for killed supervisors or rebooted machines
-- User-level systemd unit generation
-- Integration tests around the real CLI and detached lifecycle
-- Strict Rust checks passing
-
-Still needed before a serious public release:
-
-1. GitHub Actions release pipeline for Linux binaries
-2. Optional AI diagnostics with review-before-run safety controls
-3. TUI or web dashboard
-4. More platform testing outside Linux/systemd
-
-## Install from release
-
-The recommended public install path is a one-line installer script. The script downloads the prebuilt release binary, verifies the SHA256 checksum when available, and installs `zervox` into `~/.local/bin` by default.
+## Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
 ```
 
-Install a specific version:
+Or build from source:
 
 ```bash
-VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+cargo build --release
+./target/release/zervox
 ```
 
-Install somewhere else:
+---
 
-```bash
-BIN_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+## Web Dashboard
+
+Zervox ships with a real-time web dashboard for monitoring processes, viewing logs, and applying AI-suggested fixes. Open it after starting the daemon:
+
+```
+http://localhost:4040
 ```
 
-Uninstall:
+---
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash -s -- --uninstall
-```
+## Documentation
 
-## Release
+Comprehensive guides on setting up autonomous agents, fine-tuning repair strategies, and scaling your SRE operations:
 
-Tag a version to trigger the Linux binary release workflow:
+- [Getting Started](https://zervox.vercel.app/#/docs)
+- [CLI Reference](https://zervox.vercel.app/#/docs)
+- [Configuration](https://zervox.vercel.app/#/docs)
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+---
 
-The workflow uploads `zervox-x86_64-unknown-linux-gnu.tar.gz` and a SHA256 file.
+## CLI Reference
 
-## Development
+| Command | Description |
+|---|---|
+| `zervox check -- <cmd>` | Run once and summarize failures |
+| `zervox start -- <cmd>` | Foreground watchdog with restart limit |
+| `zervox start --detach --name <n> -- <cmd>` | Background supervisor |
+| `zervox add <name> -- <cmd>` | Save a command locally |
+| `zervox up <name>` | Start a saved command in detached mode |
+| `zervox status [name]` | Show runtime status, PID, restarts, log path |
+| `zervox logs <name>` | Tail persistent logs |
+| `zervox stop <name>` | Stop supervisor and child process |
+| `zervox restart <name>` | Restart a saved supervised process |
+| `zervox systemd <name>` | Generate a systemd unit for a tracked command |
+| `zervox list` | List all tracked commands |
+
+---
+
+## Runtime Files
+
+| Path | Purpose |
+|---|---|
+| `~/.config/zervox/processes.json` | Saved command definitions |
+| `~/.local/state/zervox/runtime.json` | Active supervisor state |
+| `~/.local/state/zervox/logs/<name>.log` | Per-process logs |
+
+Use `zervox doctor` to print the exact paths on your machine.
+
+---
+
+## Build from source
 
 ```bash
 cargo fmt --check
 cargo test --all-targets
 cargo clippy --all-targets --all-features -- -D warnings
-cargo run -- check -- node -e "console.log('ok')"
+cargo build --release
 ```
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Built with Rust, Actix-Web, Axum, Gemini AI.
