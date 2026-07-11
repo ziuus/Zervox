@@ -1,32 +1,77 @@
-# Zervox
+# Zervox — AI Recovery Copilot for Production Systems
 
-**Autonomous SRE. Unmatched Scale.**
+Zervox is an **AI-assisted production recovery agent** that helps engineers diagnose incidents, propose safe recovery options, execute after approval, and verify recovery.
 
-Zervox is a next-generation SRE daemon that detects crashes, analyzes root causes with Gemini AI, and executes fixes autonomously.
+It connects to existing infrastructure — process supervisors, logs, deployments — and gives you a copilot interface for incident response. Not another monitoring dashboard. Not an autonomous autopilot.
 
-- **Auto-Fix Loop** — Autonomous crash detection and AI-powered repair cycles that heal your apps in seconds.
-- **Global Daemon** — Manage a swarm of processes across multiple environments with a single unified interface.
-- **Visual Insights** — Minimalist dashboard designed for high cognitive fluency and rapid incident response.
+> **Current stage:** Foundation (process watchdog + rule-based diagnostics + web dashboard). The architecture is being built toward full observability integration and AI-assisted recovery planning.
 
 → [zervox.vercel.app](https://zervox.vercel.app)
 
 ---
 
-## Features
+## How It Works (Vision)
 
-- **AI-Powered Diagnostics** — When a crash occurs, Zervox analyzes logs via Gemini AI, identifies root causes, and suggests precise fix commands.
-- **Auto-Fix Dependency Issues** — Scans crash logs for `Cannot find module` patterns, detects missing packages, and runs the correct install command.
-- **Process Supervision** — Track PIDs, persistent logs, restart limits, and exponential backoff for every process.
-- **Real-Time Dashboard** — Web-based dashboard with Socket.IO live updates. View process status, tail logs, and apply AI-suggested fixes with one click.
-- **Systemd Integration** — Generate systemd user services from any tracked process. Survive reboots and crashes transparently.
-- **7KB Binary in Rust** — Single lean binary with zero runtime dependencies. Installs in seconds.
+```
+Applications / Servers / Kubernetes / Docker / PM2
+        ↓
+Logs + Metrics + Traces + Deployment Events
+        ↓
+OpenTelemetry / Prometheus / Grafana / Datadog / CloudWatch / ELK
+        ↓
+Zervox
+        ↓
+Diagnose incident → Propose recovery options
+        ↓
+Engineer reviews, modifies, or creates new plan
+        ↓
+Approval → Execute → Verify recovery → RCA summary
+```
+
+### Core Principles
+
+- **Copilot, not autopilot** — Zervox discusses and proposes. Engineers decide and approve.
+- **Integration-first** — connects to existing stacks (Grafana, Prometheus, Kubernetes, Jenkins, OpenTelemetry) instead of replacing them.
+- **Safety as a feature** — actions are tiered by risk. Read-only is free. Execution requires approval.
+
+---
+
+## What Exists Now (v0.1)
+
+The current build is a **single-binary process watchdog** for Node.js and shell commands:
+
+```
+zervox start --detach --name api -- node server.js
+zervox status api
+zervox logs api -n 50
+zervox restart api
+zervox stop api
+```
+
+| Capability | Status |
+|---|---|
+| Process supervision (PID tracking, restart limits, backoff) | ✅ |
+| Crash detection with pattern-based diagnosis | ✅ |
+| Web dashboard (real-time, Socket.IO) | ✅ |
+| Systemd integration (generate user services) | ✅ |
+| Auto-fix for missing dependencies (npm/bun/pnpm/yarn) | ✅ |
+| Rule-based crash classification (port conflicts, permissions, syntax errors) | ✅ |
+| CLI with status, logs, restart, detach | ✅ |
+| Gemini AI–powered diagnostics | 🔜 |
+| OpenTelemetry / Prometheus / Grafana integration | 🔜 |
+| Kubernetes / Docker integration | 🔜 |
+| Multi-option recovery proposals | 🔜 |
+| Engineer-negotiated plan modification | 🔜 |
+| Approval-based execution gates | 🔜 |
+| Post-recovery verification | 🔜 |
+| Incident / RCA summary generation | 🔜 |
 
 ---
 
 ## Quick Start
 
 ```bash
-# Run a command once
+# Run a command once (check mode)
 zervox check -- node server.js
 
 # Foreground watchdog with auto-restart
@@ -61,21 +106,16 @@ cargo build --release
 
 ## Web Dashboard
 
-Zervox ships with a real-time web dashboard for monitoring processes, viewing logs, and applying AI-suggested fixes. Open it after starting the daemon:
+Zervox ships with a real-time web dashboard for monitoring processes, viewing logs, and applying suggested fixes.
 
+```bash
+zervox start --detach --name api -- node server.js
+# Open http://localhost:4040
 ```
-http://localhost:4040
-```
 
----
+![Zervox Dashboard](public/screenshot.png)
 
-## Documentation
-
-Comprehensive guides on setting up autonomous agents, fine-tuning repair strategies, and scaling your SRE operations:
-
-- [Getting Started](https://zervox.vercel.app/#/docs)
-- [CLI Reference](https://zervox.vercel.app/#/docs)
-- [Configuration](https://zervox.vercel.app/#/docs)
+> **Dashboard screenshot needed** — the interface exists and works. A screenshot will be added here after the next UI polish pass.
 
 ---
 
@@ -97,15 +137,84 @@ Comprehensive guides on setting up autonomous agents, fine-tuning repair strateg
 
 ---
 
-## Runtime Files
+## Safety Model
 
-| Path | Purpose |
-|---|---|
-| `~/.config/zervox/processes.json` | Saved command definitions |
-| `~/.local/state/zervox/runtime.json` | Active supervisor state |
-| `~/.local/state/zervox/logs/<name>.log` | Per-process logs |
+Zervox is designed around a graduated risk model. This is the **target** safety model being built toward:
 
-Use `zervox doctor` to print the exact paths on your machine.
+### Read-only (always allowed)
+- Read logs, inspect metrics, check pod/process status
+- Summarize incidents, explain root causes
+- Simulate or preview recovery plans
+
+### Requires approval
+- Restart a service or process
+- Rollback a deployment
+- Scale replicas up or down
+- Run shell scripts
+- Change configuration
+- Trigger a Jenkins job or CI/CD pipeline
+
+### High-risk (restricted / require explicit escalation)
+- Database mutations
+- Secret or credential changes
+- Resource deletion
+- Infrastructure destruction (terraform destroy, etc.)
+- Production code patch deployment
+
+> **Current state:** The v0.1 watchdog already does read-only (status, logs) and medium-risk actions (restart, stop). Approval gates are being implemented in the next phase.
+
+---
+
+## Roadmap
+
+```
+Phase 1 (current)
+  └─ Process watchdog + rule-based diagnostics + web dashboard
+
+Phase 2
+  ├─ Jenkins / GitHub Actions integration
+  ├─ Deployment rollback support
+  ├─ Approval-based execution gates
+  └─ AI-driven root cause analysis (Gemini / local LLM)
+
+Phase 3
+  ├─ OpenTelemetry integration (traces + metrics)
+  ├─ Prometheus / Grafana / Loki data sources
+  ├─ Multi-option recovery proposals
+  └─ Engineer-negotiated plan modification
+
+Phase 4
+  ├─ Kubernetes integration (pod health, deployments, scaling)
+  ├─ Distributed tracing (Jaeger)
+  └─ CloudWatch / ELK integration
+
+Phase 5
+  ├─ Slack / PagerDuty / Jira integrations
+  ├─ Automated RCA generation
+  └─ Post-incident summary
+```
+
+---
+
+## Architecture (Current)
+
+```
+zervox/
+├── src/
+│   ├── bin/             # Entry point
+│   ├── cli.rs           # CLI argument parsing (clap)
+│   ├── monitor.rs       # Process execution + crash detection
+│   ├── supervisor.rs    # Process lifecycle management
+│   ├── autofix.rs       # Rule-based dependency repair
+│   ├── web/             # Axum web server + Socket.IO
+│   ├── runtime.rs       # Daemon state management
+│   ├── store.rs         # Persistent state (JSON)
+│   ├── config.rs        # Watch configuration
+│   └── systemd.rs       # Systemd unit generation
+├── public/              # Web dashboard frontend
+├── scripts/             # Installer + demo scripts
+└── docs/                # Documentation
+```
 
 ---
 
@@ -120,8 +229,16 @@ cargo build --release
 
 ---
 
+## Related
+
+- [zervox.vercel.app](https://zervox.vercel.app) — web dashboard and docs
+- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guide
+- [docs/](docs/) — additional documentation
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
-Built with Rust, Actix-Web, Axum, Gemini AI.
+Built with Rust, Axum, Socket.IO.
