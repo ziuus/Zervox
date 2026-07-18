@@ -3,406 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zervox — Autonomous SRE for Modern Scale</title>
-  <meta name="description" content="The world's first autonomous SRE daemon. Zervox detects crashes, analyzes root causes with Gemini AI, and executes fixes in real-time." />
-  <meta name="keywords" content="SRE, site reliability engineer, autonomous, crash detection, AI diagnostics, Rust, process watchdog, Gemini" />
-  <meta name="application-name" content="Zervox" />
-  <meta name="color-scheme" content="dark" />
-  <meta property="og:title" content="Zervox — Autonomous SRE for Modern Scale" />
-  <meta property="og:description" content="Detect crashes, analyze root causes with Gemini AI, and auto-fix — all in one daemon." />
-  <meta property="og:url" content="https://zervox.vercel.app" />
-  <meta property="og:type" content="product" />
-  <meta property="og:image" content="https://zervox.vercel.app/img/og-image.svg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Zervox — Autonomous SRE Daemon" />
-  <meta name="twitter:description" content="Free open-source SRE daemon with AI crash diagnostics. Written in Rust." />
-  <link rel="canonical" href="https://zervox.vercel.app" />
-  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+  <title>Zervox — AIOps Incident Copilot</title>
+  <meta name="description" content="Zervox ingests metrics, correlates anomalies, explains root causes via LLM, and suggests Kubernetes execution steps." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Zervox",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Linux, macOS",
-    "description": "Autonomous SRE daemon with AI crash diagnostics, Git-based remediation, and real-time dashboard.",
-    "url": "https://zervox.vercel.app",
-    "sameAs": "https://github.com/ziuus/Zervox",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD",
-      "description": "Free and open source under MIT license"
-    },
-    "author": {
-      "@type": "Person",
-      "name": "Noel (@ziuus)",
-      "url": "https://github.com/ziuus"
-    }
-  }
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-black text-slate-200 selection:bg-white selection:text-black">
-  <div id="root">
+<body>
+  <div class="noise-overlay"></div>
+  <div class="aurora-bg"></div>
 
-    <!-- ===== NAV ===== -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-2 cursor-pointer" onclick="scrollToTop()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 fill-white"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
-        <span class="font-bold tracking-tighter text-xl">ZERVOX</span>
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center backdrop-blur-md border-b border-white/5">
+    <div class="flex items-center gap-2 cursor-pointer font-display font-bold text-xl tracking-tight text-white">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#38bdf8]"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      ZERVOX
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-sm text-[#a1a1aa] font-medium">
+      <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
+      <a href="#features" class="hover:text-white transition-colors">Copilot Features</a>
+      <a href="https://github.com/ziuus/Zervox" class="hover:text-white transition-colors">GitHub</a>
+    </div>
+    <a href="https://github.com/ziuus/Zervox" class="gradient-border-button text-sm">
+      View Prototype
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative pt-48 pb-32 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-[#a1a1aa] font-medium mb-8">
+      <span class="w-2 h-2 rounded-full bg-[#34d399] animate-pulse"></span>
+      Advanced Prototype Available on GitHub
+    </div>
+
+    <h1 class="text-hero font-bold mb-8 text-white">
+      The <span class="text-gradient-accent">AIOps Copilot</span><br>
+      For Production.
+    </h1>
+
+    <p class="text-[#a1a1aa] text-lg md:text-xl max-w-2xl mb-16 leading-relaxed">
+      Zervox bridges the gap between raw observability data and safe incident resolution. Ingest metrics, analyze with LLMs, and execute on Kubernetes.
+    </p>
+
+    <!-- Terminal Copilot Window -->
+    <div class="w-full max-w-4xl liquid-glass overflow-hidden text-left mx-auto">
+      <div class="flex gap-2 px-4 py-3 border-b border-white/5 bg-black/20">
+        <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+        <span class="text-xs text-[#a1a1aa] ml-4 font-mono">zervox analyze</span>
       </div>
-      <div class="hidden md:flex items-center gap-8 text-sm text-slate-400">
-        <a href="#features" class="hover:text-white transition-colors">Features</a>
-        <a href="#demo" class="hover:text-white transition-colors">Demo</a>
-        <a href="#docs" class="hover:text-white transition-colors">Docs</a>
-        <a href="https://github.com/ziuus/Zervox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+      <div class="p-6 md:p-8 font-mono text-sm leading-relaxed space-y-4">
+        <div><span class="text-[#38bdf8]">Zervox ⚡</span> Received Grafana Webhook: <span class="text-white font-bold">[FIRING] HighAPILatency (api-gateway critical)</span></div>
+        <div class="text-[#a1a1aa]">Ingesting 200 metrics and 45 error logs from Prometheus...</div>
+        <div class="border-t border-white/5 my-4"></div>
+        
+        <div><span class="text-[#8b5cf6]">🧠 LLM Insight:</span> <span class="text-white">The api-gateway is experiencing high latency due to a memory leak in the auth middleware causing repeated OOMKilled events.</span></div>
+        <div class="border-t border-white/5 my-4"></div>
+        
+        <div class="text-[#a1a1aa]">Recommended safe recovery actions:</div>
+        <div class="text-white bg-white/5 px-4 py-2 rounded border border-white/10 inline-block w-full">
+          <span class="text-[#34d399]">1. [High Confidence]</span> Restart API Gateway Deployment<br>
+          <span class="text-yellow-400">2. [Medium Confidence]</span> Scale Replicas Up to 5
+        </div>
+        
+        <div class="mt-4"><span class="text-[#38bdf8]">Select action ></span> 1</div>
+        <div><span class="text-[#34d399]">✓ Authorized.</span> Executing <span class="text-white bg-black/50 px-1 rounded">kubectl rollout restart deployment/api-gateway</span>...</div>
+        <div><span class="text-[#34d399]">✓ Resolution Complete.</span></div>
       </div>
-      <a href="#get-started" class="get-started-btn bg-white text-black px-4 py-1.5 rounded-full text-sm font-medium hover:bg-slate-200 transition-colors">Get Started</a>
-    </nav>
+    </div>
+  </section>
 
-    <!-- ===== HERO ===== -->
-    <section class="relative pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-white/5 blur-[120px] rounded-full -z-10"></div>
+  <!-- ARCHITECTURE (BENTO GRID) -->
+  <section id="architecture" class="py-32 px-6 max-w-7xl mx-auto">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white text-center">A Modern Observability Pipeline.</h2>
+    <p class="text-[#a1a1aa] text-lg mb-16 text-center">Data flows from ingestion to execution safely and securely.</p>
 
-      <div class="badge inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs text-slate-400 mb-8">
-        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-        v1.0.0 Stable Release Available
-      </div>
-
-      <h1 class="text-6xl md:text-8xl font-black tracking-tight mb-8 leading-[0.9]">
-        Autonomous SRE.<br>
-        <span class="text-slate-500">Unmatched Scale.</span>
-      </h1>
-
-      <p class="text-slate-400 text-lg md:text-xl max-w-2xl mb-12">
-        Zervox is a next-generation SRE daemon that detects crashes, analyzes root causes with Gemini AI, and executes fixes autonomously.
-      </p>
-
-      <div class="flex flex-col md:flex-row gap-4 mb-20">
-        <a href="#get-started" class="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">
-          Deploy Now
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-        </a>
-        <a href="#docs" class="flex items-center gap-2 border border-white/10 bg-white/5 px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition-all active:scale-95">
-          Read Docs
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path></svg>
-        </a>
-      </div>
-
-      <!-- Terminal demo hero block -->
-      <div class="w-full max-w-4xl rounded-2xl glass border border-white/5 overflow-hidden">
-        <div class="flex gap-1.5 px-4 py-3 border-b border-white/5">
-          <div class="w-3 h-3 rounded-full bg-red-500/20"></div>
-          <div class="w-3 h-3 rounded-full bg-yellow-500/20"></div>
-          <div class="w-3 h-3 rounded-full bg-green-500/20"></div>
-          <span class="text-xs text-slate-600 ml-2 font-mono">zervox start server.js --auto-fix</span>
-        </div>
-        <div class="p-6 font-mono text-xs md:text-sm leading-relaxed space-y-2">
-          <div class="text-green-400">$ <span class="text-white">zervox start --cwd ./api --max-restarts 5 --auto-fix -- node server.js</span></div>
-          <div><span class="text-slate-500">[supervisor]</span> starting child: node server.js</div>
-          <div><span class="text-slate-500">[supervisor]</span> child pid=14237 <span class="text-green-400">status=online</span></div>
-          <div class="pt-2 border-t border-white/5"></div>
-          <div><span class="text-slate-500">[stderr]</span> <span class="text-red-400">Error: Cannot find module 'express'</span></div>
-          <div><span class="text-slate-500">[supervisor]</span> <span class="text-yellow-400">crash detected — running diagnostics...</span></div>
-          <div class="pt-2 border-t border-white/5"></div>
-          <div><span class="text-slate-500">[ai-diagnostics]</span> <span class="text-indigo-400">analyzing last 80 lines of output...</span></div>
-          <div><span class="text-slate-500">[ai-diagnostics]</span> <span class="text-indigo-400">root cause: missing dependency 'express'</span></div>
-          <div><span class="text-slate-500">[ai-diagnostics]</span> <span class="text-indigo-400">92% confidence — suggested fix: npm install express</span></div>
-          <div class="pt-2 border-t border-white/5"></div>
-          <div><span class="text-green-400">[auto-fix]</span> ✓ detected missing package: express</div>
-          <div><span class="text-green-400">[auto-fix]</span> ✓ running: npm install express</div>
-          <div><span class="text-green-400">[auto-fix]</span> ✓ install complete — restarting</div>
-          <div class="pt-2 border-t border-white/5"></div>
-          <div><span class="text-slate-500">[supervisor]</span> child pid=14289 <span class="text-green-400">status=online</span></div>
-          <div class="text-green-400">$ <span class="animate-pulse text-white">▊</span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== FEATURES ===== -->
-    <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
-      <h2 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Built for Resilience.</h2>
-      <p class="text-slate-500 text-lg mb-16 max-w-2xl">From crash to fix in seconds — fully autonomous. No config files. No runtime deps.</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-yellow-400"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">Auto-Fix Loop</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Autonomous crash detection and AI-powered repair cycles that heal your apps in seconds. Just deploy and trust.</p>
-        </div>
-
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-purple-400"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">AI Diagnostics</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Gemini AI analyzes crash logs, identifies root causes (missing modules, port conflicts, syntax errors), and suggests precise fix commands.</p>
-        </div>
-
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-blue-400"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">Global Daemon</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Manage a swarm of processes across multiple environments with a single unified interface. Track PIDs, restart limits, and exponential backoff.</p>
-        </div>
-
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-green-400"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" x2="20" y1="19" y2="19"></line></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">Real-Time Dashboard</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Web dashboard with live process monitoring. View status, tail logs, and apply AI-suggested fixes with one click.</p>
-        </div>
-
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-amber-400"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">Systemd Integration</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Generate systemd user services from any tracked process. Survive reboots and crashes transparently with zero config.</p>
-        </div>
-
-        <div class="feature-card p-8 rounded-2xl glass hover:border-white/20 transition-all group">
-          <div class="mb-6 bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-cyan-400"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-          </div>
-          <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-white transition-colors">7KB Binary in Rust</h3>
-          <p class="text-slate-500 leading-relaxed text-sm">Single lean binary with zero runtime dependencies. Installs in seconds, uses minimal memory, no Node.js or interpreter needed.</p>
+    <div class="bento-grid">
+      
+      <!-- BENTO 1: Ingestion -->
+      <div class="bento-cell-large liquid-glass p-8 md:p-12 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-[#38bdf8] rounded-full mix-blend-screen filter blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        <h3 class="text-2xl font-bold mb-4 text-white">1. Native Ingestion</h3>
+        <p class="text-[#a1a1aa] leading-relaxed mb-6">Zervox natively pulls metrics from Prometheus scraping endpoints and accepts asynchronous JSON payloads from Grafana Alertmanager via an ultra-fast webhook queue.</p>
+        <div class="flex gap-4">
+          <span class="bg-black/30 border border-white/10 px-3 py-1 rounded text-xs font-mono text-[#38bdf8]">Grafana Webhooks</span>
+          <span class="bg-black/30 border border-white/10 px-3 py-1 rounded text-xs font-mono text-[#38bdf8]">Prometheus /metrics</span>
         </div>
       </div>
-    </section>
 
-    <!-- ===== HOW IT WORKS ===== -->
-    <section class="py-24 px-6 max-w-7xl mx-auto border-t border-white/5">
-      <h2 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight text-center">How It Works</h2>
-      <p class="text-slate-500 text-lg mb-16 text-center">From crash to fix in seconds — fully autonomous.</p>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div class="text-center">
-          <div class="w-16 h-16 rounded-2xl glass border border-white/10 flex items-center justify-center mx-auto mb-6">
-            <span class="text-2xl font-bold text-white">1</span>
-          </div>
-          <h3 class="text-lg font-bold mb-2">Watch</h3>
-          <p class="text-slate-500 text-sm leading-relaxed">Zervox monitors your processes. Every crash is captured with the last 80 lines of logs.</p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 rounded-2xl glass border border-white/10 flex items-center justify-center mx-auto mb-6">
-            <span class="text-2xl font-bold text-white">2</span>
-          </div>
-          <h3 class="text-lg font-bold mb-2">Diagnose</h3>
-          <p class="text-slate-500 text-sm leading-relaxed">Gemini AI identifies root causes — missing modules, port conflicts, syntax errors, or permissions.</p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 rounded-2xl glass border border-white/10 flex items-center justify-center mx-auto mb-6">
-            <span class="text-2xl font-bold text-white">3</span>
-          </div>
-          <h3 class="text-lg font-bold mb-2">Fix</h3>
-          <p class="text-slate-500 text-sm leading-relaxed">Auto-applies safe repairs: npm/bun/pnpm install for missing dependencies. Or approve from the dashboard.</p>
-        </div>
-        <div class="text-center">
-          <div class="w-16 h-16 rounded-2xl glass border border-white/10 flex items-center justify-center mx-auto mb-6">
-            <span class="text-2xl font-bold text-white">4</span>
-          </div>
-          <h3 class="text-lg font-bold mb-2">Restart</h3>
-          <p class="text-slate-500 text-sm leading-relaxed">Zero-downtime restart with configurable delay and max retry count. Integrated with systemd.</p>
-        </div>
+      <!-- BENTO 2: LLM Analysis -->
+      <div class="bento-cell-medium liquid-glass p-8 relative overflow-hidden group">
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-[#8b5cf6] rounded-full mix-blend-screen filter blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        <h3 class="text-xl font-bold mb-3 text-white">2. LLM Correlation</h3>
+        <p class="text-[#a1a1aa] text-sm leading-relaxed">Matches heuristic log patterns with metric thresholds and passes context to GPT-4o for plain-English root cause summaries.</p>
       </div>
-    </section>
 
-    <!-- ===== DOCS / CODE ===== -->
-    <section id="docs" class="py-24 px-6 border-t border-white/5 bg-surface">
-      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-        <div>
-          <h2 class="text-4xl font-bold mb-6 tracking-tight text-white">Production Documentation.</h2>
-          <p class="text-slate-400 mb-8 text-lg">Comprehensive guides on setting up autonomous agents, fine-tuning repair strategies, and scaling your SRE operations.</p>
-
-          <div class="space-y-8">
-            <div>
-              <div class="flex items-center gap-3 text-slate-300 mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-indigo-400"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
-                <span>Security-first execution environment</span>
-              </div>
-              <p class="text-slate-600 text-sm ml-8">Every fix is validated before execution. Rollback on failure. No remote code execution without explicit approval.</p>
-            </div>
-            <div>
-              <div class="flex items-center gap-3 text-slate-300 mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-purple-400"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></svg>
-                <span>Native Gemini AI Integration</span>
-              </div>
-              <p class="text-slate-600 text-sm ml-8">On-device Gemini AI analyzes crash patterns without sending logs to external servers. Full privacy, local execution.</p>
-            </div>
-            <div>
-              <div class="flex items-center gap-3 text-slate-300 mb-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-green-400"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" x2="20" y1="19" y2="19"></line></svg>
-                <span>CLI-first workflow</span>
-              </div>
-              <p class="text-slate-600 text-sm ml-8">Single binary, zero config. Start any process with <code class="text-slate-400">zervox start -- node app.js</code> and get auto-fix out of the box.</p>
-            </div>
-          </div>
-
-          <div class="mt-12 space-y-4">
-            <div class="glass p-6 rounded-2xl border border-white/5">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-mono text-slate-400">Quick start</span>
-                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400 transition-colors" onclick="copyCode(this)">Copy</button>
-              </div>
-              <pre class="font-mono text-xs text-slate-300 leading-relaxed"><span class="text-green-400">$</span> <span class="text-white">zervox start --cwd ./api --auto-fix -- node server.js</span>
-<span class="text-slate-500">[supervisor]</span> child pid=14237 status=<span class="text-green-400">online</span>
-<span class="text-slate-500">[supervisor]</span> monitoring with auto-fix enabled</pre>
-            </div>
-            <div class="glass p-6 rounded-2xl border border-white/5">
-              <div class="flex items-center justify-between mb-4">
-                <span class="text-sm font-mono text-slate-400">Install via curl</span>
-                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400 transition-colors" onclick="copyCode(this)">Copy</button>
-              </div>
-              <pre class="font-mono text-xs text-slate-300"><span class="text-green-400">$</span> <span class="text-white">curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash</span></pre>
-            </div>
-          </div>
-
-          <a href="https://github.com/ziuus/Zervox" target="_blank" class="mt-12 inline-flex items-center gap-2 text-white border-b border-white/50 hover:opacity-70 transition-opacity pb-1">
-            Explore the Knowledge Base →
-          </a>
-        </div>
-
-        <!-- CLI Reference Table -->
-        <div class="glass p-6 md:p-8 rounded-2xl border border-white/5">
-          <h3 class="text-lg font-bold mb-6">CLI Reference</h3>
-          <div class="space-y-1">
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox check -- &lt;cmd&gt;</code>
-              <span class="text-xs text-slate-500">Run once, summarize failures</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox start -- &lt;cmd&gt;</code>
-              <span class="text-xs text-slate-500">Watch with auto-restart</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox start --detach --name &lt;n&gt;</code>
-              <span class="text-xs text-slate-500">Background daemon</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox add &lt;name&gt; -- &lt;cmd&gt;</code>
-              <span class="text-xs text-slate-500">Save command</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox status [name]</code>
-              <span class="text-xs text-slate-500">Show runtime status</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox logs &lt;name&gt; [-n N]</code>
-              <span class="text-xs text-slate-500">Tail persistent logs</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox stop &lt;name&gt;</code>
-              <span class="text-xs text-slate-500">Stop process</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-white/5">
-              <code class="font-mono text-sm text-white">zervox systemd &lt;name&gt;</code>
-              <span class="text-xs text-slate-500">Generate systemd unit</span>
-            </div>
-            <div class="flex justify-between py-2">
-              <code class="font-mono text-sm text-white">zervox list</code>
-              <span class="text-xs text-slate-500">List tracked commands</span>
-            </div>
-          </div>
-        </div>
+      <!-- BENTO 3: K8s Execution -->
+      <div class="bento-cell-medium liquid-glass p-8 relative overflow-hidden group">
+        <div class="absolute top-0 left-0 w-48 h-48 bg-[#34d399] rounded-full mix-blend-screen filter blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
+        <h3 class="text-xl font-bold mb-3 text-white">3. Kubernetes Execution</h3>
+        <p class="text-[#a1a1aa] text-sm leading-relaxed">Generates ranked recommendations and executes authenticated fixes directly against your cluster via kube-rs.</p>
       </div>
-    </section>
 
-    <!-- ===== CTA ===== -->
-    <section id="get-started" class="py-24 px-6 max-w-7xl mx-auto text-center">
-      <h2 class="text-3xl md:text-5xl font-bold mb-6 tracking-tight">Ready to ship reliable software?</h2>
-      <p class="text-slate-400 text-lg mb-12 max-w-2xl mx-auto">Install Zervox in seconds and never manually restart a crashed process again.</p>
-      <div class="flex flex-col md:flex-row gap-4 justify-center">
-        <a href="https://github.com/ziuus/Zervox/releases" target="_blank" class="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all active:scale-95">
-          Download v1.0.0
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        </a>
-        <a href="https://github.com/ziuus/Zervox" target="_blank" class="flex items-center gap-2 border border-white/10 bg-white/5 px-8 py-3 rounded-xl font-bold hover:bg-white/10 transition-all active:scale-95">
-          View on GitHub
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-        </a>
-      </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- ===== FOOTER ===== -->
-    <footer class="border-t border-white/5 py-12 px-6">
-      <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 fill-white"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
-            <span class="font-bold tracking-tighter">ZERVOX</span>
-          </div>
-          <p class="text-sm text-slate-600 leading-relaxed">Autonomous SRE daemon. Crash detection, AI diagnostics, and auto-fix — all in one Rust binary.</p>
-        </div>
-        <div>
-          <h4 class="text-sm font-semibold text-slate-400 mb-4">Product</h4>
-          <div class="space-y-3 text-sm">
-            <a href="#features" class="block text-slate-600 hover:text-slate-400 transition-colors">Features</a>
-            <a href="#docs" class="block text-slate-600 hover:text-slate-400 transition-colors">Documentation</a>
-            <a href="https://github.com/ziuus/Zervox/releases" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Releases</a>
-          </div>
-        </div>
-        <div>
-          <h4 class="text-sm font-semibold text-slate-400 mb-4">Community</h4>
-          <div class="space-y-3 text-sm">
-            <a href="https://github.com/ziuus/Zervox" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">GitHub</a>
-            <a href="https://github.com/ziuus/Zervox/issues" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Issues</a>
-            <a href="https://github.com/ziuus/Zervox/blob/master/CONTRIBUTING.md" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Contributing</a>
-          </div>
-        </div>
-        <div>
-          <h4 class="text-sm font-semibold text-slate-400 mb-4">Stack</h4>
-          <div class="space-y-3 text-sm">
-            <span class="block text-slate-600">Rust · Actix-Web</span>
-            <span class="block text-slate-600">Axum · Gemini AI</span>
-            <span class="block text-slate-600">Socket.IO · Systemd</span>
-          </div>
-        </div>
-      </div>
-      <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 text-center text-sm text-slate-700">
-        <p>Zervox — <a href="https://github.com/ziuus/Zervox" target="_blank" class="text-slate-500 hover:text-slate-400">Open Source</a> (MIT) by <a href="https://github.com/ziuus" target="_blank" class="text-slate-500 hover:text-slate-400">@ziuus</a></p>
-      </div>
-    </footer>
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-12 mt-24 text-center">
+    <p class="text-[#a1a1aa] text-sm">
+      Zervox — <a href="https://github.com/ziuus/Zervox" class="text-white hover:text-[#38bdf8] transition-colors">View Prototype on GitHub</a>
+    </p>
+  </footer>
 
-  </div>
-
-  <script>
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      });
-    });
-
-    // Scroll to top helper
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // Copy code blocks
-    function copyCode(btn) {
-      const pre = btn.closest('.glass').querySelector('pre');
-      if (pre) {
-        navigator.clipboard.writeText(pre.textContent.replace(/^\$\s/gm, '')).then(() => {
-          const orig = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(() => btn.textContent = orig, 1500);
-        });
-      }
-    }
-  </script>
 </body>
 </html>
