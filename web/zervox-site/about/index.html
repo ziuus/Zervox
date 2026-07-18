@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Zervox — AI SRE Built with Rust by @ziuus</title>
+  <meta name="description" content="Zervox is an open-source autonomous AI site reliability engineer, built in Rust by Noel (@ziuus). Learn why we built it, why Rust, and how it closes the crash-diagnose-fix loop.">
+  <meta name="application-name" content="Zervox About">
+  <meta name="color-scheme" content="dark">
+
+  <meta property="og:title" content="About Zervox — Open Source AI SRE in Rust">
+  <meta property="og:description" content="Zervox closes the crash-diagnose-fix loop. Built in Rust by @ziuus — a production-grade process watchdog with AI diagnostics.">
+  <meta property="og:url" content="https://zervox-site.vercel.app/about">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://zervox-site.vercel.app/img/og-image.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About Zervox — Rust AI SRE">
+  <meta name="twitter:description" content="Open source process watchdog with AI crash analysis. Built in Rust by @ziuus.">
+
+  <link rel="canonical" href="https://zervox-site.vercel.app/about">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "About Zervox",
+    "description": "Learn about Zervox — an open-source autonomous AI site reliability engineer built in Rust.",
+    "url": "https://zervox-site.vercel.app/about"
+  }
+  </script>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a class="nav-brand" href="../"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg> Zer<span class="accent">vox</span></a>
+        <ul class="nav-links">
+          <li><a href="../" data-page="home" onclick="Zervox.navigate('home');return false">Home</a></li>
+          <li><a href="../docs/" data-page="docs" onclick="Zervox.navigate('docs');return false">Docs</a></li>
+          <li><a href="../pricing/" data-page="pricing" onclick="Zervox.navigate('pricing');return false">Pricing</a></li>
+          <li><a href="../about/" data-page="about" class="active" onclick="Zervox.navigate('about');return false">About</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <a class="btn btn-ghost btn-sm" href="https://github.com/ziuus/Zervox" target="_blank">GitHub</a>
+        <a class="btn btn-primary btn-sm" href="../docs/" onclick="Zervox.navigate('docs');return false">Get Started</a>
+        <button class="hamburger" onclick="Zervox.toggleMobileNav()" aria-label="Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div id="page-container" class="page active">
+      <h1 class="section-title" style="margin-top:60px;">About Zervox</h1>
+      <p class="section-subtitle">A production-grade watchdog, reimagined for the AI era.</p>
+
+      <div class="about-section">
+        <h2>The Problem</h2>
+        <p>Every developer who runs Node.js apps in production has been there — a crash at 3 AM, a confusing error log, and the manual hunt for the missing dependency or port conflict. Traditional process managers (pm2, forever) restart processes but don't tell you why they crashed or how to fix them.</p>
+        <p>Zervox was built to close this loop: crash → diagnose → fix → restart. All in one tool.</p>
+      </div>
+
+      <div class="about-section">
+        <h2>Why Rust?</h2>
+        <p>Zervox is a single Rust binary with zero runtime dependencies. It installs in seconds, uses under 10 MB of memory in steady state, and starts before your Node.js runtime even initializes. No Electron, no Python, no Node.js required to run the watchdog itself.</p>
+      </div>
+
+      <div class="about-stats">
+        <div class="stat-card">
+          <div class="stat-value">Rust</div>
+          <div class="stat-label">Language</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">&lt; 10 MB</div>
+          <div class="stat-label">Steady Memory</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">&lt; 7 KB</div>
+          <div class="stat-label">Binary Size (stripped)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">MIT</div>
+          <div class="stat-label">License</div>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2>Built by Noel</h2>
+        <p>Zervox is an open-source project by <a href="https://github.com/ziuus" style="color:var(--accent-blue);text-decoration:none;">@ziuus</a> — a CS/AI student and freelance developer from Kerala, India. It started as a "things I wish existed" project and grew into a production-grade tool used across personal and client deployments.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <h4>Zervox</h4>
+        <p>Autonomous AI Site Reliability Engineer. Watch, diagnose, fix — all in one tool.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="../">Home</a></li>
+          <li><a href="../docs/">Docs</a></li>
+          <li><a href="../pricing/">Pricing</a></li>
+          <li><a href="../about/">About</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/ziuus/Zervox" target="_blank">GitHub</a></li>
+          <li><a href="https://github.com/ziuus/Zervox/releases" target="_blank">Releases</a></li>
+          <li><a href="https://github.com/ziuus/Zervox/issues" target="_blank">Issues</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Built with</h4>
+        <p>Rust · Actix-Web · Axum · OpenAI API</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Zervox — <a href="https://github.com/ziuus/Zervox" target="_blank">Open Source</a> (MIT) by <a href="https://github.com/ziuus" target="_blank">@ziuus</a></p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

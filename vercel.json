@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "name": "zervox",
+  "framework": null,
+  "buildCommand": null,
+  "outputDirectory": "web/zervox-site",
+  "trailingSlash": false,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}

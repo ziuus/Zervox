@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zervox Documentation — CLI Reference, AI Auto-Fix, Dashboard Setup</title>
+  <meta name="description" content="Complete Zervox documentation: installation, CLI commands (zervox start, zervox web, zervox logs), AI-powered crash diagnostics, auto-fix for missing dependencies, web dashboard, and systemd integration.">
+  <meta name="keywords" content="zervox, CLI, documentation, SRE, crash detection, auto-fix, Rust, watchdog, systemd">
+  <meta name="application-name" content="Zervox Docs">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Zervox Documentation — CLI Reference & AI Auto-Fix">
+  <meta property="og:description" content="Complete documentation for Zervox: Rust-based process watchdog with AI crash diagnostics. CLI reference, auto-fix guide, dashboard setup, and systemd integration.">
+  <meta property="og:url" content="https://zervox.vercel.app/docs">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://zervox.vercel.app/img/og-image.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Zervox Documentation">
+  <meta name="twitter:description" content="Rust process watchdog CLI docs, AI auto-fix, and dashboard setup.">
+  <link rel="canonical" href="https://zervox.vercel.app/docs">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-black text-slate-200 selection:bg-white selection:text-black">
+
+  <!-- ===== NAV ===== -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <a href="../" class="flex items-center gap-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 fill-white"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
+        <span class="font-bold tracking-tighter text-xl">ZERVOX</span>
+      </a>
+    </div>
+    <div class="hidden md:flex items-center gap-8 text-sm text-slate-400">
+      <a href="../#features" class="hover:text-white transition-colors">Features</a>
+      <a href="../#demo" class="hover:text-white transition-colors">Demo</a>
+      <a href="./" class="text-white transition-colors">Docs</a>
+      <a href="https://github.com/ziuus/Zervox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+    </div>
+    <a href="../#get-started" class="bg-white text-black px-4 py-1.5 rounded-full text-sm font-medium hover:bg-slate-200 transition-colors">Get Started</a>
+  </nav>
+
+  <div class="pt-24 pb-20 px-6 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Sidebar -->
+      <aside class="md:col-span-1">
+        <div class="glass p-6 rounded-2xl border border-white/5 sticky" style="top: 6rem;">
+          <h4 class="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">Documentation</h4>
+          <nav class="space-y-1 text-sm">
+            <a href="#getting-started" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Getting Started</a>
+            <a href="#cli-reference" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">CLI Reference</a>
+            <a href="#ai-auto-fix" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">AI Auto-Fix</a>
+            <a href="#configuration" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Configuration</a>
+            <a href="#dashboard" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Web Dashboard</a>
+            <a href="#systemd" class="block px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Systemd</a>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <main class="md:col-span-3">
+        <div class="glass p-8 rounded-2xl border border-white/5">
+
+          <section id="getting-started">
+            <h1 class="text-3xl font-bold mb-6">Getting Started with Zervox</h1>
+            <p class="text-slate-400 mb-8">Zervox is a Rust-based watchdog daemon that monitors your processes, detects crashes, runs AI-powered root cause analysis, and auto-fixes dependency issues.</p>
+
+            <h2 class="text-xl font-bold mt-8 mb-4">Installation</h2>
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-500 font-mono">Install from source</span>
+                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre class="text-sm font-mono text-slate-300 leading-relaxed"><span class="text-green-400">$</span> <span class="text-white">git clone https://github.com/ziuus/Zervox</span>
+<span class="text-green-400">$</span> <span class="text-white">cd Zervox</span>
+<span class="text-green-400">$</span> <span class="text-white">cargo install --path .</span></pre>
+            </div>
+
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-500 font-mono">Quick install script</span>
+                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash</span></pre>
+            </div>
+
+            <h2 class="text-xl font-bold mt-8 mb-4">Quick Start</h2>
+            <p class="text-slate-400 mb-4">Watch a Node.js app with automatic restart:</p>
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-500 font-mono">Basic usage</span>
+                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">zervox start -- node server.js</span></pre>
+            </div>
+            <p class="text-slate-400 mb-4">From a specific directory with auto-fix and crash limits:</p>
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-500 font-mono">Advanced usage</span>
+                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">zervox start --cwd /path/to/project --max-restarts 5 --auto-fix -- node server.js</span></pre>
+            </div>
+
+            <h2 class="text-xl font-bold mt-8 mb-4">Open the Dashboard</h2>
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-500 font-mono">Launch web UI</span>
+                <button class="copy-btn text-xs text-slate-600 hover:text-slate-400" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">zervox web</span></pre>
+            </div>
+            <p class="text-slate-400">Opens the web dashboard at <code class="text-white">http://127.0.0.1:3000</code> with real-time process monitoring and AI diagnostics.</p>
+          </section>
+
+          <!-- Divider -->
+          <div class="my-12 border-t border-white/5"></div>
+
+          <section id="cli-reference">
+            <h2 class="text-2xl font-bold mb-6">CLI Reference</h2>
+            <p class="text-slate-400 mb-6">All Zervox commands follow <code class="text-white">zervox &lt;subcommand&gt; [options] [--] &lt;command&gt;</code>.</p>
+
+            <div class="space-y-6">
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox check</h3>
+                <p class="text-sm text-slate-500 mb-2">Run a command once, capture output, summarize failures. Useful for one-shot health checks.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox check -- node -e "require('express')"</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox start</h3>
+                <p class="text-sm text-slate-500 mb-2">Watch a process with automatic restart on crash.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox start --node server.js
+<span class="text-green-400">$</span> zervox start --detach --name my-api -- node app.js</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox add</h3>
+                <p class="text-sm text-slate-500 mb-2">Save a command by name so it persists across sessions.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox add web-app -- node server.js</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox status</h3>
+                <p class="text-sm text-slate-500 mb-2">Show runtime status for all tracked processes.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox status</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox logs</h3>
+                <p class="text-sm text-slate-500 mb-2">Show persistent logs for a process. Each process gets a named log file, auto-rotated.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox logs my-api
+<span class="text-green-400">$</span> zervox logs my-api -n 50</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox stop</h3>
+                <p class="text-sm text-slate-500 mb-2">Gracefully stop a tracked process.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox stop my-api</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox systemd</h3>
+                <p class="text-sm text-slate-500 mb-2">Generate a systemd user service unit for a tracked process. Supports enable/disable/status.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox systemd my-api
+<span class="text-green-400">$</span> zervox systemd my-api --enable</pre>
+              </div>
+              <div class="glass p-4 rounded-xl border border-white/5">
+                <h3 class="font-bold text-white mb-1">zervox list</h3>
+                <p class="text-sm text-slate-500 mb-2">List all tracked and saved commands.</p>
+                <pre class="text-xs font-mono text-slate-400"><span class="text-green-400">$</span> zervox list</pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Divider -->
+          <div class="my-12 border-t border-white/5"></div>
+
+          <section id="ai-auto-fix">
+            <h2 class="text-2xl font-bold mb-6">AI Auto-Fix</h2>
+            <p class="text-slate-400 mb-4">Zervox can analyze crash logs and attempt automatic repairs using Gemini AI. This is opt-in and runs entirely locally.</p>
+
+            <h3 class="text-lg font-bold text-white mt-8 mb-3">How it works</h3>
+            <ol class="space-y-3 text-slate-400 mb-8">
+              <li class="flex gap-3"><span class="text-green-400 font-bold shrink-0">1.</span> Process crashes. Zervox captures the last 80 lines of stdout/stderr and the exit code.</li>
+              <li class="flex gap-3"><span class="text-green-400 font-bold shrink-0">2.</span> Gemini AI analyzes the output to identify the root cause: missing module, port conflict, syntax error, permission issue, etc.</li>
+              <li class="flex gap-3"><span class="text-green-400 font-bold shrink-0">3.</span> A fix command is generated (<code class="text-white">npm install &lt;pkg&gt;</code>, <code class="text-white">pnpm install</code>, <code class="text-white">bun install</code>, etc.) and validated for safety.</li>
+              <li class="flex gap-3"><span class="text-green-400 font-bold shrink-0">4.</span> With <code class="text-white">--auto-fix</code>, Zervox applies the fix and restarts. Without it, the suggested fix is shown in the dashboard for manual approval.</li>
+            </ol>
+
+            <h3 class="text-lg font-bold text-white mt-8 mb-3">Flags</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--auto-fix</code>
+                <span class="text-slate-500">Enable automatic repair execution</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--analyze</code>
+                <span class="text-slate-500">Diagnose crash but skip auto-repair</span>
+              </div>
+              <div class="flex justify-between py-2">
+                <code class="text-white font-mono">--provider &lt;provider&gt;</code>
+                <span class="text-slate-500">AI provider: gemini, openai, ollama</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Divider -->
+          <div class="my-12 border-t border-white/5"></div>
+
+          <section id="configuration">
+            <h2 class="text-2xl font-bold mb-6">Configuration</h2>
+            <p class="text-slate-400 mb-6">All configuration is done through CLI arguments. There's no config file to manage.</p>
+
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--cwd &lt;dir&gt;</code>
+                <span class="text-slate-500">Working directory for the child process</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--max-restarts &lt;n&gt;</code>
+                <span class="text-slate-500">Max restarts before giving up (default: 5)</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--delay &lt;ms&gt;</code>
+                <span class="text-slate-500">Delay between restarts (default: 1000ms)</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--detach</code>
+                <span class="text-slate-500">Run daemon in background</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--name &lt;name&gt;</code>
+                <span class="text-slate-500">Assign a name to the process</span>
+              </div>
+              <div class="flex justify-between py-2">
+                <code class="text-white font-mono">--log-size &lt;n&gt;</code>
+                <span class="text-slate-500">Max log lines retained per process (default: 1000)</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Divider -->
+          <div class="my-12 border-t border-white/5"></div>
+
+          <section id="dashboard">
+            <h2 class="text-2xl font-bold mb-6">Web Dashboard</h2>
+            <p class="text-slate-400 mb-6">Zervox ships with a lightweight web dashboard built on Axum and WebSocket.io. It provides real-time process monitoring and AI diagnostics.</p>
+
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">zervox web</span>
+<span class="text-slate-500">[info]</span> Dashboard listening on http://127.0.0.1:3000</pre>
+            </div>
+
+            <h3 class="text-lg font-bold text-white mt-8 mb-3">Dashboard features</h3>
+            <ul class="space-y-3 text-slate-400">
+              <li class="flex items-start gap-3">
+                <span class="text-green-400 bg-green-500/20 w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <span><strong class="text-white">Live process list</strong> — See all tracked processes with status indicators (running/stopped/idle)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-400 bg-green-500/20 w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <span><strong class="text-white">Per-process details</strong> — CPU, memory, uptime, and restart count for each process</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-400 bg-green-500/20 w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <span><strong class="text-white">Live log tailing</strong> — Real-time log viewer with auto-scroll and filter controls</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="text-green-400 bg-green-500/20 w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5">✓</span>
+                <span><strong class="text-white">AI Diagnostics panel</strong> — See detected issues, confidence scores, and suggested fix commands</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Divider -->
+          <div class="my-12 border-t border-white/5"></div>
+
+          <section id="systemd">
+            <h2 class="text-2xl font-bold mb-6">Systemd Integration</h2>
+            <p class="text-slate-400 mb-4">Zervox can generate systemd user service units, allowing processes to survive reboots and run as standard systemd services.</p>
+
+            <div class="glass p-4 rounded-xl border border-white/5 mb-6">
+              <pre class="text-sm font-mono text-slate-300"><span class="text-green-400">$</span> <span class="text-white">zervox systemd my-api</span>
+<span class="text-slate-500">[systemd]</span> ✓ Unit written to ~/.config/systemd/user/zervox-my-api.service
+<span class="text-green-400">$</span> <span class="text-white">systemctl --user enable zervox-my-api</span>
+<span class="text-green-400">$</span> <span class="text-white">systemctl --user start zervox-my-api</span></pre>
+            </div>
+
+            <h3 class="text-lg font-bold text-white mt-8 mb-3">Systemd commands in Zervox</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">zervox systemd &lt;name&gt;</code>
+                <span class="text-slate-500">Generate a systemd unit file</span>
+              </div>
+              <div class="flex justify-between py-2 border-b border-white/5">
+                <code class="text-white font-mono">--enable</code>
+                <span class="text-slate-500">Also enable the unit for autostart</span>
+              </div>
+              <div class="flex justify-between py-2">
+                <code class="text-white font-mono">--start</code>
+                <span class="text-slate-500">Generate, enable, and start in one step</span>
+              </div>
+            </div>
+
+            <div class="glass p-4 rounded-xl border border-white/5 mt-8">
+              <div class="flex items-center gap-2 text-yellow-400 mb-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span class="text-sm font-bold">Note</span>
+              </div>
+              <p class="text-sm text-slate-500">Systemd integration requires <code class="text-white">systemd --user</code> to be available on the system. It's typically enabled on most modern Linux distributions by default.</p>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 fill-white"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
+          <span class="font-bold tracking-tighter">ZERVOX</span>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">Autonomous SRE daemon. Crash detection, AI diagnostics, and auto-fix — all in one Rust binary.</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-slate-400 mb-4">Product</h4>
+        <div class="space-y-3 text-sm">
+          <a href="../#features" class="block text-slate-600 hover:text-slate-400 transition-colors">Features</a>
+          <a href="./" class="block text-slate-600 hover:text-slate-400 transition-colors">Documentation</a>
+          <a href="https://github.com/ziuus/Zervox/releases" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Releases</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-slate-400 mb-4">Community</h4>
+        <div class="space-y-3 text-sm">
+          <a href="https://github.com/ziuus/Zervox" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">GitHub</a>
+          <a href="https://github.com/ziuus/Zervox/issues" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Issues</a>
+          <a href="https://github.com/ziuus/Zervox/blob/master/CONTRIBUTING.md" target="_blank" class="block text-slate-600 hover:text-slate-400 transition-colors">Contributing</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-slate-400 mb-4">Stack</h4>
+        <div class="space-y-3 text-sm">
+          <span class="block text-slate-600">Rust · Actix-Web</span>
+          <span class="block text-slate-600">Axum · Gemini AI</span>
+          <span class="block text-slate-600">Socket.IO · Systemd</span>
+        </div>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 text-center text-sm text-slate-700">
+      <p>Zervox — <a href="https://github.com/ziuus/Zervox" target="_blank" class="text-slate-500 hover:text-slate-400">Open Source</a> (MIT) by <a href="https://github.com/ziuus" target="_blank" class="text-slate-500 hover:text-slate-400">@ziuus</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth anchor scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        const t = document.querySelector(this.getAttribute('href'));
+        if (t) t.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Copy code buttons
+    function copyCode(btn) {
+      const pre = btn.closest('.glass').querySelector('pre');
+      if (pre) {
+        navigator.clipboard.writeText(pre.textContent.replace(/^\$\s/gm, '')).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => btn.textContent = orig, 1500);
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,244 +1,150 @@
-# Zervox — AI Recovery Copilot for Production Systems
+# Zervox: AIOps Incident Copilot 🚀
 
-Zervox is an **AI-assisted production recovery agent** that helps engineers diagnose incidents, propose safe recovery options, execute after approval, and verify recovery.
+[![Rust](https://img.shields.io/badge/Rust-1.75+-blue.svg)](https://www.rust-lang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status: Advanced Prototype](https://img.shields.io/badge/Status-Advanced_Prototype-orange.svg)]()
 
-It connects to existing infrastructure — process supervisors, logs, deployments — and gives you a copilot interface for incident response. Not another monitoring dashboard. Not an autonomous autopilot.
+**Observe. Analyze. Recommend. Execute.**
 
-> **Current stage:** Foundation (process watchdog + rule-based diagnostics + web dashboard). The architecture is being built toward full observability integration and AI-assisted recovery planning.
-
-→ [zervox.vercel.app](https://zervox.vercel.app)
-
----
-
-## How It Works (Vision)
-
-```
-Applications / Servers / Kubernetes / Docker / PM2
-        ↓
-Logs + Metrics + Traces + Deployment Events
-        ↓
-OpenTelemetry / Prometheus / Grafana / Datadog / CloudWatch / ELK
-        ↓
-Zervox
-        ↓
-Diagnose incident → Propose recovery options
-        ↓
-Engineer reviews, modifies, or creates new plan
-        ↓
-Approval → Execute → Verify recovery → RCA summary
-```
-
-### Core Principles
-
-- **Copilot, not autopilot** — Zervox discusses and proposes. Engineers decide and approve.
-- **Integration-first** — connects to existing stacks (Grafana, Prometheus, Kubernetes, Jenkins, OpenTelemetry) instead of replacing them.
-- **Safety as a feature** — actions are tiered by risk. Read-only is free. Execution requires approval.
+Zervox is a next-generation AIOps platform built in Rust. It bridges the gap between raw observability data and safe, intelligent incident resolution. Instead of waking up engineers with contextless alerts, Zervox ingests metrics and logs, correlates anomalies, explains root causes via LLM, and suggests human-approved Kubernetes execution steps.
 
 ---
 
-## What Exists Now (v0.1)
-
-The current build is a **single-binary process watchdog** for Node.js and shell commands:
-
-```
-zervox start --detach --name api -- node server.js
-zervox status api
-zervox logs api -n 50
-zervox restart api
-zervox stop api
-```
-
-| Capability | Status |
-|---|---|
-| Process supervision (PID tracking, restart limits, backoff) | ✅ |
-| Crash detection with pattern-based diagnosis | ✅ |
-| Web dashboard (real-time, Socket.IO) | ✅ |
-| Systemd integration (generate user services) | ✅ |
-| Auto-fix for missing dependencies (npm/bun/pnpm/yarn) | ✅ |
-| Rule-based crash classification (port conflicts, permissions, syntax errors) | ✅ |
-| CLI with status, logs, restart, detach | ✅ |
-| Gemini AI–powered diagnostics | 🔜 |
-| OpenTelemetry / Prometheus / Grafana integration | 🔜 |
-| Kubernetes / Docker integration | 🔜 |
-| Multi-option recovery proposals | 🔜 |
-| Engineer-negotiated plan modification | 🔜 |
-| Approval-based execution gates | 🔜 |
-| Post-recovery verification | 🔜 |
-| Incident / RCA summary generation | 🔜 |
+## 📖 Table of Contents
+- [Why Zervox?](#why-zervox)
+- [Architecture](#architecture)
+- [How it Works in Practice](#how-it-works-in-practice)
+- [Quick Start](#quick-start)
+- [Roadmap & Production Status](#roadmap--production-status)
+- [Contributing](#contributing)
 
 ---
 
-## Quick Start
+## 🎯 Why Zervox?
 
-```bash
-# Run a command once (check mode)
-zervox check -- node server.js
+Modern microservices generate too much noise. When an incident occurs, engineers spend the first 20 minutes just trying to correlate Prometheus metric spikes with Kubernetes error logs. 
 
-# Foreground watchdog with auto-restart
-zervox start --max-restarts 5 -- node server.js
-
-# Background daemon
-zervox start --detach --name api -- node server.js
-
-# Inspect and control
-zervox status api
-zervox logs api -n 50
-zervox restart api
-zervox stop api
-```
+Zervox acts as your **SRE Copilot**:
+1. **Never drops an alert:** Non-blocking async ingestion queues.
+2. **Understands context:** GPT-4o LLM integration reads the logs and metrics together.
+3. **Takes safe action:** Recommends fixes and executes them via the Kubernetes API only when authorized.
 
 ---
 
-## Install
+## 🏗️ Architecture
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ziuus/Zervox/master/scripts/install.sh | bash
+Zervox is designed as a modular pipeline. Data flows from left to right, ending in safe execution.
+
+```mermaid
+graph LR
+    subgraph Observability
+        A[Grafana Alertmanager] -->|JSON Webhook| B(Zervox API)
+        C[Prometheus] -->|Scrape /metrics| B
+    end
+    
+    subgraph Core
+        B --> D[(SQLite Persistence)]
+        D --> E{Correlation Engine}
+        E -->|Threshold + Rules| F(LLM Analyzer)
+    end
+    
+    subgraph Resolution
+        F --> G[CLI / Dashboard]
+        G -->|User Approval| H[Kubernetes API]
+        H -->|Restart / Scale| I[Cluster]
+    end
 ```
 
-Or build from source:
+### The Four Pillars:
+1. **Ingestion Layer:** Accepts payloads from Grafana webhooks and native Prometheus scrapers.
+2. **State & Persistence:** Uses `rusqlite` to safely persist incident payloads to `zervox_incidents.db`.
+3. **Analysis Engine:** Combines heuristic threshold matching with LLM-powered natural language analysis.
+4. **Execution Layer:** Uses `kube-rs` to execute authenticated deployment rollouts and fixes safely.
+
+---
+
+## 🔍 How it Works in Practice
+
+Imagine your `api-gateway` starts failing.
+
+1. **Grafana** detects a P99 latency spike and fires a webhook to Zervox.
+2. **Zervox** parses the webhook, pulls the recent error logs for `api-gateway`, and correlates the data.
+3. **The LLM** summarizes: *"The api-gateway is experiencing high latency due to a memory leak in the auth middleware (OOMKilled)."*
+4. **Zervox CLI** prompts you:
+   ```text
+   [FIRING] HighAPILatency (api-gateway critical)
+   Incident Summary: The api-gateway is experiencing high latency due to a memory leak.
+   
+   Recommended Actions:
+   1. [High Confidence] Restart API Service
+   2. [Medium Confidence] Scale Up Replicas
+   
+   Select an action to execute: 1
+   ```
+5. You type `1`. Zervox natively contacts the Kubernetes API and restarts the deployment. Incident resolved.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Build and Run the Server
+
+Ensure you have Rust installed, then build the binary:
 
 ```bash
 cargo build --release
-./target/release/zervox
+./target/release/zervox server --port 3000
 ```
 
----
+### 2. Configure Grafana Alertmanager
 
-## Web Dashboard
+Point your existing Grafana or Alertmanager webhooks to your Zervox instance:
+```text
+POST http://<zervox-host>:3000/api/grafana_webhook
+```
 
-Zervox ships with a real-time web dashboard for monitoring processes, viewing logs, and applying suggested fixes.
+### 3. Simulate an Incident
 
+Want to see it in action without breaking your production cluster? Run the included simulation script:
 ```bash
-zervox start --detach --name api -- node server.js
-# Open http://localhost:4040
+./scripts/simulate_incident.sh
 ```
 
-![Zervox Dashboard](public/screenshot.png)
+### 4. Interactive CLI
 
-> **Dashboard screenshot needed** — the interface exists and works. A screenshot will be added here after the next UI polish pass.
-
----
-
-## CLI Reference
-
-| Command | Description |
-|---|---|
-| `zervox check -- <cmd>` | Run once and summarize failures |
-| `zervox start -- <cmd>` | Foreground watchdog with restart limit |
-| `zervox start --detach --name <n> -- <cmd>` | Background supervisor |
-| `zervox add <name> -- <cmd>` | Save a command locally |
-| `zervox up <name>` | Start a saved command in detached mode |
-| `zervox status [name]` | Show runtime status, PID, restarts, log path |
-| `zervox logs <name>` | Tail persistent logs |
-| `zervox stop <name>` | Stop supervisor and child process |
-| `zervox restart <name>` | Restart a saved supervised process |
-| `zervox systemd <name>` | Generate a systemd unit for a tracked command |
-| `zervox list` | List all tracked commands |
-
----
-
-## Safety Model
-
-Zervox is designed around a graduated risk model. This is the **target** safety model being built toward:
-
-### Read-only (always allowed)
-- Read logs, inspect metrics, check pod/process status
-- Summarize incidents, explain root causes
-- Simulate or preview recovery plans
-
-### Requires approval
-- Restart a service or process
-- Rollback a deployment
-- Scale replicas up or down
-- Run shell scripts
-- Change configuration
-- Trigger a Jenkins job or CI/CD pipeline
-
-### High-risk (restricted / require explicit escalation)
-- Database mutations
-- Secret or credential changes
-- Resource deletion
-- Infrastructure destruction (terraform destroy, etc.)
-- Production code patch deployment
-
-> **Current state:** The v0.1 watchdog already does read-only (status, logs) and medium-risk actions (restart, stop). Approval gates are being implemented in the next phase.
-
----
-
-## Roadmap
-
-```
-Phase 1 (current)
-  └─ Process watchdog + rule-based diagnostics + web dashboard
-
-Phase 2
-  ├─ Jenkins / GitHub Actions integration
-  ├─ Deployment rollback support
-  ├─ Approval-based execution gates
-  └─ AI-driven root cause analysis (Gemini / local LLM)
-
-Phase 3
-  ├─ OpenTelemetry integration (traces + metrics)
-  ├─ Prometheus / Grafana / Loki data sources
-  ├─ Multi-option recovery proposals
-  └─ Engineer-negotiated plan modification
-
-Phase 4
-  ├─ Kubernetes integration (pod health, deployments, scaling)
-  ├─ Distributed tracing (Jaeger)
-  └─ CloudWatch / ELK integration
-
-Phase 5
-  ├─ Slack / PagerDuty / Jira integrations
-  ├─ Automated RCA generation
-  └─ Post-incident summary
-```
-
----
-
-## Architecture (Current)
-
-```
-zervox/
-├── src/
-│   ├── bin/             # Entry point
-│   ├── cli.rs           # CLI argument parsing (clap)
-│   ├── monitor.rs       # Process execution + crash detection
-│   ├── supervisor.rs    # Process lifecycle management
-│   ├── autofix.rs       # Rule-based dependency repair
-│   ├── web/             # Axum web server + Socket.IO
-│   ├── runtime.rs       # Daemon state management
-│   ├── store.rs         # Persistent state (JSON)
-│   ├── config.rs        # Watch configuration
-│   └── systemd.rs       # Systemd unit generation
-├── public/              # Web dashboard frontend
-├── scripts/             # Installer + demo scripts
-└── docs/                # Documentation
-```
-
----
-
-## Build from source
-
+Analyze stored incidents and authorize fixes directly from your terminal:
 ```bash
-cargo fmt --check
-cargo test --all-targets
-cargo clippy --all-targets --all-features -- -D warnings
-cargo build --release
+zervox analyze
 ```
 
 ---
 
-## Related
+## 🚧 Roadmap & Production Status
 
-- [zervox.vercel.app](https://zervox.vercel.app) — web dashboard and docs
-- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guide
-- [docs/](docs/) — additional documentation
+Zervox is currently in an **Advanced Prototype** stage. It successfully proves the architectural flow from ingestion to Kubernetes execution. However, it is not yet suitable for mission-critical enterprise environments.
+
+**Requirements for V1.0 (Production-Ready):**
+- [ ] **Distributed Database:** Replace SQLite with PostgreSQL for concurrent access.
+- [ ] **Durable Event Queue:** Replace `tokio::spawn` with Redis, NATS, or Kafka for guaranteed job execution.
+- [ ] **Security & RBAC:** Implement JWT authentication and a strict policy engine for Kubernetes execution (e.g., allow restarts, deny deletions).
+- [ ] **Native OTLP:** Add OpenTelemetry native ingestion for traces.
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT — see [LICENSE](LICENSE).
+We welcome contributions! If you want to help transition Zervox from an advanced prototype to a production powerhouse, please open an Issue to discuss architecture before submitting a Pull Request.
 
-Built with Rust, Axum, Socket.IO.
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+*Built with ❤️ in Rust, using Axum, Tokio, kube-rs, and rusqlite.*

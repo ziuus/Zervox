@@ -100,6 +100,11 @@ enum Commands {
         #[arg(long, default_value_t = 3000)]
         port: u16,
     },
+    /// Analyze an incident from a JSON file of logs and metrics (AIOps MVP).
+    Analyze {
+        #[arg(long)]
+        file: String,
+    },
 }
 
 pub fn run() -> Result<()> {
@@ -318,6 +323,7 @@ pub fn run() -> Result<()> {
 
             rt.block_on(async { crate::web::start_server(port).await })
         }
+        Commands::Analyze { file } => crate::interface::cli_chat::run_analysis(&file),
     }
 }
 
