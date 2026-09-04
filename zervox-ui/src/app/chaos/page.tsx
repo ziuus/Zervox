@@ -63,7 +63,7 @@ export default function ChaosSandboxPage() {
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Judges Chaos Simulation Console
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Trigger real-world crisis injections to observe autonomous out-of-band resilience, policy blocking, and failover in real time.
           </p>
         </div>
@@ -126,10 +126,10 @@ export default function ChaosSandboxPage() {
       {/* ── SECTION 1: 4 CHAOS INJECTION CARDS ─────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Fault Injection Bench
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             One-click crisis simulations
           </span>
         </div>
@@ -142,7 +142,7 @@ export default function ChaosSandboxPage() {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                     Scenario {s.number}
                   </span>
                   <Badge variant={s.badgeColor} dot>
@@ -154,12 +154,12 @@ export default function ChaosSandboxPage() {
                   {s.title}
                 </h3>
 
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed">
                   {s.desc}
                 </p>
 
                 <div className="mt-4 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
                     What Judges Should Observe:
                   </span>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
@@ -169,7 +169,7 @@ export default function ChaosSandboxPage() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                <span className="font-mono text-[10px] text-slate-400">
+                <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400">
                   POST /api/action
                 </span>
                 <button
@@ -196,14 +196,14 @@ export default function ChaosSandboxPage() {
                 Primary Host Failure & Failover Simulation
               </h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
               Test what happens when the active Zervox orchestrator itself crashes. Sever the heartbeat loop on the interactive network topology map to watch the dormant backup promote to leader with zero data loss.
             </p>
           </div>
 
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer self-start md:self-auto shadow-sm"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer self-start md:self-auto shadow-sm"
           >
             <span>🌐</span>
             <span>Open Sentinel Map →</span>

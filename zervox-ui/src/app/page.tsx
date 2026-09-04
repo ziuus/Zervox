@@ -33,7 +33,7 @@ export default function OverviewPage() {
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             System Overview & Cluster Telemetry
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Real-time multi-node health, mutual TLS heartbeat tunnel (TCP 9000), and cluster failover sentinel.
           </p>
         </div>
@@ -41,14 +41,14 @@ export default function OverviewPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/chaos"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer shadow-sm"
           >
             <span>⚡</span>
             <span>Chaos Sandbox</span>
           </Link>
           <Link
             href="/incidents"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
           >
             <span>🚨</span>
             <span>Incidents ({incidents.length})</span>
@@ -59,10 +59,10 @@ export default function OverviewPage() {
       {/* ── ROW 1: PRIMARY, BACKUP & ENGINE SENTINELS ──────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Active Nodes & Dual-Engine Watchdog
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             Zero-single-point-of-failure topology
           </span>
         </div>
@@ -84,10 +84,10 @@ export default function OverviewPage() {
       {/* ── ROW 2: FULL-WIDTH TOPOLOGY MINI-MAP ───────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             High-Availability Network Graph
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             Autonomous failover routing (Track A → Track B)
           </span>
         </div>
@@ -109,10 +109,10 @@ export default function OverviewPage() {
       {/* ── ROW 3: CLEAN KPI METRICS MATRIX ────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Cluster Telemetry Key Performance Indicators
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             8 live health checkpoints
           </span>
         </div>
@@ -152,7 +152,7 @@ export default function OverviewPage() {
                 : 'STANDALONE',
               sub: 'Microcontroller breaker',
               color: hardwareStatus?.includes('ARMED')
-                ? '#a855f7'
+                ? '#7e22ce'
                 : 'var(--text-secondary)',
             },
             {
@@ -201,7 +201,7 @@ export default function OverviewPage() {
                   {value}
                 </p>
               </div>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 block">
+              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-2 block">
                 {sub}
               </span>
             </Card>

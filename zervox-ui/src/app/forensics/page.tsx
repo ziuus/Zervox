@@ -32,7 +32,7 @@ export default function ForensicsPage() {
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Air-Gap Defense & Forensic Freeze Vault
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Cryptographic pre-remediation snapshots, optical zero-egress data diodes, and tamper-proof evidence preservation.
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function ForensicsPage() {
           <button
             type="button"
             onClick={() => setIsAirGapOpen(true)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition-all cursor-pointer shadow-sm"
           >
             <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
             <span>Launch Optical QR Diode</span>
@@ -52,7 +52,7 @@ export default function ForensicsPage() {
           <button
             type="button"
             onClick={() => setIsPolicyModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100/60 dark:hover:bg-rose-900/40 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 hover:bg-rose-100/60 dark:hover:bg-rose-900/40 transition-all cursor-pointer shadow-sm"
           >
             <span>🛡️</span>
             <span>Inspect OPA Rego Diff</span>
@@ -63,10 +63,10 @@ export default function ForensicsPage() {
       {/* ── SECTION 1: FORENSIC FREEZE FRAME SHOWCASE ─────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Forensic Freeze Frame
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             Pre-remediation state lock & socket dump
           </span>
         </div>
@@ -78,10 +78,10 @@ export default function ForensicsPage() {
       {/* ── SECTION 2: AIR-GAP TRANSMISSION & ATTESTATION ─────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Optical Air-Gap Transmission & Attestation
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             Zero WAN footprint · Physical data diode
           </span>
         </div>
@@ -98,7 +98,7 @@ export default function ForensicsPage() {
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
                 Scannable QR Telemetry
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
                 Transmits real-time incident root-cause and SHA-256 Merkle hashes via camera-scannable QR payloads without network cables.
               </p>
             </div>
@@ -106,7 +106,7 @@ export default function ForensicsPage() {
               <button
                 type="button"
                 onClick={() => setIsAirGapOpen(true)}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold text-center transition-all bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-pointer shadow-sm"
+                className="w-full py-2.5 rounded-xl text-xs font-semibold text-center transition-all bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-500/30 cursor-pointer shadow-sm"
               >
                 Open Fullscreen Beacon →
               </button>
@@ -124,7 +124,7 @@ export default function ForensicsPage() {
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
                 Ed25519 Signature Beacon
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
                 Hardware socket counters verify zero unauthorized outbound packets. Rotary signature attestation changes every 3 seconds.
               </p>
             </div>
@@ -144,7 +144,7 @@ export default function ForensicsPage() {
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
                 Latest Evidence Hash
               </h3>
-              <p className="font-mono text-xs text-teal-600 dark:text-teal-400 mt-2 truncate max-w-[240px]" title={evidenceHash}>
+              <p className="font-mono text-xs text-teal-700 dark:text-teal-400 mt-2 truncate max-w-[240px]" title={evidenceHash}>
                 sha256:{evidenceHash}
               </p>
             </div>
@@ -152,7 +152,7 @@ export default function ForensicsPage() {
               <button
                 type="button"
                 onClick={() => setIsPolicyModalOpen(true)}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold text-center transition-all bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm"
+                className="w-full py-2.5 rounded-xl text-xs font-semibold text-center transition-all bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer shadow-sm"
               >
                 Inspect OPA Policy Audit →
               </button>

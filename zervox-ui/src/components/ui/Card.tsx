@@ -30,7 +30,7 @@ export function CardLabel({ children, className }: CardLabelProps) {
   return (
     <p
       className={cn(
-        'text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wide',
+        'text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide',
         className
       )}
     >

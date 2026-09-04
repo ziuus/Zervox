@@ -25,7 +25,7 @@ export default function IncidentsPage() {
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Incident Control & Remediation Trail
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             End-to-end glass box root-cause diagnosis, tamper-evident cryptographic Merkle ledger, and remediation timeline.
           </p>
         </div>
@@ -43,10 +43,10 @@ export default function IncidentsPage() {
       {/* ── SECTION 1: GLASS BOX ROOT CAUSE TRAIL ─────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Glass Box Root Cause Trail
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             4-step deterministic vs AI reasoning verification
           </span>
         </div>
@@ -59,10 +59,10 @@ export default function IncidentsPage() {
       {/* ── SECTION 2: REMEDIATION TIMELINE & AUDIT LOG ───────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Remediation Timeline & Evidence Ledger
           </h2>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             Unconstrained vertical audit view
           </span>
         </div>

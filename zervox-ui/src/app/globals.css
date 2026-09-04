@@ -8,7 +8,7 @@
    ================================================================ */
 
 @layer base {
-  /* ── LIGHT MODE (Crisp White & Slate with Calm Teal Accents) ──── */
+  /* ── LIGHT MODE (Crisp White with High-Contrast Dark Slate & Deep Teal) ──── */
   :root,
   [data-theme='light'] {
     color-scheme: light;
@@ -20,45 +20,53 @@
     --bg-sunken:        #f1f5f9;
     --bg-code:          #0f172a;
 
-    /* Borders — clean subtle slate */
-    --border-subtle:    #e2e8f0;
-    --border-medium:    #cbd5e1;
-    --border-strong:    #94a3b8;
+    /* Borders — clean defined slate */
+    --border-subtle:    #cbd5e1;
+    --border-medium:    #94a3b8;
+    --border-strong:    #64748b;
 
-    /* Text */
-    --text-primary:     #0f172a;
-    --text-secondary:   #475569;
-    --text-muted:       #64748b;
-    --text-code:        #f1f5f9;
+    /* Text — STRICT HIGH CONTRAST (Never lighter than slate-600) */
+    --text-primary:     #0f172a; /* Slate-900: Crisp & dark */
+    --text-secondary:   #334155; /* Slate-700: High-contrast body text */
+    --text-muted:       #475569; /* Slate-600: Minimum threshold for subtext */
+    --text-code:        #0f172a;
 
-    /* Accent — calm teal */
-    --accent:           #0f766e;
-    --accent-hover:     #115e59;
-    --accent-subtle:    rgba(15, 118, 110, 0.08);
-    --accent-border:    rgba(15, 118, 110, 0.22);
+    /* Accent — deep legible teal */
+    --accent:           #0f766e; /* Teal-700 */
+    --accent-hover:     #115e59; /* Teal-800 */
+    --accent-subtle:    rgba(15, 118, 110, 0.10);
+    --accent-border:    rgba(15, 118, 110, 0.35);
 
-    /* Status colours */
-    --status-green:     #10b981;
-    --status-green-bg:  rgba(16, 185, 129, 0.08);
-    --status-green-bdr: rgba(16, 185, 129, 0.20);
-    --status-amber:     #f59e0b;
-    --status-amber-bg:  rgba(245, 158, 11, 0.08);
-    --status-amber-bdr: rgba(245, 158, 11, 0.20);
-    --status-red:       #ef4444;
-    --status-red-bg:    rgba(239, 68, 68, 0.08);
-    --status-red-bdr:   rgba(239, 68, 68, 0.20);
+    /* Status colours — deep shades for WCAG AAA contrast against light backgrounds */
+    --status-green:     #047857; /* Emerald-700 */
+    --status-green-bg:  rgba(4, 120, 87, 0.12);
+    --status-green-bdr: rgba(4, 120, 87, 0.35);
+    --status-amber:     #b45309; /* Amber-700 */
+    --status-amber-bg:  rgba(180, 83, 9, 0.12);
+    --status-amber-bdr: rgba(180, 83, 9, 0.35);
+    --status-red:       #b91c1c; /* Red-700 */
+    --status-red-bg:    rgba(185, 28, 28, 0.12);
+    --status-red-bdr:   rgba(185, 28, 28, 0.35);
+    --status-purple:    #7e22ce; /* Purple-700 */
+    --status-purple-bg: rgba(126, 34, 206, 0.12);
+    --status-purple-bdr:rgba(126, 34, 206, 0.35);
+    --status-indigo:    #4338ca; /* Indigo-700 */
+    --status-indigo-bg: rgba(67, 56, 202, 0.12);
+    --status-indigo-bdr:rgba(67, 56, 202, 0.35);
+    --status-rose:      #be123c; /* Rose-700 */
+    --status-rose-bg:   rgba(190, 18, 60, 0.12);
+    --status-rose-bdr:  rgba(190, 18, 60, 0.35);
 
-    /* Subtle accents */
     --glow-sky:         transparent;
     --glow-purple:      transparent;
 
     /* Header */
-    --header-bg:        rgba(255, 255, 255, 0.90);
-    --header-border:    #e2e8f0;
+    --header-bg:        rgba(255, 255, 255, 0.95);
+    --header-border:    #cbd5e1;
 
     /* Scrollbar */
     --scrollbar-track:  #f8fafc;
-    --scrollbar-thumb:  #cbd5e1;
+    --scrollbar-thumb:  #94a3b8;
 
     --grid-line:        transparent;
   }
@@ -76,13 +84,13 @@
 
     /* Borders — subtle slate */
     --border-subtle:    rgba(255, 255, 255, 0.08);
-    --border-medium:    rgba(255, 255, 255, 0.12);
-    --border-strong:    rgba(255, 255, 255, 0.20);
+    --border-medium:    rgba(255, 255, 255, 0.14);
+    --border-strong:    rgba(255, 255, 255, 0.22);
 
     /* Text */
     --text-primary:     #f8fafc; /* Slate-50 */
-    --text-secondary:   #94a3b8; /* Slate-400 */
-    --text-muted:       #64748b; /* Slate-500 */
+    --text-secondary:   #cbd5e1; /* Slate-300 */
+    --text-muted:       #94a3b8; /* Slate-400 */
     --text-code:        #e2e8f0;
 
     /* Accent — calm soft teal */
@@ -101,8 +109,16 @@
     --status-red:       #f43f5e;
     --status-red-bg:    rgba(244, 63, 94, 0.10);
     --status-red-bdr:   rgba(244, 63, 94, 0.25);
+    --status-purple:    #c084fc;
+    --status-purple-bg: rgba(192, 132, 252, 0.10);
+    --status-purple-bdr:rgba(192, 132, 252, 0.25);
+    --status-indigo:    #818cf8;
+    --status-indigo-bg: rgba(129, 140, 248, 0.10);
+    --status-indigo-bdr:rgba(129, 140, 248, 0.25);
+    --status-rose:      #fb7185;
+    --status-rose-bg:   rgba(251, 113, 133, 0.10);
+    --status-rose-bdr:  rgba(251, 113, 133, 0.25);
 
-    /* Subtle accents without aggressive neon blurs */
     --glow-sky:         transparent;
     --glow-purple:      transparent;
 

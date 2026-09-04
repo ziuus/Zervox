@@ -17,9 +17,9 @@ const variantStyles: Record<BadgeVariant, { color: string; bg: string; border: s
   red:    { color: 'var(--status-red)',     bg: 'var(--status-red-bg)',    border: 'var(--status-red-bdr)',    dotBg: 'var(--status-red)' },
   sky:    { color: 'var(--accent)',         bg: 'var(--accent-subtle)',    border: 'var(--accent-border)',     dotBg: 'var(--accent)' },
   slate:  { color: 'var(--text-secondary)', bg: 'var(--bg-sunken)',        border: 'var(--border-subtle)',     dotBg: 'var(--text-muted)' },
-  purple: { color: '#a855f7',               bg: 'rgba(168,85,247,0.08)',   border: 'rgba(168,85,247,0.20)',    dotBg: '#a855f7' },
-  indigo: { color: '#6366f1',               bg: 'rgba(99,102,241,0.08)',   border: 'rgba(99,102,241,0.20)',    dotBg: '#6366f1' },
-  rose:   { color: '#f43f5e',               bg: 'rgba(244,63,94,0.08)',    border: 'rgba(244,63,94,0.20)',     dotBg: '#f43f5e' },
+  purple: { color: 'var(--status-purple)',  bg: 'var(--status-purple-bg)', border: 'var(--status-purple-bdr)', dotBg: 'var(--status-purple)' },
+  indigo: { color: 'var(--status-indigo)',  bg: 'var(--status-indigo-bg)', border: 'var(--status-indigo-bdr)', dotBg: 'var(--status-indigo)' },
+  rose:   { color: 'var(--status-rose)',    bg: 'var(--status-rose-bg)',   border: 'var(--status-rose-bdr)',   dotBg: 'var(--status-rose)' },
 }
 
 export function Badge({ children, variant = 'sky', size = 'md', dot, className }: BadgeProps) {

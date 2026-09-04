@@ -50,17 +50,12 @@ export function AirGapBeacon({ onBreachChange }: AirGapBeaconProps) {
           <button
             type="button"
             onClick={() => setShowProofModal(true)}
-            className="flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[10px] font-bold tracking-wider uppercase transition-all hover:scale-105 cursor-pointer"
-            style={{
-              border: '1px solid rgba(56,189,248,0.35)',
-              background: 'rgba(56,189,248,0.08)',
-              color: 'var(--accent)',
-            }}
+            className="flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-bold tracking-wide uppercase transition-all hover:scale-105 cursor-pointer bg-teal-100/90 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-800 text-teal-950 dark:text-teal-200 shadow-xs"
             title="Click to inspect cryptographic zero-egress attestation"
           >
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
-            <span>🔒 AIR-GAP VERIFIED</span>
-            <span className="hidden xl:inline text-[9px] opacity-70 font-normal">{signature.slice(0, 15)}…</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-600 dark:bg-teal-400 animate-pulse" />
+            <span>🔒 Air-Gap Verified</span>
+            <span className="hidden xl:inline font-mono text-[10px] text-teal-800 dark:text-teal-300 font-semibold">{signature.slice(0, 15)}…</span>
           </button>
         ) : (
           <button
