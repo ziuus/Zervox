@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victim-api
+  namespace: default
+  labels:
+    app: victim-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victim-api
+  template:
+    metadata:
+      labels:
+        app: victim-api
+    spec:
+      containers:
+      - name: memory-leak
+        image: python:3.9-slim
+        command: ["python", "-c"]
+        args:
+          - |
+            import time
+            print("Zervox Demo: Starting memory leak payload...")
+            leak = []
+            while True:
+                leak.append(' ' * (1024 * 1024)) # Allocate 1MB continuously
+                time.sleep(0.05)
+        resources:
+          limits:
+            memory: "64Mi" # Extremely tight memory limit to guarantee quick OOMKilled
+            cpu: "100m"
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
