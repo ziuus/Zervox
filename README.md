@@ -3,12 +3,40 @@
 > *Engineered for Mission-Critical Infrastructure & Kerala Police Cyberdome Digital Forensics*
 
 [![Rust Core](https://img.shields.io/badge/Rust-1.85+-orange.svg?style=flat-square&logo=rust)](https://www.rust-lang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2%20App%20Router-black.svg?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v3%20Class%20Theme-blue.svg?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
 [![OPA](https://img.shields.io/badge/OPA-Rego%20v1-blue.svg?style=flat-square&logo=open-policy-agent)](https://www.openpolicyagent.org/)
 [![Tests](https://img.shields.io/badge/Tests-31%2F31%20Passed-emerald.svg?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
 
-Zervox is an **out-of-band, high-availability SRE engine** engineered to survive catastrophic Kubernetes control-plane failures. It autonomously ingests alerts, conducts AI-powered root-cause analysis, preserves tamper-evident forensic memory traces, enforces unbypassable hardware and OPA security gates, and self-heals its own leadership topology via active-standby mTLS heartbeats.
+Zervox is an **out-of-band, high-availability SRE resilience engine** engineered to survive catastrophic Kubernetes control-plane failures. Operating strictly outside the clusters it protects, Zervox autonomously ingests alerts, conducts AI and deterministic root-cause analysis, preserves tamper-evident forensic memory traces, enforces unbypassable hardware and OPA security gates, and self-heals its own leadership topology via active-standby mTLS heartbeats.
+
+---
+
+## 🖥️ Modern Multi-Page Control Plane (Next.js App Router)
+
+The Zervox UI is built on a clean, modern SaaS design system (inspired by Linear and Vercel) with dedicated, spacious routes and high-contrast Light/Dark mode accessibility:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│  ⚡ Zervox SRE    [Overview]    [Incidents]    [Forensics & Air-Gap]    [Chaos]   │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+| Route | Page Name | Core Capabilities & Components |
+|:---|:---|:---|
+| **`/`** | **System Dashboard & Telemetry** | • **Dual-Engine Watchdog**: Telemetry cards for Primary Engine (Track A) & Backup Engine (Track B) with round-trip latency, uptime, and peer mTLS status.<br>• **Autonomous Engine Mode**: Real-time AI (cloud LLM) vs Deterministic Fallback status.<br>• **Split-Brain Sentinel Graph**: Full-width interactive network topology map with one-click mTLS heartbeat sever simulation.<br>• **8-Point KPI Matrix**: Live health checkpoints for Commander, State, Mode, Hardware, Uptime, Incidents, OPA, and K8s. |
+| **`/incidents`** | **Incident Control & Remediation** | • **Glass Box Root Cause Trail**: 4-step visualizer revealing raw alert payload, prompt construction, LLM reasoning chain vs 1.2ms fallback execution, and OPA policy evaluation.<br>• **Remediation Timeline**: Vertical SQLite WAL audit ledger displaying tamper-evident Merkle hashes, execution times, and one-click cryptographic snapshot downloads. |
+| **`/forensics`** | **Air-Gap Defense & Forensic Vault** | • **Forensic Freeze Frame**: Pre-remediation `/proc` memory dumps and open socket dumps sealed with SHA-256 Merkle trees before container restarts.<br>• **Optical QR Data Diode**: Fullscreen camera-scannable QR beacon transmitting telemetry across physical air-gaps without network cables.<br>• **Ed25519 Attestation Beacon**: Continuous cryptographic signature rotating every 3s with active socket breach detection.<br>• **OPA Rego Diff Modal**: Visual comparison of blocked destructive actions vs safe remediation alternatives. |
+| **`/chaos`** | **Judges Chaos Simulation Bench** | • **One-Click Injections**: Pod Crash Loop (01), Malicious RBAC Deletion (02), Node Cordon Dual-Key (03), Repeating Attack Adaptive Immune Quarantine (04).<br>• **Live Feedback Banners**: Instant visual confirmation with direct deep-links to WAL ledger and forensic snapshots.<br>• **Primary Host Kill Simulator**: Heartbeat failover test ensuring sub-3s backup promotion with zero data loss. |
+
+---
+
+## 🎨 Theme & Accessibility System
+
+- **Light Mode**: Crisp white (`#ffffff`) surface with deep slate typography (`#0f172a`, `#334155`) and deep teal accents (`#0f766e`) passing strict WCAG AAA contrast standards.
+- **Dark Mode**: Deep slate (`#020617`) canvas with subtle gray borders (`rgba(255,255,255,0.08)`) and soft teal glowing accents.
+- **Class-Based Switching**: Fully synchronized `.dark` class and `data-theme` attribute powered by `darkMode: 'class'` in Tailwind to eliminate OS preference conflicts and FOUC.
 
 ---
 
@@ -154,6 +182,14 @@ Launch the complete 4-service stack:
 docker compose up --build -d
 ```
 
-- **Control Plane UI**: [http://localhost:3000](http://localhost:3000)
-- **Primary Core API**: [http://localhost:8080/api/status](http://localhost:8080/api/status)
-- **OPA Policy Server**: [http://localhost:8181/v1/data/zervox/authz](http://localhost:8181/v1/data/zervox/authz)
+| Service | Endpoint | Description |
+|:---|:---|:---|
+| **Control Plane UI** | [http://localhost:3000](http://localhost:3000) | Next.js 14 App Router Multi-Page Control Plane |
+| **Primary Core Engine** | [http://localhost:8080](http://localhost:8080) | Active Leader (Ingestion, OPA, WAL, TCP 9000 Heartbeat) |
+| **Backup Core Engine** | [http://localhost:8081](http://localhost:8081) | Dormant Standby Sentinel (mTLS Polling Listener) |
+| **OPA Policy Server** | [http://localhost:8181](http://localhost:8181) | Rego Zero-Trust Policy Decision Engine |
+
+To view live service logs:
+```bash
+docker compose logs -f zervox-ui zervox-primary
+```
