@@ -1,11 +1,14 @@
 # ==========================================================
-# Helm values for kube-prometheus-stack integration with Zervox
+# Helm values for kube-prometheus-stack — Zervox integration
+# Updated: adds Grafana datasource for Zervox UI, CORS headers,
+# ServiceMonitor for Zervox metrics, and additional alert rules.
 # ==========================================================
 
 global:
   rbac:
     create: true
 
+# ── Alertmanager ─────────────────────────────────────────────
 alertmanager:
   enabled: true
   config:
@@ -31,50 +34,178 @@ alertmanager:
               bearer_token: 'zervox-secret-token'
             max_alerts: 10
 
+# ── Prometheus ───────────────────────────────────────────────
 prometheus:
   enabled: true
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
     evaluationInterval: 10s
     scrapeInterval: 10s
 
+    # Allow cross-namespace ServiceMonitor discovery
+    serviceMonitorNamespaceSelector: {}
+    serviceMonitorSelector: {}
+
+    # Expose Prometheus API to external consumers (Zervox UI)
+    externalUrl: "http://prometheus.monitoring.svc.cluster.local:9090"
+    enableAdminAPI: true
+
+    # Retention
+    retention: 7d
+    retentionSize: "4GB"
+
+    # Additional scrape configs — scrape Zervox instances directly
+    additionalScrapeConfigs:
+      - job_name: 'zervox-primary'
+        scrape_interval: 10s
+        scrape_timeout: 5s
+        static_configs:
+          - targets: ['zervox-primary:8080']
+            labels:
+              instance: 'zervox-primary'
+              role: 'primary'
+              component: 'zervox-sre-engine'
+        metrics_path: /metrics
+        # Zervox exports Prometheus metrics at /metrics if configured
+        # Falls back gracefully if endpoint doesn't exist
+
+      - job_name: 'zervox-backup'
+        scrape_interval: 10s
+        scrape_timeout: 5s
+        static_configs:
+          - targets: ['zervox-backup:8081']
+            labels:
+              instance: 'zervox-backup'
+              role: 'backup'
+              component: 'zervox-sre-engine'
+        metrics_path: /metrics
+
+# ── Grafana ──────────────────────────────────────────────────
 grafana:
   enabled: true
   adminPassword: "prom-operator"
+
   service:
     type: ClusterIP
     port: 80
 
-# Additional SRE Prometheus alerting rules for victim application
+  # Allow Zervox UI (localhost:3000 in dev, DNS in prod) to embed panels
+  grafana.ini:
+    security:
+      allow_embedding: true
+      cookie_samesite: none
+    server:
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+      serve_from_sub_path: false
+    auth.anonymous:
+      enabled: false
+    cors:
+      allowed_origins: "http://localhost:3000,http://zervox-ui:3000"
+
+  # Pre-provision Prometheus as a datasource
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          uid: prometheus
+          url: http://prometheus-kube-prometheus-prometheus:9090
+          access: proxy
+          isDefault: true
+          editable: false
+          jsonData:
+            timeInterval: "10s"
+            queryTimeout: "30s"
+            httpMethod: POST
+
+  # Pre-provision Zervox dashboard folder
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'zervox'
+          orgId: 1
+          folder: 'Zervox SRE'
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/zervox
+
+  # Sidecar to auto-load dashboards from ConfigMaps
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+
+# ── Additional Alert Rules ───────────────────────────────────
 additionalPrometheusRulesMap:
   zervox-alerts:
     groups:
       - name: zervox.remediation.rules
+        interval: 10s
         rules:
           - alert: PodCrashLooping
             expr: rate(kube_pod_container_status_restarts_total[2m]) * 60 > 2
             for: 10s
             labels:
               severity: critical
+              team: sre
             annotations:
-              summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in CrashLoopBackOff"
-              description: "Container restarts exceeded threshold; automatic remediation required."
+              summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is CrashLoopBackOff"
+              description: "Container restarts exceeded threshold; Zervox autonomous remediation triggered."
 
           - alert: HighLatency
             expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[2m])) by (le, app)) > 1.5
             for: 15s
             labels:
               severity: warning
+              team: sre
             annotations:
-              summary: "Service {{ $labels.app }} p95 latency is exceeding 1500ms"
-              description: "Deployment requires scale out within cap."
+              summary: "Service {{ $labels.app }} p95 latency exceeds 1500ms"
+              description: "Zervox will attempt scale-out within replica cap (≤10)."
 
           - alert: NodeNotReady
             expr: kube_node_status_condition{condition="Ready",status="true"} == 0
             for: 30s
             labels:
               severity: critical
+              team: sre
             annotations:
               summary: "Node {{ $labels.node }} is not in Ready state"
-              description: "Degraded node requires immediate cordon."
+              description: "Zervox will cordon the degraded node."
+
+          - alert: PodNotReady
+            expr: kube_pod_status_ready{condition="false"} == 1
+            for: 30s
+            labels:
+              severity: warning
+              team: sre
+            annotations:
+              summary: "Pod {{ $labels.pod }} is not Ready in {{ $labels.namespace }}"
+              description: "Pod readiness gate failed; Zervox restart action may be triggered."
+
+          - alert: HighErrorRate
+            expr: sum(rate(http_requests_total{status=~"5.."}[2m])) by (app) / sum(rate(http_requests_total[2m])) by (app) > 0.1
+            for: 20s
+            labels:
+              severity: warning
+              team: sre
+            annotations:
+              summary: "Service {{ $labels.app }} error rate exceeds 10%"
+              description: "5xx error rate above threshold; Zervox scale-out remediation eligible."
+
+          - alert: ZervoxPrimaryDown
+            expr: up{job="zervox-primary"} == 0
+            for: 10s
+            labels:
+              severity: critical
+              team: sre
+            annotations:
+              summary: "Zervox primary instance is unreachable"
+              description: "Backup instance should promote to active within watchdog timeout."
