@@ -2,78 +2,80 @@
 
 > **Autonomous Resilient Kubernetes SRE Incident Remediation Engine**
 
-Zervox is an external, resilient SRE engine designed to run safely outside the Kubernetes failure domain. It ingests Prometheus & Alertmanager alerts, leverages LLM-driven root cause analysis with automatic fallback to deterministic rules, enforces strict unbypassable Open Policy Agent (OPA) security boundaries, and provides high-availability watchdog failover.
+Zervox is an out-of-band, high-availability SRE engine engineered to survive catastrophic control-plane failures. It autonomously ingests alerts, attempts AI-driven remediation, enforces immutable blast-radius boundaries, and self-heals its own master process.
 
 ---
 
-## 🏗 Architecture Overview
+## 🏗 Architecture & Deployment Topology
 
-```
-Alertmanager Webhook  ──► [ Ingestion & Auth Gate ]
+```text
+                                     [ OUT-OF-BAND SRE DOMAIN ]
+                                   
+   ┌────────────────────────────────────────────────────────────────────────────────────────┐
+   │                                                                                        │
+   │   ┌────────────────────┐                            ┌──────────────────────────────┐   │
+   │   │ Next.js UI         │                            │  STANDBY NODE                │   │
+   │   │ (Control Plane)    │◄──[ REST Telemetry ]───────┤  [ zervox-core --backup ]    │   │
+   │   │ localhost:3000     │                            │                              │   │
+   │   └─────────▲──────────┘                            └──────────────▲───────────────┘   │
+   │             │                                                      │                   │
+   │             │                                                      │ (mTLS Heartbeat)  │
+   │             │                                                      ▼                   │
+   │   ┌─────────▼──────────────────────────────────────────────────────┴───────────────┐   │
+   │   │ ACTIVE PRIMARY NODE (zervox-core --primary)                                    │   │
+   │   │                                                                                │   │
+   │   │  [ Ingestion Gate ] (JWT Auth / Fuzz-Tested)                                   │   │
+   │   │          │                                                                     │   │
+   │   │          ├─────────────────────────────────────────┐                           │   │
+   │   │          ▼                                         ▼                           │   │
+   │   │  [ AI Engine ] ◄──(Timeout / Network Cut)──► [ Local Fallback ]                │   │
+   │   │  (gpt-4o-mini)                               (Deterministic)                   │   │
+   │   │          │                                         │                           │   │
+   │   │          └────────────────┬────────────────────────┘                           │   │
+   │   │                           ▼                                                    │   │
+   │   │                 [ OPA Rego Security Gate ] ◄───────► [ Embedded OPA Server ]   │   │
+   │   │                 (Immutable Blast-Radius)             (localhost:8181)          │   │
+   │   │                           │                                                    │   │
+   │   │                           ▼ (Allowed Actions)                                  │   │
+   │   │                 [ Kubernetes Executor ]                                        │   │
+   │   │                           │                                                    │   │
+   │   │                           ▼                                                    │   │
+   │   │                 [ SQLite WAL / IncidentStore ]                                 │   │
+   │   └───────────────────────────┬────────────────────────────────────────────────────┘   │
+   └───────────────────────────────┼────────────────────────────────────────────────────────┘
                                    │
-                                   ▼
-                       [ LLM RCA with Timeout ] ──(on timeout/error)──► [ Local Fallback Engine ]
-                                   │                                            │
-                                   └──────────────┬─────────────────────────────┘
-                                                  ▼
-                                      [ OPA Rego Security Gate ]
-                                      (Unbypassable Blast-Radius Guard)
-                                                  │ (Allowed)
-                                                  ▼
-                                      [ Kubernetes Executor ] (kube-rs)
-                                                  │
-                                                  ▼
-                                      [ SQLite WAL Incident Store ]
+      ┌────────────────────────────┼──────────────────────────────────────────────────┐
+      │ KUBERNETES CLUSTER         │ (kube-rs via TLS)                                │
+      │                            ▼                                                  │
+      │   [ Prometheus ] ──(Webhook Alerts)──► (victim-api / Deployments / Pods)      │
+      └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 🚀 Key Capabilities
 
-1. **Deterministic Local Fallback Mode**: If external LLMs or internet connections are disrupted, Zervox seamlessly drops to local verified deterministic remediation rules without downtime.
-2. **Unbypassable Policy Gate (OPA & Embedded Rego Guard)**: Every remediation decision must be validated before execution. Strict rules prevent namespace deletion, container shell execution (`exec`), and out-of-bounds replica scaling (> 10).
-3. **High-Availability Watchdog & Self-Preservation**: Built-in Primary/Backup active-standby topology with lightweight TCP heartbeat. If the primary instance goes down, the backup promotes itself to Active within seconds.
-4. **Persistent SQLite WAL Incident Store**: All incoming alerts, decisions, policy checks, and execution results are persisted with SQLite Write-Ahead Logging (WAL) and 5s busy timeouts.
+1. **Deterministic Local Fallback**: If external LLM networks are severed, Zervox instantly defaults to verified local remediation.
+2. **mTLS Watchdog Failover**: Built-in Primary/Backup active-standby topology utilizing mutually authenticated TLS TCP heartbeats. Standby promotes to active leader instantly on primary failure.
+3. **OPA Blast-Radius Enforcement**: All actions must clear an unbypassable Rego policy gate preventing namespace destruction and container escapes.
+4. **Out-Of-Band Autonomy**: Designed explicitly to run outside the Kubernetes failure domain, breaking the "Host Paradox" of embedded operators.
 
 ---
 
-## 🛠 Quick Start
+## 🛠 Deployment (Docker Compose)
 
-### 1. Build & Test Locally
+The entire stack (Rust Core, Standby Core, OPA Server, and Next.js UI) runs seamlessly via Docker Compose:
 
 ```bash
-cd zervox-core
-cargo test --all
-cargo run -- --role primary --http-port 8080 --heartbeat-port 9000
+docker-compose up --build -d
 ```
 
-### 2. Run with Docker Compose (Full Stack with OPA & HA Backup)
+- **Next.js Control Plane**: `http://localhost:3000`
+- **Core Engine API**: `http://localhost:8080/api/status`
 
+## 📊 Testing & Chaos Simulation
+
+Inject an organic OOMKilled payload to observe the end-to-end resolution pipeline:
 ```bash
-docker compose up --build
+kubectl apply -f infra/demo-app/victim-memory-leak.yaml
 ```
-
-### 3. Open the Status Dashboard
-
-Navigate to: `http://localhost:8080/status`
-
----
-
-## 📊 API Reference
-
-- `GET /healthz` - Health probe endpoint
-- `GET /status` - Rich HTML visual control plane
-- `GET /api/status` - JSON status telemetry & recent incident log
-- `POST /api/grafana_webhook` - Alertmanager webhook ingestion (requires `x-api-key` or `Authorization: Bearer` token)
-- `POST /api/simulate_attack` - Security demonstration endpoint for testing OPA blast-radius enforcement
-
----
-
-## 📁 Repository Structure
-
-- `zervox-core/` — Rust engine (Ingest, LLM, Fallback, OPA Client, Executor, SQLite Store, Watchdog)
-  - `policies/zervox.rego` — Rego security and authorization policy
-- `infra/` — Cluster provisioning, Helm monitoring values, demo manifests, chaos injection scripts
-  - `chaos-scripts/` — Automated chaos scripts (pod crash, RBAC attack, network outage, primary kill)
-- `scripts/demo-runbook.sh` — Interactive demo runbook script
-- `docs/` — Architecture and build specifications
