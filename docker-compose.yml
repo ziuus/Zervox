@@ -1,55 +1,109 @@
 version: '3.8'
 
+# ============================================================
+# Zervox Full Stack — Production Docker Compose
+# Services: OPA · Zervox Primary · Zervox Backup · Zervox UI
+# ============================================================
+
+networks:
+  zervox-net:
+    driver: bridge
+
+volumes:
+  zervox_data:
+    name: zervox_shared_data
+
 services:
+
+  # ── Open Policy Agent (OPA) ──────────────────────────────
+  opa:
+    image: openpolicyagent/opa:latest
+    container_name: zervox-opa
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "--log-format=json"
+      - "--log-level=info"
+      - "/policies"
+    volumes:
+      - ./zervox-core/policies:/policies:ro
+    ports:
+      - "8181:8181"
+    networks:
+      - zervox-net
+    restart: unless-stopped
+
+  # ── Zervox Primary Engine (Port 8080 / TCP 9000) ─────────
   zervox-primary:
     build:
       context: ./zervox-core
+    container_name: zervox-primary
     environment:
       - ZERVOX_ROLE=primary
       - ZERVOX_HTTP_PORT=8080
       - ZERVOX_HEARTBEAT_PORT=9000
+      - ZERVOX_API_KEY=zervox-secret-token
+      - ZERVOX_DB_PATH=/data/zervox.db
       - OPA_URL=http://opa:8181/v1/data/zervox/authz
+      - ZERVOX_DRY_RUN=true
       - RUST_LOG=info,zervox_core=debug
+    volumes:
+      - zervox_data:/data
     ports:
       - "8080:8080"
       - "9000:9000"
+    networks:
+      - zervox-net
     depends_on:
       - opa
+    restart: unless-stopped
 
+  # ── Zervox Backup Engine (Port 8081 / TCP 9001) ──────────
   zervox-backup:
     build:
       context: ./zervox-core
+    container_name: zervox-backup
     environment:
       - ZERVOX_ROLE=backup
       - ZERVOX_HTTP_PORT=8081
       - ZERVOX_HEARTBEAT_PORT=9001
       - ZERVOX_PEER=zervox-primary:9000
+      - ZERVOX_API_KEY=zervox-secret-token
+      - ZERVOX_DB_PATH=/data/zervox.db
       - OPA_URL=http://opa:8181/v1/data/zervox/authz
+      - ZERVOX_DRY_RUN=true
       - RUST_LOG=info,zervox_core=debug
+    volumes:
+      - zervox_data:/data
     ports:
       - "8081:8081"
+      - "9001:9001"
+    networks:
+      - zervox-net
     depends_on:
       - zervox-primary
       - opa
+    restart: unless-stopped
 
-  frontend:
-    image: node:20-alpine
-    working_dir: /app
-    # Uses a placeholder command if the Next.js frontend directory is empty, otherwise runs the dev server
-    command: sh -c "if [ -f package.json ]; then npm install && npm run dev; else echo 'Waiting for Next.js initialization...' && sleep infinity; fi"
-    volumes:
-      - ./zervox-ui:/app
+  # ── Zervox Control Plane UI (Next.js 14) ──────────────────
+  zervox-ui:
+    build:
+      context: ./zervox-ui
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_PRIMARY_URL: "http://localhost:8080"
+        NEXT_PUBLIC_BACKUP_URL: "http://localhost:8081"
+        NEXT_PUBLIC_POLL_INTERVAL_MS: "3000"
+    container_name: zervox-ui
+    environment:
+      - ZERVOX_PRIMARY_URL=http://zervox-primary:8080
+      - ZERVOX_BACKUP_URL=http://zervox-backup:8081
+      - NODE_ENV=production
     ports:
       - "3000:3000"
-
-  opa:
-    image: openpolicyagent/opa:latest
-    ports:
-      - "8181:8181"
-    volumes:
-      - ./zervox-core/policies:/policies
-    command:
-      - "run"
-      - "--server"
-      - "--log-level=debug"
-      - "/policies"
+    networks:
+      - zervox-net
+    depends_on:
+      - zervox-primary
+    restart: unless-stopped
