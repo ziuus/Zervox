@@ -60,7 +60,7 @@ curl -s http://localhost:3000/api/telemetry
 ## 📋 Pending Tasks & Action Items
 
 ### 1. Live Kubernetes Cluster Integration (Track B)
-- [ ] **Connect to local k3s / minikube**:
+- [x] **Connect to local k3s / minikube**:
   - Currently runs in `dry-run/simulated` mode if no kubeconfig is mounted.
   - Test setting `KUBECONFIG=~/.kube/config` and verifying real pod restart via `kube-rs` on a live cluster.
   - Deploy a simple `victim-api` deployment in namespace `default` with resource memory limit `64Mi` so it actually OOMKills during demo.
