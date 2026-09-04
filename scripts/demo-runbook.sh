@@ -38,11 +38,29 @@ echo -e "${COLOR_RESET}"
 # Step 1: Health & HA Topology Check
 pause_step "1. Verify Cluster & Zervox High-Availability Topology"
 echo "Checking Zervox Primary status at ${ZERVOX_PRIMARY_URL}..."
-curl -s "${ZERVOX_PRIMARY_URL}/api/status" | jq '.' || true
+curl -s "${ZERVOX_PRIMARY_URL}/api/status" | jq '.' || echo -e "${COLOR_RED}Primary unreachable!${COLOR_RESET}"
 
 # Step 2: Pod Crash Remediation
-pause_step "2. Inject Pod Crash Chaos & Observe Autonomous Remediation"
-echo "Firing PodCrashLooping alert to Zervox..."
+pause_step "2. Workload Failure (Pod Crash Chaos)"
+echo "Executing pod-crash.sh to dynamically kill the victim-api pod..."
+bash infra/chaos-scripts/pod-crash.sh
+echo -e "\nWaiting for Prometheus Alertmanager to fire webhook to Zervox..."
+sleep 15
+echo "Fetching recent Zervox remediation decisions..."
+curl -s "${ZERVOX_PRIMARY_URL}/api/status" | jq '.recent_incidents' || true
+
+# Step 3: OPA Policy Blast-Radius Attack Block
+pause_step "3. Malicious Actor (RBAC Namespace Deletion Attack)"
+echo "Executing rbac-attack.sh to simulate rogue SA and Zervox OPA evaluation..."
+bash infra/chaos-scripts/rbac-attack.sh
+
+# Step 4: Network Outage & Local Fallback Mode
+pause_step "4. Dependency Outage (LLM Network Sever)"
+echo "Executing network-outage.sh to sever external dependencies..."
+bash infra/chaos-scripts/network-outage.sh
+echo -e "\nWaiting a moment, then querying Zervox to see if Fallback Mode activates on next webhook..."
+# We trigger a webhook manually because prometheus might be isolated depending on network-outage config
+# Note: network-outage script allows localhost traffic so we can test Zervox API locally!
 curl -s -X POST "${ZERVOX_PRIMARY_URL}/api/grafana_webhook" \
     -H "Content-Type: application/json" \
     -H "x-api-key: zervox-secret-token" \
@@ -54,63 +72,23 @@ curl -s -X POST "${ZERVOX_PRIMARY_URL}/api/grafana_webhook" \
                 "labels": {
                     "alertname": "PodCrashLooping",
                     "namespace": "default",
-                    "pod": "victim-api-6d7c8f",
+                    "pod": "victim-api-fallback-test",
                     "severity": "critical"
-                },
-                "annotations": {
-                    "summary": "Pod victim-api-6d7c8f in CrashLoopBackOff"
                 }
             }
         ]
     }' | jq '.' || true
 
-# Step 3: OPA Policy Blast-Radius Attack Block
-pause_step "3. Simulate Malicious RBAC Namespace Deletion (OPA Security Gate)"
-echo "Injecting unauthorized namespace deletion payload..."
-curl -s -X POST "${ZERVOX_PRIMARY_URL}/api/simulate_attack" \
-    -H "Content-Type: application/json" \
-    -d '{
-        "attack_type": "delete_namespace",
-        "namespace": "default",
-        "target_name": "default"
-    }' | jq '.' || true
-
-# Step 4: Network Outage & Local Fallback Mode
-pause_step "4. Simulate External Network Outage & Trigger Local Fallback Mode"
-echo "Simulating external cloud / LLM outage with high latency alert in fallback mode..."
-curl -s -X POST "${ZERVOX_PRIMARY_URL}/api/grafana_webhook" \
-    -H "Content-Type: application/json" \
-    -H "x-api-key: zervox-secret-token" \
-    -d '{
-        "status": "firing",
-        "alerts": [
-            {
-                "status": "firing",
-                "labels": {
-                    "alertname": "HighLatency",
-                    "namespace": "default",
-                    "app": "victim-api",
-                    "severity": "warning"
-                },
-                "annotations": {
-                    "summary": "High traffic latency on victim-api"
-                }
-            }
-        ]
-    }' | jq '.' || true
+echo -e "\nRestoring network access..."
+bash infra/chaos-scripts/restore-network.sh
 
 # Step 5: Primary Failure & Watchdog Leader Failover
-pause_step "5. Kill Zervox Primary to Demonstrate Watchdog Self-Preservation Failover"
-echo "Simulating sudden crash of primary binary..."
-./infra/chaos-scripts/kill-zervox-primary.sh || true
+pause_step "5. Responder Assassination (Watchdog Failover)"
+echo "Executing kill-zervox-primary.sh to assassinate active engine..."
+bash infra/chaos-scripts/kill-zervox-primary.sh
+echo -e "\nWaiting for backup node heartbeat timeout and promotion..."
+sleep 8
+echo "Querying Backup instance (which should now be ACTIVE leader)..."
+curl -s "${ZERVOX_BACKUP_URL}/api/status" | jq '.' || echo -e "${COLOR_RED}Backup node not responding!${COLOR_RESET}"
 
-echo "Checking Backup instance status after failover promotion..."
-sleep 4
-curl -s "${ZERVOX_BACKUP_URL}/api/status" 2>/dev/null | jq '.' || echo "Backup node at ${ZERVOX_BACKUP_URL} ready to query."
-
-# Step 6: Final Incident Timeline Review
-pause_step "6. Review Complete Incident Timeline and SQLite Audit Trail"
-echo "Fetching full audit timeline from Zervox..."
-curl -s "${ZERVOX_PRIMARY_URL}/api/status" 2>/dev/null | jq '.recent_incidents' || curl -s "${ZERVOX_BACKUP_URL}/api/status" 2>/dev/null | jq '.recent_incidents' || true
-
-echo -e "\n${COLOR_GREEN}✔ Demo Runbook completed successfully!${COLOR_RESET}"
+echo -e "\n${COLOR_GREEN}✔ Live Demo Runbook completed successfully!${COLOR_RESET}"

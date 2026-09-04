@@ -12,7 +12,8 @@ if command -v iptables &> /dev/null; then
     sudo iptables -P INPUT ACCEPT
     sudo iptables -P OUTPUT ACCEPT
     sudo iptables -P FORWARD ACCEPT
-    echo "✔ All network traffic restored to default ACCEPT."
+    echo "✔ Iptables flushed safely. All TCP network traffic restored."
 else
-    echo "iptables not found or not required."
+    echo "Error: iptables not found."
+    exit 1
 fi
