@@ -173,17 +173,17 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
           </svg>
 
           {/* Status Overlay Pill */}
-          <div className="absolute inset-x-0 bottom-[-8px] text-center z-20">
+          <div className="absolute inset-x-0 bottom-[-8px] flex justify-center z-20 pointer-events-none">
             {isElecting ? (
-              <span className="text-[11px] font-extrabold text-amber-300 bg-amber-950/95 px-3 py-1 rounded-full border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)] animate-pulse">
+              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-amber-300 bg-amber-950/95 px-2.5 py-1 rounded-full border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)] animate-pulse">
                 ⏳ ELECTING BACKUP LEADER (2.4s)…
               </span>
             ) : simulatedSever ? (
-              <span className="text-[11px] font-extrabold text-amber-300 bg-slate-950/95 px-3 py-1 rounded-full border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.5)]">
+              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-amber-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.5)]">
                 ⚡ BACKUP SEIZED ACTIVE CONTROL · 0 DATA LOSS
               </span>
             ) : (
-              <span className="text-[11px] font-extrabold text-emerald-300 bg-slate-950/95 px-3.5 py-1 rounded-full border border-emerald-400/60 shadow-[0_0_14px_rgba(52,211,153,0.35)] tracking-wide">
+              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-emerald-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-emerald-400/60 shadow-[0_0_14px_rgba(52,211,153,0.35)] tracking-wide">
                 ● mTLS HEARTBEAT TUNNEL HEALTHY (TCP 9000)
               </span>
             )}
