@@ -26,6 +26,8 @@ pub fn create_app(app_state: Arc<AppState>) -> Router {
         .route("/api/v1/alerts", post(ingest::handle_grafana_webhook))
         .route("/api/simulate_attack", post(ingest::simulate_attack))
         .route("/api/incidents/{id}/forensics", get(status::get_incident_forensics))
+        .route("/api/immune/status", get(status::get_immune_status))
+        .route("/api/immune/reset", post(status::reset_immune_quarantine))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(app_state)

@@ -291,6 +291,23 @@ pub struct ForensicEvidencePackage {
     pub snapshot: ForensicSnapshot,
 }
 
+/// Adaptive Immune System: Active quarantine record for malicious or high-failure workloads
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuarantineRecord {
+    pub target: String,
+    pub violation_count: usize,
+    pub quarantined_until: DateTime<Utc>,
+    pub reason: String,
+}
+
+/// Immune system status response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImmuneStatusResponse {
+    pub status: String,
+    pub total_quarantined: usize,
+    pub active_quarantines: Vec<QuarantineRecord>,
+}
+
 /// Instance role in high-availability topology
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

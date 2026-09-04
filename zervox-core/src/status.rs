@@ -110,3 +110,28 @@ pub async fn get_incident_forensics(
         )),
     }
 }
+
+pub async fn get_immune_status(
+    State(state): State<Arc<AppState>>,
+) -> Json<crate::types::ImmuneStatusResponse> {
+    let active = state.policy.get_active_quarantines();
+    Json(crate::types::ImmuneStatusResponse {
+        status: if active.is_empty() {
+            "monitoring_active".to_string()
+        } else {
+            "quarantine_engaged".to_string()
+        },
+        total_quarantined: active.len(),
+        active_quarantines: active,
+    })
+}
+
+pub async fn reset_immune_quarantine(
+    State(state): State<Arc<AppState>>,
+) -> Json<serde_json::Value> {
+    state.policy.clear_quarantines();
+    Json(json!({
+        "status": "success",
+        "message": "Adaptive immune system quarantines successfully reset."
+    }))
+}
