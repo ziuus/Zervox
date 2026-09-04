@@ -48,6 +48,6 @@ ENV OPA_URL=http://127.0.0.1:8181/v1/data/zervox/authz
 EXPOSE 8080 9000
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/healthz || exit 1
+  CMD curl -f http://localhost:${ZERVOX_HTTP_PORT:-8080}/healthz || exit 1
 
 ENTRYPOINT ["/app/zervox-core"]
