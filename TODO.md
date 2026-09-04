@@ -79,7 +79,7 @@ curl -s http://localhost:3000/api/telemetry
     - Wire a physical physical toggle switch to GPIO 4 for the ultimate judge live demo!
 
 ### 4. 3-Minute Demo Runbook Script (`scripts/demo-judges.sh`)
-- [ ] Create an automated bash script that executes the exact 5-step judge presentation:
+- [x] Create an automated bash script that executes the exact 5-step judge presentation:
   1. `STEP 1`: Inject RBAC attack (`delete_namespace`) → Show Policy Firewall Replay modal blocking the action.
   2. `STEP 2`: Inject `PodCrashLooping` alert → Show Forensic Freeze Frame capturing volatile memory before restarting pod.
   3. `STEP 3`: Show Glass Box reasoning trail in UI and flip to Deterministic Fallback.
