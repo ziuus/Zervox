@@ -22,23 +22,33 @@ export function EngineModeCard({
   totalIncidents,
   hasOpaBlock = false,
 }: EngineModeCardProps) {
-  const isAI = mode === 'ai'
+  const isAI      = mode === 'ai'
   const isFallback = mode === 'fallback'
+  const opaOnline  = opaStatus === 'reachable'
+  const k8sConn    = k8sStatus === 'connected'
+  const peerConn   = peerStatus === 'peer_connected'
 
-  const opaOnline = opaStatus === 'reachable'
-  const k8sConnected = k8sStatus === 'connected'
-  const peerConnected = peerStatus === 'peer_connected'
-
-  const stateBorderClass = hasOpaBlock
-    ? 'border-rose-500/40 bg-gradient-to-b from-rose-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(244,63,94,0.12)]'
+  const accentBorder = hasOpaBlock
+    ? 'var(--status-red-bdr)'
     : isFallback
-      ? 'border-amber-500/40 bg-gradient-to-b from-amber-950/20 via-transparent to-transparent shadow-[0_0_25px_rgba(245,158,11,0.12)]'
-      : isAI
-        ? 'border-sky-500/40 bg-gradient-to-b from-sky-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(56,189,248,0.12)]'
-        : 'border-white/[0.08]'
+    ? 'var(--status-amber-bdr)'
+    : isAI
+    ? 'var(--accent-border)'
+    : 'var(--border-subtle)'
+
+  const accentShadow = hasOpaBlock
+    ? '0 0 24px var(--status-red-bg)'
+    : isFallback
+    ? '0 0 24px var(--status-amber-bg)'
+    : isAI
+    ? '0 0 24px var(--glow-sky)'
+    : 'none'
 
   return (
-    <Card glow className={stateBorderClass}>
+    <div
+      className="rounded-2xl p-5 surface transition-all duration-300"
+      style={{ borderColor: accentBorder, boxShadow: accentShadow }}
+    >
       {/* Engine Mode Banner */}
       <div className="mb-5 flex items-center justify-between">
         <CardLabel className="mb-0">Engine Mode</CardLabel>
@@ -52,61 +62,72 @@ export function EngineModeCard({
       </div>
 
       {/* Mode description */}
-      <div className={`mb-5 rounded-lg border px-4 py-3 ${
-        isAI
-          ? 'border-sky-400/20 bg-sky-400/5'
-          : isFallback
-            ? 'border-amber-400/20 bg-amber-400/5'
-            : 'border-slate-500/20 bg-slate-500/5'
-      }`}>
-        <p className="font-mono text-xs leading-relaxed text-slate-400">
+      <div
+        className="mb-5 rounded-xl px-4 py-3"
+        style={{
+          border: `1px solid ${isAI ? 'var(--accent-border)' : isFallback ? 'var(--status-amber-bdr)' : 'var(--border-subtle)'}`,
+          background: isAI ? 'var(--accent-subtle)' : isFallback ? 'var(--status-amber-bg)' : 'var(--bg-sunken)',
+        }}
+      >
+        <p className="font-mono text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           {isAI
             ? 'LLM-driven root cause analysis active. Decisions routed via external model with automatic fallback on timeout.'
             : isFallback
-              ? 'Local deterministic rules active. Air-gapped mode — no external LLM dependency. Sub-100ms decision latency.'
-              : 'Engine status initializing…'}
+            ? 'Local deterministic rules active. Air-gapped mode — no external LLM dependency. Sub-100ms decision latency.'
+            : 'Engine status initializing…'}
         </p>
       </div>
 
       {/* Divider */}
-      <div className="mb-4 h-px bg-[#1e3a5f]" />
+      <div className="mb-4 hr-gradient" />
 
       {/* Sub-system grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <CardLabel>OPA Security Gate</CardLabel>
-          <div className="flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${opaOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-            <span className={`font-mono text-xs font-semibold ${opaOnline ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {opaOnline ? 'EXTERNAL' : 'EMBEDDED'}
-            </span>
+        {[
+          {
+            label: 'OPA Security Gate',
+            dot: opaOnline ? 'var(--status-green)' : 'var(--status-amber)',
+            valueColor: opaOnline ? 'var(--status-green)' : 'var(--status-amber)',
+            value: opaOnline ? 'EXTERNAL' : 'EMBEDDED',
+            sub: opaStatus ?? '—',
+          },
+          {
+            label: 'Kubernetes Executor',
+            dot: k8sConn ? 'var(--status-green)' : 'var(--status-amber)',
+            valueColor: k8sConn ? 'var(--status-green)' : 'var(--status-amber)',
+            value: k8sConn ? 'LIVE' : 'DRY RUN',
+            sub: k8sStatus ?? '—',
+          },
+          {
+            label: 'HA Peer Link',
+            dot: peerConn ? 'var(--status-green)' : 'var(--status-red)',
+            valueColor: peerConn ? 'var(--status-green)' : 'var(--status-red)',
+            value: peerStatus?.replace('_', ' ').toUpperCase() ?? '—',
+            sub: null,
+          },
+        ].map(({ label, dot, valueColor, value, sub }) => (
+          <div key={label}>
+            <CardLabel>{label}</CardLabel>
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: dot }} />
+              <span className="font-mono text-xs font-semibold" style={{ color: valueColor }}>
+                {value}
+              </span>
+            </div>
+            {sub && (
+              <p className="mt-0.5 font-mono text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                {sub}
+              </p>
+            )}
           </div>
-          <p className="mt-0.5 font-mono text-[10px] text-slate-600 truncate">{opaStatus ?? '—'}</p>
-        </div>
-        <div>
-          <CardLabel>Kubernetes Executor</CardLabel>
-          <div className="flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${k8sConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-            <span className={`font-mono text-xs font-semibold ${k8sConnected ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {k8sConnected ? 'LIVE' : 'DRY RUN'}
-            </span>
-          </div>
-          <p className="mt-0.5 font-mono text-[10px] text-slate-600 truncate">{k8sStatus ?? '—'}</p>
-        </div>
-        <div>
-          <CardLabel>HA Peer Link</CardLabel>
-          <div className="flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${peerConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-            <span className={`font-mono text-xs font-semibold ${peerConnected ? 'text-emerald-400' : 'text-red-400'}`}>
-              {peerStatus?.replace('_', ' ').toUpperCase() ?? '—'}
-            </span>
-          </div>
-        </div>
+        ))}
         <div>
           <CardLabel>Total Incidents</CardLabel>
-          <p className="font-mono text-lg font-bold text-sky-400">{totalIncidents.toLocaleString()}</p>
+          <p className="font-mono text-lg font-bold" style={{ color: 'var(--accent)' }}>
+            {totalIncidents.toLocaleString()}
+          </p>
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

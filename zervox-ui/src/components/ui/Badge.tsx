@@ -1,46 +1,52 @@
 import { cn } from '@/lib/utils'
 
+type BadgeVariant = 'green' | 'amber' | 'red' | 'sky' | 'slate' | 'purple' | 'indigo' | 'rose'
+type BadgeSize    = 'sm' | 'md'
+
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'green' | 'red' | 'amber' | 'sky' | 'purple' | 'slate'
-  size?: 'sm' | 'md'
+  variant?: BadgeVariant
+  size?: BadgeSize
   dot?: boolean
   className?: string
 }
 
-const variants = {
-  green:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]',
-  red:    'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.15)]',
-  amber:  'bg-amber-500/10 text-amber-300 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]',
-  sky:    'bg-sky-500/10 text-sky-300 border-sky-500/30 shadow-[0_0_12px_rgba(56,189,248,0.15)]',
-  purple: 'bg-purple-500/10 text-purple-300 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.15)]',
-  slate:  'bg-slate-800/40 text-slate-300 border-slate-700/50',
+const variantStyles: Record<BadgeVariant, { color: string; bg: string; border: string; dotBg: string }> = {
+  green:  { color: 'var(--status-green)',   bg: 'var(--status-green-bg)',  border: 'var(--status-green-bdr)',  dotBg: 'var(--status-green)' },
+  amber:  { color: 'var(--status-amber)',   bg: 'var(--status-amber-bg)',  border: 'var(--status-amber-bdr)',  dotBg: 'var(--status-amber)' },
+  red:    { color: 'var(--status-red)',     bg: 'var(--status-red-bg)',    border: 'var(--status-red-bdr)',    dotBg: 'var(--status-red)' },
+  sky:    { color: 'var(--accent)',         bg: 'var(--accent-subtle)',    border: 'var(--accent-border)',     dotBg: 'var(--accent)' },
+  slate:  { color: 'var(--text-secondary)', bg: 'var(--bg-sunken)',        border: 'var(--border-subtle)',     dotBg: 'var(--text-muted)' },
+  purple: { color: 'rgb(167 139 250)',      bg: 'rgba(167,139,250,0.10)',  border: 'rgba(167,139,250,0.30)',   dotBg: 'rgb(167 139 250)' },
+  indigo: { color: 'rgb(129 140 248)',      bg: 'rgba(129,140,248,0.10)',  border: 'rgba(129,140,248,0.30)',   dotBg: 'rgb(129 140 248)' },
+  rose:   { color: 'rgb(251 113 133)',      bg: 'rgba(251,113,133,0.10)',  border: 'rgba(251,113,133,0.30)',   dotBg: 'rgb(251 113 133)' },
 }
 
-const dotColors = {
-  green:  'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]',
-  red:    'bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.8)]',
-  amber:  'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]',
-  sky:    'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]',
-  purple: 'bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.8)]',
-  slate:  'bg-slate-400',
-}
+export function Badge({ children, variant = 'sky', size = 'md', dot, className }: BadgeProps) {
+  const v = variantStyles[variant]
+  const padding = size === 'sm' ? '0 6px' : '1px 8px'
 
-export function Badge({ children, variant = 'slate', size = 'sm', dot = false, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border font-mono font-semibold uppercase tracking-wider backdrop-blur-sm',
-        size === 'sm' ? 'px-2.5 py-0.5 text-[9px]' : 'px-3 py-1 text-[11px]',
-        variants[variant],
+        'inline-flex items-center gap-1.5 rounded font-mono font-semibold uppercase tracking-wider select-none',
+        size === 'sm' ? 'text-[9px]' : 'text-[10px]',
         className,
       )}
+      style={{
+        color: v.color,
+        background: v.bg,
+        border: `1px solid ${v.border}`,
+        padding,
+      }}
     >
       {dot && (
-        <span className={cn('h-1.5 w-1.5 rounded-full animate-pulse', dotColors[variant])} />
+        <span
+          className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+          style={{ background: v.dotBg }}
+        />
       )}
       {children}
     </span>
   )
 }
-
