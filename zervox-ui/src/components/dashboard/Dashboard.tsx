@@ -15,51 +15,7 @@ import { PolicyFirewallModal } from '@/components/dashboard/PolicyFirewallModal'
 import { GlassBoxVisualizer } from '@/components/dashboard/GlassBoxVisualizer'
 import { ForensicFreezeFrame } from '@/components/dashboard/ForensicFreezeFrame'
 
-// 5 Core Innovations for Kerala Police Cyberdome Best Innovation Award
-const INNOVATIONS = [
-  {
-    id: '01',
-    title: 'Forensic Freeze Frame',
-    subtitle: 'Pre-Remediation Evidence Snapshot',
-    tag: 'SHA-256 MERKLE',
-    desc: 'Before touching a compromised pod, Zervox triggers an ephemeral /proc & socket dump into a tamper-evident append-only ledger. OPA rule guarantee: no remediation without a sealed hash.',
-    accent: { text: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.3)', dot: '#a78bfa' },
-  },
-  {
-    id: '02',
-    title: 'Glass Box Root Cause Trail',
-    subtitle: 'LLM Reasoning Chain Visualizer',
-    tag: 'DECISION GRAPH',
-    desc: 'Structured reasoning trail (hypothesis → evidence checked → confidence score). If LLM times out at 10s, visually reroutes to deterministic rule-table fallback in 1.2ms.',
-    accent: { text: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.3)', dot: '#818cf8' },
-  },
-  {
-    id: '03',
-    title: 'Policy Firewall Replay',
-    subtitle: 'Rego "Blocked Action" Theater',
-    tag: 'REGO GATE',
-    desc: 'Live attempted-vs-blocked staging. Out-of-bounds actions (e.g. delete namespace) are denied by Rego rule REG-001, rendering the strikethrough diff for auditors.',
-    accent: { text: '#fb7185', bg: 'rgba(251,113,133,0.08)', border: 'rgba(251,113,133,0.3)', dot: '#fb7185' },
-    triggerPolicyModal: true,
-  },
-  {
-    id: '04',
-    title: 'Split-Brain Sentinel',
-    subtitle: 'Live Failover Visualization',
-    tag: 'mTLS HEARTBEAT',
-    desc: 'Sub-3s leader takeover. The backup node detects missed mTLS heartbeat pings and promotes itself with zero dropped incidents from replicated SQLite WAL.',
-    accent: { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.3)', dot: '#fbbf24' },
-  },
-  {
-    id: '05',
-    title: 'Air-Gap Attestation Beacon',
-    subtitle: 'Cryptographic Isolation Proof',
-    tag: 'Ed25519 SEALED',
-    desc: 'Continuous proof of zero internet egress. Lightweight daemon signs egress state into the hash chain every 3s. Egress anomaly triggers immediate alert banner.',
-    accent: { text: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.3)', dot: '#34d399' },
-    ctaOptical: true,
-  },
-]
+
 
 export function Dashboard() {
   const [isAirGapOpen, setIsAirGapOpen] = useState(false)
@@ -229,88 +185,6 @@ export function Dashboard() {
             </div>
           )}
 
-          {/* ── 5 INNOVATION FEATURE SHOWCASE DECK ─────────────────── */}
-          <section className="animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
-            <SectionLabel
-              title="5 CORE INNOVATIONS — BEST INNOVATION AWARD"
-              subtitle="Kerala Police Cyberdome HAC'KP 2026 Pitch Architecture"
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5">
-              {INNOVATIONS.map((inn) => (
-                <div
-                  key={inn.id}
-                  className="rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
-                  style={{
-                    background: inn.accent.bg,
-                    border: `1px solid ${inn.accent.border}`,
-                    backdropFilter: 'blur(12px)',
-                  }}
-                >
-                  <div>
-                    <div
-                      className="flex items-center justify-between pb-2 mb-2"
-                      style={{ borderBottom: `1px solid ${inn.accent.border}` }}
-                    >
-                      <span
-                        className="font-mono text-[9px] font-extrabold uppercase tracking-[0.2em]"
-                        style={{ color: inn.accent.text }}
-                      >
-                        INNOVATION {inn.id}
-                      </span>
-                      <span
-                        className="h-1.5 w-1.5 rounded-full animate-pulse"
-                        style={{ background: inn.accent.dot, boxShadow: `0 0 6px ${inn.accent.dot}` }}
-                      />
-                    </div>
-                    <h3
-                      className="font-mono text-xs font-bold uppercase tracking-wider mb-0.5"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {inn.title}
-                    </h3>
-                    <p className="font-mono text-[9px] mb-2 font-semibold" style={{ color: inn.accent.text }}>
-                      {inn.subtitle}
-                    </p>
-                    <p className="text-[11px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-                      {inn.desc}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: inn.accent.border }}>
-                    {inn.triggerPolicyModal ? (
-                      <button
-                        type="button"
-                        onClick={() => setIsPolicyModalOpen(true)}
-                        className="font-mono text-[9px] font-bold rounded-full px-2 py-0.5 cursor-pointer hover:scale-105 transition-all"
-                        style={{ color: inn.accent.text, background: inn.accent.bg, border: `1px solid ${inn.accent.border}` }}
-                      >
-                        OPEN THEATER
-                      </button>
-                    ) : inn.ctaOptical ? (
-                      <button
-                        type="button"
-                        onClick={() => setIsAirGapOpen(true)}
-                        className="font-mono text-[9px] font-bold rounded-full px-2 py-0.5 cursor-pointer hover:scale-105 transition-all"
-                        style={{ color: inn.accent.text, background: inn.accent.bg, border: `1px solid ${inn.accent.border}` }}
-                      >
-                        OPTICAL QR
-                      </button>
-                    ) : (
-                      <span
-                        className="font-mono text-[9px] font-bold rounded-full px-2 py-0.5"
-                        style={{ color: inn.accent.text, background: inn.accent.bg, border: `1px solid ${inn.accent.border}` }}
-                      >
-                        {inn.tag}
-                      </span>
-                    )}
-                    <span className="font-mono text-[8px]" style={{ color: 'var(--text-muted)' }}>
-                      ACTIVE
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
 
           {/* ── CHAOS SIMULATION & JUDGES DEMO CONSOLE ────────────── */}
           <section className="rounded-2xl p-4.5 surface animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
