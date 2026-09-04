@@ -3,7 +3,7 @@
 # ==========================================
 
 # Stage 1: Build binary
-FROM rust:1.80-bullseye AS builder
+FROM rust:bookworm AS builder
 
 WORKDIR /usr/src/zervox-core
 
@@ -20,11 +20,11 @@ COPY policies ./policies
 RUN cargo build --release
 
 # Stage 2: Minimal hardened runtime
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
-    libssl1.1 \
+    libssl3 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
