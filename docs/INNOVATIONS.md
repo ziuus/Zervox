@@ -1,118 +1,103 @@
-# Zervox: Hackathon Innovations Specification 🏆
-> **Targeted for HAC'KP 2026 & Kerala Police Cyberdome Digital Forensics**
+# Zervox: 5 Breakthrough Innovations Specification 🏆
+> **Targeted for HAC'KP 2026 & Kerala Police Cyberdome Digital Forensics Best Innovation Award**
 
 Standard enterprise auto-remediation systems (Kubernetes operators, ArgoCD, self-healing controllers) treat pods as ephemeral cattle: when an incident or crash occurs, they immediately delete and replace the container. In a cybersecurity or incident investigation scenario, this **destroys all volatile forensic artifacts**—active process trees, open socket descriptors, volatile heap traces, and attacker payloads—frustrating police and digital forensic investigators.
 
-Zervox introduces **four breakthrough architectural innovations** that bridge autonomous self-healing with zero-trust forensics, hardware security, and air-gapped resilience.
+Zervox introduces **five breakthrough architectural innovations** that bridge autonomous self-healing with zero-trust forensics, explainable AI, hardware security, and air-gapped resilience.
 
 ---
 
-## 🔬 Innovation 1: Forensic Freeze Vault (Pre-Remediation Evidence Preservation)
+## 🔬 1. Forensic Freeze Frame (Immutable Evidence Snapshot Before Remediation)
 
-### The Problem
-When a compromised or crashed container is deleted during auto-remediation, critical evidence is permanently destroyed. Digital forensic investigators from Kerala Police Cyberdome and incident response teams arrive at a crime scene where the evidence was obliterated by the automated infrastructure itself.
+### The Pitch
+Before Zervox touches a compromised pod, it forks a tamper-evident forensic snapshot so remediation never destroys the crime scene.
 
-### The Zervox Solution
-Before `RemediationExecutor` issues a pod delete or restart:
-1. **Volatile State Snapshot**: Queries the pod's live execution metadata, active memory dump, environment state, and tail logs.
-2. **Immutable SHA-256 Digest**: Computes a cryptographic SHA-256 hash across the entire snapshot package.
-3. **Forensic Vault Storage**: Persists the snapshot into an isolated, append-only SQLite WAL table (`incident_forensics`).
-4. **1-Click Forensic Package**: Available via `/api/incidents/:id/forensics` and directly in the Next.js UI with evidence export and verification.
+### The Industry Problem
+The #1 complaint from DFIR (Digital Forensics & Incident Response) teams about auto-remediation tools is that killing/restarting a compromised pod destroys volatile evidence (process tree, network sockets, memory-resident malware) before investigators can analyze it. Auto-healing and forensics are traditionally mutually exclusive.
 
-```text
-[ Prometheus Alert ] ──► [ LLM RCA / Fallback ] ──► [ OPA Gate: ALLOW ]
-                                                            │
-                                  ┌─────────────────────────▼─────────────────────────┐
-                                  │   INNOVATION 1: PRE-REMEDIATION FORENSIC FREEZE    │
-                                  │   1. Read container logs & live execution spec    │
-                                  │   2. Extract volatile memory dump & sockets       │
-                                  │   3. Compute SHA-256 immutable checksum           │
-                                  │   4. Persist to isolated incident_forensics vault │
-                                  └─────────────────────────┬─────────────────────────┘
-                                                            │
-                                  [ k8s_openapi: Pod Delete (ReplicaSet Heals) ]
-```
-
-### Why Judges & Cyber Investigators Love It
-- Directly addresses digital forensics and chain-of-custody requirements.
-- Zero downtime penalty: snapshot extraction completes in under 20ms before pod teardown.
+### How It Works in Zervox
+1. **Volatile State Snapshot**: On threat detection, Zervox triggers an ephemeral container attach + `/proc` memory dump and network socket descriptor capture.
+2. **SHA-256 Merkle Root**: Hashes the entire artifact bundle into an immutable cryptographic digest.
+3. **SQLite Ledger Chaining**: Writes the digest to an append-only SQLite table with previous-hash chain integrity.
+4. **Hard Rego Policy Gate**: The Open Policy Agent gate enforces the rule:
+   ```rego
+   deny[msg] {
+       input.action == "restart_pod"
+       not input.evidence_hash
+       msg := "FORENSIC INTEGRITY: Pod remediation forbidden without sealed evidence hash."
+   }
+   ```
+5. **Dashboard Visual**: The pod card visibly flashes and freezes with a snapshot shutter animation, displays a live-calculating `sha256:...` Merkle digest, and unlocks the green **Evidence Sealed ✔** badge before remediation restores the pod in `<10 seconds`.
 
 ---
 
-## 🛡 Innovation 2: Physical Dual-Key Hardware Circuit-Breaker (RISC-V / ESP32-C3 Guard)
+## 🧠 2. Glass Box Root Cause Trail (LLM Reasoning Chain Visualizer)
 
-### The Problem
-Autonomous remediation engines possess devastating permissions (node cordoning, pod deletion, replica scaling). If an attacker compromises the API token, prompts the LLM maliciously, or poisons the model, they can manipulate the engine into cordoning the entire cluster and taking down infrastructure.
+### The Pitch
+Zervox never says "trust me" — it renders its entire dual-tier AI reasoning path as a live, inspectable decision graph.
 
-### The Zervox Solution
-Destructive cluster-level actions (such as `cordon_node`) **cannot be executed by software alone**. They require a physical challenge-response signature from a hardware coprocessor (ESP32-C3 / RISC-V) connected over serial/UART:
-1. When `cordon_node` is scheduled, the engine generates a cryptographic challenge `zervox-hw-auth-<nonce>`.
-2. The hardware coprocessor verifies physical dual-key state (physical jumper/button or armed hardware register) and returns an HMAC/SHA-256 authorization signature.
-3. Without valid hardware authorization, the software hard-rejects the action even if OPA and LLM allowed it.
+### The Industry Problem
+SOC analysts distrust black-box AI remediation. SOAR tools that "just act" get disabled after the first false positive because nobody can audit *why* an action fired or what evidence was evaluated.
 
-```text
-[ Node Cordon Requested ] ──► [ OPA Policy Check ] ──► [ HARDWARE CIRCUIT-BREAKER ]
-                                                              │
-                                            ┌─────────────────┴─────────────────┐
-                                            │ UART Challenge-Response Interface  │
-                                            │ Nonce: zervox-hw-auth-<uuid>      │
-                                            │ Physical Switch / Key Register    │
-                                            └─────────────────┬─────────────────┘
-                                                              │
-                                            ┌─────────────────▼─────────────────┐
-                                            │ Hardware Armed & Verified?        │
-                                            │  YES ──► Signed: Sig: 7f3b...     │
-                                            │  NO  ──► REJECTED: HW Disarmed    │
-                                            └───────────────────────────────────┘
-```
+### How It Works in Zervox
+1. **Structured Reasoning Pipeline**: Every LLM call emits structured intermediate steps (`Hypothesis Generation` → `Evidence Audit: /proc & metrics` → `Confidence Validation: 94%` → `Remediation Plan`).
+2. **Deterministic Fallback Reroute**: If the external LLM is unreachable or exceeds the **hard 10-second deadline**, the graph visibly and instantly reroutes through the highlighted **Deterministic Fallback Engine** branch in amber (executing local rule tables in **1.2ms** with zero external dependencies).
+3. **Dashboard Visual**: A 4-stage interactive node-graph animating in real time with confidence indicators and interactive switches to demonstrate live failover.
 
 ---
 
-## 🦠 Innovation 3: Adaptive Policy Tightening (Self-Learning Immune System)
+## 🛡 3. Policy Firewall Replay (Rego Gate "Blocked Action" Theater)
 
-### The Problem
-Standard rule engines evaluate each incoming alert in a vacuum. If an attacker repeatedly probes an endpoint or triggers high-frequency suspicious payloads (e.g., trying to execute shell commands or delete namespaces), standard firewalls only block the individual action, leaving the target available for ongoing probing.
+### The Pitch
+Zervox doesn't just enforce policy silently — it stages a live "attempted vs blocked" replay so judges watch the zero-trust guardrail catch a dangerous action.
 
-### The Zervox Solution
-Zervox features a biological immune response:
-1. Tracks target workloads and namespaces across all evaluated policies.
-2. If repeated policy violations (≥ 2 attempts) target the same resource within a session, the **Adaptive Immune System dynamically locks down the workload for 30 minutes**.
-3. During active quarantine, **all actions on that workload are pre-emptively blocked at the gateway**, preventing alert flooding and active reconnaissance.
-4. Quarantines can be inspected via `GET /api/immune/status` and cleared by an authorized operator via `POST /api/immune/reset`.
+### The Industry Problem
+Zero-trust automation frameworks are judged on what they *refuse* to do as much as what they do, but most demos only show the happy path. Nobody ever proves the safety rails actually work.
 
----
-
-## 📡 Innovation 4: Air-Gapped Optical Telemetry (Zero-Packet Visual Extraction)
-
-### The Problem
-In high-security SCADA networks, military facilities, police crime labs, or during catastrophic network blackouts (e.g., control plane DoS or severed WAN links), operators cannot open web browsers or send TCP packets to retrieve incident data.
-
-### The Zervox Solution
-1. Cryptographically signs the live system health, active node role, and latest forensic SHA-256 hash.
-2. Encodes the payload into a high-density, real-time animated **QR code telemetry stream**.
-3. An operator in an air-gapped facility scans the screen using an authorized mobile camera or optical reader—**extracting full telemetry with 0 network packets and 0 physical data cables**.
-
-```text
-[ Air-Gapped Incident Event ]
-           │
-           ▼
-[ Cryptographic Telemetry Payload ]
-           │
-           ▼
-[ High-Density Visual QR Matrix on Dashboard ] 
-           │ (Optical Scan via Smartphone / Optical Sensor)
-           ▼
-[ Zero-Packet Incident Decryption & Investigation ]
-```
+### How It Works in Zervox
+1. **Staged Attack Injection**: During demos, a malicious scenario is injected (e.g., `delete_namespace` or destructive `cordon_all_nodes`).
+2. **OPA Decision Interception**: The serialized action object is evaluated by OPA (`/policies/authz.rego`), which hard-denies the payload under rule `REG-001`.
+3. **Dashboard Visual**: A red **ACTION BLOCKED BY POLICY** theater modal opens with a diff view:
+   - **Attempted Action**: `~~kubectl delete namespace default~~` (strikethrough)
+   - **Allowed Alternative**: `QUARANTINE_ISOLATE + RESTART_POD`
+   - **Rego Inspector**: Direct view of the active Rego rule code.
 
 ---
 
-## 📊 Live Verification & Demonstration Matrix
+## ⚡ 4. Split-Brain Sentinel (Live Failover Visualization)
 
-| Innovation | Endpoint / UI Surface | Test Script / Chaos Trigger |
-|:---|:---|:---|
-| **Forensic Freeze** | `GET /api/incidents/:id/forensics` | `infra/chaos-scripts/oom-leak.sh` |
-| **Hardware Key** | `GET /api/hardware/status` & `POST /api/hardware/toggle` | `infra/chaos-scripts/node-cordon-hardware.sh` |
-| **Adaptive Immune** | `GET /api/immune/status` & `POST /api/immune/reset` | `infra/chaos-scripts/rbac-attack.sh` (run 2x) |
-| **Optical Telemetry** | Next.js Floating Dock `[ AIR-GAP OPTICAL ]` Button | Click button in dashboard at `http://localhost:3000` |
+### The Pitch
+Zervox visualizes its own heartbeat dying and a dormant backup node seizing control, in real time, on stage.
 
+### The Industry Problem
+High-Availability (HA) claims in security tooling are usually untestable in a demo. "Trust our failover" is just a slide, and teams get burned by remediation engines that silently go dark during an actual cluster crisis.
+
+### How It Works in Zervox
+1. **mTLS Heartbeat Tunnel**: Active Primary and Standby Backup communicate over mutual TLS on `TCP 9000` every 2 seconds.
+2. **Sub-3s Leader Election**: When primary process dies or link severs, the backup detects the missed pings, breaks dormant state, promotes itself to active leader, and serves from the shared SQLite WAL database.
+3. **Dashboard Visual**: Topology map with two nodes connected by a pulsing green line. Clicking **⚡ Sever Heartbeat** turns the line dashed-red, launches a 2.4s `ELECTING BACKUP LEADER...` spinner, and promotes the backup node to gold `★ ACTIVE PROMOTED LEADER` with **zero lost incidents**.
+
+---
+
+## 🔒 5. Air-Gap Attestation Beacon (Cryptographic Isolation Proof)
+
+### The Pitch
+Zervox continuously proves it never touched the public internet during incident response, sealing that proof into the audit trail.
+
+### The Industry Problem
+Regulated environments (critical infra, defense, police labs) require documented proof that incident response tooling operated completely air-gapped without data exfiltration risks.
+
+### How It Works in Zervox
+1. **Continuous Socket & Interface Audit**: Samples outbound network interface counters and socket descriptors every 3 seconds.
+2. **Ed25519 Cryptographic Attestation**: Computes an Ed25519 signature certifying zero WAN egress and seals it into the SQLite append-only ledger.
+3. **Dashboard Visual**: Persistent `🔒 AIR-GAP VERIFIED` badge with live-ticking Ed25519 signature in the header dock. Clicking **Simulate Egress Anomaly** triggers an immediate emergency breach banner identifying the intercepted socket (`198.51.100.44:443 [PID 4192]`).
+4. **Optical QR Matrix**: Auxiliary modal generating real-time QR matrices for zero-packet camera telemetry extraction.
+
+---
+
+### Demo Presentation Sequencing (For Judges)
+1. **Open with #3 (Policy Firewall Replay)**: Proves autonomous execution has an absolute, immutable safety ceiling.
+2. **Escalate to #1 (Forensic Freeze Frame)**: Shows unique digital forensics angle for Kerala Police Cyberdome.
+3. **Centerpiece #2 (Glass Box Reasoning Trail)**: Visualizes explainable AI and sub-1.2ms deterministic fallback.
+4. **Closing Climax #4 (Split-Brain Sentinel)**: Sever the live primary node on stage and show instant backup promotion with zero data loss.
+5. **Judge Q&A #5 (Air-Gap Attestation)**: Prove air-gapped compliance and zero data exfiltration.

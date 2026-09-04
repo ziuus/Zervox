@@ -68,25 +68,30 @@ Zervox is an **out-of-band, high-availability SRE engine** engineered to survive
 
 ---
 
-## 🏆 Hackathon Innovation Showcase (HAC'KP 2026)
+### 🏆 Hackathon Innovation Showcase (HAC'KP 2026)
 
-See full technical documentation in [`docs/INNOVATIONS.md`](docs/INNOVATIONS.md).
+See full technical documentation in [`docs/INNOVATIONS.md`](docs/INNOVATIONS.md) and pending tasks in [`TODO.md`](TODO.md).
 
-1. **Forensic Freeze Vault (Pre-Remediation Evidence Preservation)**:
+1. **Forensic Freeze Frame (Immutable Evidence Snapshot Before Remediation)**:
    - *Problem*: Standard auto-healing instantly deletes broken pods, permanently destroying volatile memory, active network sockets, and attacker artifacts.
-   - *Innovation*: Captures memory dumps, container tail logs, and pod specs, computes an immutable **SHA-256 cryptographic digest**, and locks it into the forensic vault before pod destruction.
+   - *Innovation*: On threat detection, captures `/proc` memory dumps and network sockets into an immutable **SHA-256 Merkle tree**, writing to an append-only ledger before container teardown.
+   - *Policy Guarantee*: Rego gate enforces `remediate == true only if evidence_hash != null`.
 
-2. **Physical Dual-Key Hardware Circuit-Breaker (RISC-V / ESP32-C3 Guard)**:
-   - *Problem*: If an AI model or API token is poisoned, malicious prompts could instruct the engine to cordon all cluster nodes.
-   - *Innovation*: Destructive cluster-level actions require physical challenge-response cryptographic authorization from an embedded RISC-V coprocessor over UART.
+2. **Glass Box Root Cause Trail (LLM Reasoning Chain Visualizer)**:
+   - *Problem*: SOC teams distrust black-box AI remediation because nobody can audit why actions fired.
+   - *Innovation*: Emits a structured chain-of-thought decision graph with live confidence percentages. If the LLM exceeds a **10s deadline**, the graph visibly reroutes to the deterministic rule engine in **1.2ms**.
 
-3. **Adaptive Policy Tightening (Self-Learning Immune System)**:
-   - *Problem*: Traditional rule gates evaluate incoming incidents in isolation, allowing repeated probing.
-   - *Innovation*: Tracks violation frequencies across workloads. If repeated attacks occur (≥ 2 within session), the workload is dynamically placed under a **30-minute quarantine lockdown**, pre-emptively blocking further execution.
+3. **Policy Firewall Replay (Rego Gate "Blocked Action" Theater)**:
+   - *Problem*: Zero-trust automation demos only show the happy path, never proving the safety ceiling.
+   - *Innovation*: Staged attack replay with live diff modal: proposed destructive action (strikethrough) vs allowed alternative, citing exact Rego rule `REG-001`.
 
-4. **Air-Gapped Optical Telemetry (Zero-Packet Extraction)**:
-   - *Problem*: In classified networks, SCADA control rooms, or during complete network isolation, operators cannot connect web browsers.
-   - *Innovation*: Cryptographically signs health and incident data into a real-time high-density **QR visual matrix** on the dashboard for zero-packet optical capture.
+4. **Split-Brain Sentinel (Live Failover Visualization)**:
+   - *Problem*: HA claims are difficult to prove without causing chaos in production.
+   - *Innovation*: Real-time topology map connected by an mTLS heartbeat link (`TCP 9000`). Severing primary triggers automated sub-3s backup promotion with **zero dropped incidents** via replicated SQLite WAL.
+
+5. **Air-Gap Attestation Beacon (Cryptographic Isolation Proof)**:
+   - *Problem*: Regulated facilities (critical infra, police crime labs) require proof of zero internet egress.
+   - *Innovation*: Continuous Ed25519 cryptographic attestation signed every 3s into the immutable ledger, with real-time breach detection if an unauthorized socket is opened.
 
 ---
 
@@ -96,6 +101,8 @@ See full technical documentation in [`docs/INNOVATIONS.md`](docs/INNOVATIONS.md)
 |:---|:---:|:---|
 | `/healthz` | `GET` | Health probe returning role, cluster state, and uptime |
 | `/api/status` | `GET` | Telemetry payload (engine mode, peer status, incident feed, hardware state) |
+| `/api/telemetry` | `GET` | Next.js server-side unified telemetry route (zero CORS / zero browser shields issue) |
+| `/api/action` | `POST` | Next.js server-side chaos & simulation proxy route |
 | `/api/grafana_webhook` | `POST` | Prometheus / Alertmanager / Grafana webhook ingestion endpoint |
 | `/api/v1/alerts` | `POST` | Prometheus native alert webhook endpoint |
 | `/api/simulate_attack` | `POST` | Security simulation trigger (evaluates OPA / Immune gate) |
