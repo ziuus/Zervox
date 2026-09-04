@@ -14,11 +14,11 @@ pub struct IncidentStore {
 impl IncidentStore {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let conn = Connection::open(path).context("Failed to open SQLite database")?;
-        
+
         // Configure SQLite WAL mode and busy timeout per spec
-        conn.pragma_update(None, "journal_mode", &"WAL")
-            .context("Failed to set WAL journal mode")?;
-        conn.pragma_update(None, "synchronous", &"NORMAL")
+        conn.pragma_update(None, "journal_mode", "WAL")
+            .context("Failed to set WAL mode")?;
+        conn.pragma_update(None, "synchronous", "NORMAL")
             .context("Failed to set synchronous mode")?;
         conn.busy_timeout(Duration::from_secs(5))
             .context("Failed to set busy timeout")?;
