@@ -3,7 +3,12 @@ use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "zervox-core", author = "Zervox Team", version = "0.1.0", about = "Autonomous Resilient Kubernetes SRE Remediation Engine")]
+#[command(
+    name = "zervox-core",
+    author = "Zervox Team",
+    version = "0.1.0",
+    about = "Autonomous Resilient Kubernetes SRE Remediation Engine"
+)]
 pub struct AppConfig {
     /// Instance role: primary or backup
     #[arg(long, env = "ZERVOX_ROLE", default_value = "primary")]
@@ -30,7 +35,11 @@ pub struct AppConfig {
     pub db_path: PathBuf,
 
     /// OPA authorization URL endpoint
-    #[arg(long, env = "OPA_URL", default_value = "http://127.0.0.1:8181/v1/data/zervox/authz")]
+    #[arg(
+        long,
+        env = "OPA_URL",
+        default_value = "http://127.0.0.1:8181/v1/data/zervox/authz"
+    )]
     pub opa_url: String,
 
     /// LLM API endpoint (OpenAI / OpenRouter / Ollama / Gemini proxy)

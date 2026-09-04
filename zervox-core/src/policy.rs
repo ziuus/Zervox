@@ -42,7 +42,10 @@ impl PolicyEngine {
     /// Convert domain RemediationAction into standardized PolicyInput
     pub fn build_policy_input(action: &RemediationAction) -> PolicyInput {
         match action {
-            RemediationAction::RestartPod { namespace, pod_name } => PolicyInput {
+            RemediationAction::RestartPod {
+                namespace,
+                pod_name,
+            } => PolicyInput {
                 action: "restart_pod".to_string(),
                 resource: "pod".to_string(),
                 name: pod_name.clone(),
@@ -171,7 +174,10 @@ impl PolicyEngine {
             violations.push("CRITICAL: Container shell execution is blocked.".to_string());
         }
         if let Some(cmd) = &input.command {
-            if cmd.iter().any(|c| c == "exec" || c.contains("sh") || c.contains("bash")) {
+            if cmd
+                .iter()
+                .any(|c| c == "exec" || c.contains("sh") || c.contains("bash"))
+            {
                 violations.push("CRITICAL: Container shell execution is blocked.".to_string());
             }
         }
@@ -186,14 +192,18 @@ impl PolicyEngine {
                     ));
                 }
                 if replicas < 1 {
-                    violations.push("CRITICAL: Autonomous scale down to 0 replicas is prohibited.".to_string());
+                    violations.push(
+                        "CRITICAL: Autonomous scale down to 0 replicas is prohibited.".to_string(),
+                    );
                 }
             }
         }
 
         // Deny rule 4: kube-system modification
         if input.namespace == "kube-system" && input.action != "no_action" {
-            violations.push("CRITICAL: Modifications to kube-system namespace are prohibited.".to_string());
+            violations.push(
+                "CRITICAL: Modifications to kube-system namespace are prohibited.".to_string(),
+            );
         }
 
         let is_valid = match input.action.as_str() {
@@ -246,7 +256,7 @@ mod tests {
     #[test]
     fn test_embedded_policy_scale_capped() {
         let engine = PolicyEngine::new("http://127.0.0.1:8181/v1/data/zervox/authz".to_string());
-        
+
         // Scale 4: allowed
         let safe_action = RemediationAction::ScaleDeployment {
             namespace: "default".to_string(),
@@ -266,7 +276,10 @@ mod tests {
         let input_unsafe = PolicyEngine::build_policy_input(&unsafe_action);
         let decision_unsafe = engine.evaluate_embedded(&input_unsafe);
         assert!(!decision_unsafe.allowed);
-        assert!(decision_unsafe.violations.iter().any(|v| v.contains("Replica cap exceeded")));
+        assert!(decision_unsafe
+            .violations
+            .iter()
+            .any(|v| v.contains("Replica cap exceeded")));
     }
 
     #[test]
@@ -283,7 +296,10 @@ mod tests {
         let input = PolicyEngine::build_policy_input(&attack_action);
         let decision = engine.evaluate_embedded(&input);
         assert!(!decision.allowed);
-        assert!(decision.violations.iter().any(|v| v.contains("Namespace deletion is absolutely prohibited")));
+        assert!(decision
+            .violations
+            .iter()
+            .any(|v| v.contains("Namespace deletion is absolutely prohibited")));
     }
 
     #[test]
@@ -300,6 +316,9 @@ mod tests {
         let input = PolicyEngine::build_policy_input(&attack_action);
         let decision = engine.evaluate_embedded(&input);
         assert!(!decision.allowed);
-        assert!(decision.violations.iter().any(|v| v.contains("Container shell execution is blocked")));
+        assert!(decision
+            .violations
+            .iter()
+            .any(|v| v.contains("Container shell execution is blocked")));
     }
 }

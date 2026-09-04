@@ -15,7 +15,6 @@ pub struct LlmAnalyzer {
     api_key: Option<String>,
     model: String,
     force_fallback: bool,
-    timeout_duration: Duration,
 }
 
 #[derive(Serialize)]
@@ -83,11 +82,10 @@ impl LlmAnalyzer {
             api_key,
             model,
             force_fallback,
-            timeout_duration: Duration::from_secs(10),
         }
     }
 
-    /// Analyze an alert: attempts LLM RCA with retry & bounded timeout, falling back seamlessly.
+    /// Analyze an alert: attempts LLM RCA with retry & strict timeout, falling back seamlessly.
     pub async fn analyze(&self, alert: &AlertItem) -> Decision {
         if self.force_fallback {
             info!("Force fallback mode active, bypassing LLM");
@@ -99,51 +97,32 @@ impl LlmAnalyzer {
             return fallback::match_rule(alert);
         }
 
-        // Bounded hard timeout wrapping the LLM call with retry
-        match timeout(self.timeout_duration, self.call_llm_with_retry(alert)).await {
-            Ok(Ok(decision)) => {
-                info!(
-                    incident_id = %decision.incident_id,
-                    root_cause = %decision.root_cause,
-                    "LLM analysis succeeded"
-                );
-                decision
-            }
-            Ok(Err(err)) => {
-                warn!(
-                    error = %err,
-                    "LLM analysis failed; gracefully switching to Local Fallback Mode"
-                );
-                fallback::match_rule(alert)
-            }
-            Err(_) => {
-                warn!(
-                    timeout_secs = self.timeout_duration.as_secs(),
-                    "LLM analysis timed out; gracefully switching to Local Fallback Mode"
-                );
-                fallback::match_rule(alert)
-            }
-        }
-    }
-
-    async fn call_llm_with_retry(&self, alert: &AlertItem) -> Result<Decision> {
-        let max_retries = 2;
-        let mut last_err = anyhow::anyhow!("Unknown error");
-
-        for attempt in 1..=max_retries {
-            match self.call_llm_single(alert).await {
-                Ok(decision) => return Ok(decision),
-                Err(err) => {
-                    warn!(attempt, max_retries, error = %err, "LLM attempt failed");
-                    last_err = err;
-                    if attempt < max_retries {
-                        tokio::time::sleep(Duration::from_millis(500 * attempt as u64)).await;
-                    }
+        let max_attempts = 3; // 1 initial + 2 immediate retries
+        for attempt in 1..=max_attempts {
+            match timeout(Duration::from_secs(3), self.call_llm_single(alert)).await {
+                Ok(Ok(decision)) => {
+                    info!(
+                        incident_id = %decision.incident_id,
+                        root_cause = %decision.root_cause,
+                        "LLM analysis succeeded"
+                    );
+                    return decision;
+                }
+                Ok(Err(err)) => {
+                    warn!(
+                        attempt,
+                        error = %err,
+                        "LLM returned structural/parsing error or network failure"
+                    );
+                }
+                Err(_) => {
+                    warn!(attempt, "LLM analysis timed out (3s strict)");
                 }
             }
         }
 
-        Err(last_err)
+        warn!("All LLM attempts exhausted (timeouts/parsing errors); routing directly to fallback");
+        fallback::match_rule(alert)
     }
 
     async fn call_llm_single(&self, alert: &AlertItem) -> Result<Decision> {
@@ -243,12 +222,15 @@ Only output valid JSON."#;
             "cordon" => RemediationAction::CordonNode {
                 node_name: target_name,
             },
-            _ => RemediationAction::NoAction {
+            "no_action" => RemediationAction::NoAction {
                 reason: output
                     .reasoning
                     .clone()
                     .unwrap_or_else(|| "LLM recommended no action".to_string()),
             },
+            unknown => {
+                anyhow::bail!("Structural validation failed: unknown action type '{}'", unknown);
+            }
         };
 
         Ok(Decision {

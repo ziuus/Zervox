@@ -96,10 +96,18 @@ impl AlertItem {
     }
 
     pub fn summary(&self) -> String {
-        if let Some(desc) = self.annotations.get("summary").or_else(|| self.annotations.get("description")) {
+        if let Some(desc) = self
+            .annotations
+            .get("summary")
+            .or_else(|| self.annotations.get("description"))
+        {
             desc.clone()
         } else {
-            format!("Alert {} on namespace {}", self.alertname(), self.namespace())
+            format!(
+                "Alert {} on namespace {}",
+                self.alertname(),
+                self.namespace()
+            )
         }
     }
 
@@ -180,15 +188,30 @@ impl RemediationAction {
 
     pub fn target_resource(&self) -> String {
         match self {
-            RemediationAction::RestartPod { namespace, pod_name } => {
+            RemediationAction::RestartPod {
+                namespace,
+                pod_name,
+            } => {
                 format!("pod/{}/{}", namespace, pod_name)
             }
-            RemediationAction::ScaleDeployment { namespace, deployment_name, target_replicas } => {
-                format!("deployment/{}/{} -> {} replicas", namespace, deployment_name, target_replicas)
+            RemediationAction::ScaleDeployment {
+                namespace,
+                deployment_name,
+                target_replicas,
+            } => {
+                format!(
+                    "deployment/{}/{} -> {} replicas",
+                    namespace, deployment_name, target_replicas
+                )
             }
             RemediationAction::CordonNode { node_name } => format!("node/{}", node_name),
             RemediationAction::NoAction { reason } => format!("none ({})", reason),
-            RemediationAction::DangerousActionAttempt { resource, target_name, namespace, .. } => {
+            RemediationAction::DangerousActionAttempt {
+                resource,
+                target_name,
+                namespace,
+                ..
+            } => {
                 format!("{}/{}/{}", resource, namespace, target_name)
             }
         }

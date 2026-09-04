@@ -1,7 +1,5 @@
 use crate::status::AppState;
-use crate::types::{
-    AlertItem, AlertmanagerPayload, Decision, IncidentRecord, RemediationAction,
-};
+use crate::types::{AlertItem, AlertmanagerPayload, Decision, IncidentRecord, RemediationAction};
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;

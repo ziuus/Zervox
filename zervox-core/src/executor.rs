@@ -75,9 +75,10 @@ impl RemediationExecutor {
         );
 
         match action {
-            RemediationAction::RestartPod { namespace, pod_name } => {
-                self.restart_pod(namespace, pod_name).await
-            }
+            RemediationAction::RestartPod {
+                namespace,
+                pod_name,
+            } => self.restart_pod(namespace, pod_name).await,
             RemediationAction::ScaleDeployment {
                 namespace,
                 deployment_name,
@@ -86,17 +87,24 @@ impl RemediationExecutor {
                 self.scale_deployment(namespace, deployment_name, *target_replicas)
                     .await
             }
-            RemediationAction::CordonNode { node_name } => {
-                self.cordon_node(node_name).await
-            }
+            RemediationAction::CordonNode { node_name } => self.cordon_node(node_name).await,
             RemediationAction::NoAction { reason } => {
                 info!(reason = %reason, "No remediation action performed");
                 Ok(format!("No action taken: {}", reason))
             }
-            RemediationAction::DangerousActionAttempt { action, resource, target_name, namespace, .. } => {
+            RemediationAction::DangerousActionAttempt {
+                action,
+                resource,
+                target_name,
+                namespace,
+                ..
+            } => {
                 anyhow::bail!(
                     "Attempted dangerous action '{}' on {}/{}/{} — execution rejected.",
-                    action, resource, namespace, target_name
+                    action,
+                    resource,
+                    namespace,
+                    target_name
                 );
             }
         }
@@ -123,7 +131,10 @@ impl RemediationExecutor {
             .with_context(|| format!("Failed to delete pod '{}/{}'", namespace, pod_name))?;
 
         info!(namespace, pod_name, "Successfully deleted pod for restart");
-        Ok(format!("Pod '{}/{}' deleted (ReplicaSet will reschedule)", namespace, pod_name))
+        Ok(format!(
+            "Pod '{}/{}' deleted (ReplicaSet will reschedule)",
+            namespace, pod_name
+        ))
     }
 
     async fn scale_deployment(
@@ -135,9 +146,7 @@ impl RemediationExecutor {
         if self.dry_run || self.k8s_client.is_none() {
             info!(
                 namespace,
-                deployment_name,
-                target_replicas,
-                "[DRY-RUN] Simulated deployment scaling"
+                deployment_name, target_replicas, "[DRY-RUN] Simulated deployment scaling"
             );
             return Ok(format!(
                 "[DRY-RUN] Deployment '{}/{}' scaled to {} replicas",
@@ -147,6 +156,24 @@ impl RemediationExecutor {
 
         let client = self.k8s_client.as_ref().unwrap();
         let deployments: Api<Deployment> = Api::namespaced(client.clone(), namespace);
+
+        match deployments.get(deployment_name).await {
+            Ok(_) => {}
+            Err(kube::Error::Api(e)) if e.code == 404 => {
+                let msg = format!(
+                    "Target deployment '{}/{}' not found in cluster. Dropping action to prevent hallucinated scale panic.",
+                    namespace, deployment_name
+                );
+                warn!("{}", msg);
+                return Ok(msg);
+            }
+            Err(e) => {
+                anyhow::bail!(
+                    "Failed to get deployment '{}/{}': {}",
+                    namespace, deployment_name, e
+                );
+            }
+        }
 
         let patch_data = json!({
             "spec": {
@@ -197,7 +224,10 @@ impl RemediationExecutor {
             .with_context(|| format!("Failed to cordon node '{}'", node_name))?;
 
         info!(node_name, "Successfully cordoned node");
-        Ok(format!("Node '{}' successfully cordoned (unschedulable=true)", node_name))
+        Ok(format!(
+            "Node '{}' successfully cordoned (unschedulable=true)",
+            node_name
+        ))
     }
 }
 

@@ -164,7 +164,10 @@ async fn test_simulate_attack_blocked_by_policy() {
     assert_eq!(json["policy_allowed"], false);
     assert_eq!(json["status"], "ATTACK_SUCCESSFULLY_BLOCKED_BY_OPA");
     let violations = json["policy_violations"].as_array().unwrap();
-    assert!(violations.iter().any(|v| v.as_str().unwrap().contains("Namespace deletion is absolutely prohibited")));
+    assert!(violations.iter().any(|v| v
+        .as_str()
+        .unwrap()
+        .contains("Namespace deletion is absolutely prohibited")));
 }
 
 #[tokio::test]

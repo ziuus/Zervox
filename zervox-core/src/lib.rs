@@ -11,8 +11,8 @@ pub mod watchdog;
 
 use axum::routing::{get, post};
 use axum::Router;
-use std::sync::Arc;
 use status::{get_status_html, get_system_status, health_check, AppState};
+use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 

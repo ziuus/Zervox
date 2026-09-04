@@ -5,8 +5,8 @@ use crate::store::IncidentStore;
 use crate::types::{EngineMode, SystemStatus};
 use crate::watchdog::Watchdog;
 use axum::extract::State;
-use axum::response::{Html, IntoResponse, Json};
 use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Json};
 use serde_json::json;
 use std::sync::Arc;
 use std::time::Instant;
@@ -43,7 +43,9 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
     let total_incidents = state.store.count_incidents().unwrap_or(0);
     let recent_incidents = state.store.get_recent_incidents(10).unwrap_or_default();
 
-    let engine_mode = if state.config.force_fallback || (state.config.llm_url.is_none() && state.config.llm_api_key.is_none()) {
+    let engine_mode = if state.config.force_fallback
+        || (state.config.llm_url.is_none() && state.config.llm_api_key.is_none())
+    {
         EngineMode::Fallback
     } else {
         EngineMode::Ai
@@ -58,8 +60,16 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
         uptime_seconds: state.start_time.elapsed().as_secs(),
         peer_address: watchdog_info.peer_address,
         peer_status: watchdog_info.peer_status,
-        opa_status: if opa_healthy { "reachable".to_string() } else { "embedded-guard-active".to_string() },
-        k8s_status: if k8s_connected { "connected".to_string() } else { "dry-run/simulated".to_string() },
+        opa_status: if opa_healthy {
+            "reachable".to_string()
+        } else {
+            "embedded-guard-active".to_string()
+        },
+        k8s_status: if k8s_connected {
+            "connected".to_string()
+        } else {
+            "dry-run/simulated".to_string()
+        },
         total_incidents,
         recent_incidents,
     };
@@ -69,7 +79,7 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
 
 pub async fn get_status_html(State(state): State<Arc<AppState>>) -> Html<String> {
     let status_json = get_system_status(State(state)).await.0;
-    
+
     let role_badge_color = if status_json.role == crate::types::NodeRole::Primary {
         "#10b981" // emerald
     } else {

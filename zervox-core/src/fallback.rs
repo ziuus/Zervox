@@ -13,10 +13,7 @@ pub fn match_rule(alert: &AlertItem) -> Decision {
         || alert.matches("KubePodNotReady")
         || alert.matches("CrashLoopBackOff")
     {
-        let pod_name = alert
-            .pod_name()
-            .unwrap_or("victim-api")
-            .to_string();
+        let pod_name = alert.pod_name().unwrap_or("victim-api").to_string();
 
         return Decision {
             incident_id,
@@ -40,10 +37,7 @@ pub fn match_rule(alert: &AlertItem) -> Decision {
         || alert.matches("HighCpuUsage")
         || alert.matches("KubeDeploymentReplicasMismatch")
     {
-        let deployment_name = alert
-            .deployment_name()
-            .unwrap_or("victim-api")
-            .to_string();
+        let deployment_name = alert.deployment_name().unwrap_or("victim-api").to_string();
 
         // Default scale target to 4 replicas (within safe <= 10 limit)
         let target_replicas = 4;
@@ -73,10 +67,7 @@ pub fn match_rule(alert: &AlertItem) -> Decision {
         || alert.matches("KubeNodeNotReady")
         || alert.matches("NodeDiskPressure")
     {
-        let node_name = alert
-            .node_name()
-            .unwrap_or("k3s-node-1")
-            .to_string();
+        let node_name = alert.node_name().unwrap_or("k3s-node-1").to_string();
 
         return Decision {
             incident_id,
@@ -87,7 +78,9 @@ pub fn match_rule(alert: &AlertItem) -> Decision {
             ),
             action: RemediationAction::CordonNode { node_name },
             confidence: 0.88,
-            reasoning: "Local fallback rule: Cordon degraded node to prevent further pod scheduling.".to_string(),
+            reasoning:
+                "Local fallback rule: Cordon degraded node to prevent further pod scheduling."
+                    .to_string(),
         };
     }
 
@@ -128,7 +121,10 @@ mod tests {
         let decision = match_rule(&alert);
         assert_eq!(decision.mode, EngineMode::Fallback);
         match decision.action {
-            RemediationAction::RestartPod { namespace, pod_name } => {
+            RemediationAction::RestartPod {
+                namespace,
+                pod_name,
+            } => {
                 assert_eq!(namespace, "default");
                 assert_eq!(pod_name, "victim-api-7b89-xyz");
             }
@@ -150,7 +146,11 @@ mod tests {
 
         let decision = match_rule(&alert);
         match decision.action {
-            RemediationAction::ScaleDeployment { deployment_name, target_replicas, .. } => {
+            RemediationAction::ScaleDeployment {
+                deployment_name,
+                target_replicas,
+                ..
+            } => {
                 assert_eq!(deployment_name, "victim-api");
                 assert_eq!(target_replicas, 4);
             }
