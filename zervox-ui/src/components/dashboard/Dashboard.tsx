@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useZervoxTelemetry } from '@/hooks/useZervoxTelemetry'
 import { Header } from '@/components/dashboard/Header'
 import { HeartbeatCard } from '@/components/dashboard/HeartbeatCard'
@@ -10,8 +11,10 @@ import { Badge } from '@/components/ui/Badge'
 import { formatUptime } from '@/lib/utils'
 
 import { TopologyMiniMap } from '@/components/dashboard/TopologyMiniMap'
+import { AirGapOpticalModal } from '@/components/dashboard/AirGapOpticalModal'
 
 export function Dashboard() {
+  const [isAirGapOpen, setIsAirGapOpen] = useState(false)
   const {
     primary,
     backup,
@@ -41,6 +44,7 @@ export function Dashboard() {
           backupOnline={backup.isOnline}
           lastUpdated={primary.lastUpdated ?? backup.lastUpdated}
           onRefresh={refetch}
+          onOpenAirGap={() => setIsAirGapOpen(true)}
         />
 
         <main className="mx-auto max-w-screen-2xl px-6 py-5">
@@ -140,6 +144,14 @@ export function Dashboard() {
           <span className="text-sky-800">POLL INTERVAL 3s</span>
         </p>
       </footer>
+
+      {/* Innovation 4: Air-Gapped Optical Telemetry Modal */}
+      <AirGapOpticalModal
+        isOpen={isAirGapOpen}
+        onClose={() => setIsAirGapOpen(false)}
+        activeInstance={activeInstance}
+        incidents={incidents}
+      />
     </div>
   )
 }

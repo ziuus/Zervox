@@ -7,9 +7,10 @@ interface HeaderProps {
   backupOnline: boolean
   lastUpdated: Date | null
   onRefresh: () => void
+  onOpenAirGap?: () => void
 }
 
-export function Header({ primaryOnline, backupOnline, lastUpdated, onRefresh }: HeaderProps) {
+export function Header({ primaryOnline, backupOnline, lastUpdated, onRefresh, onOpenAirGap }: HeaderProps) {
   const anyOnline = primaryOnline || backupOnline
 
   return (
@@ -66,6 +67,18 @@ export function Header({ primaryOnline, backupOnline, lastUpdated, onRefresh }: 
               {anyOnline ? 'SYSTEMS ONLINE' : 'OFFLINE'}
             </span>
           </div>
+
+          {/* Air-Gap Optical Telemetry Button */}
+          {onOpenAirGap && (
+            <button
+              onClick={onOpenAirGap}
+              type="button"
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-widest text-amber-300 transition-all hover:border-amber-400 hover:bg-amber-500/20 active:scale-95 shadow-[0_0_12px_rgba(245,158,11,0.15)] cursor-pointer"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span>AIR-GAP OPTICAL</span>
+            </button>
+          )}
 
           {/* Refresh button */}
           <button
