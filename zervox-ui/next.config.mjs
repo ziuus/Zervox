@@ -1,6 +1,6 @@
-import type { NextConfig } from 'next'
 
-const nextConfig: NextConfig = {
+
+const nextConfig = {
   output: 'standalone',
   // Proxy API calls to Zervox backend in development
   async rewrites() {

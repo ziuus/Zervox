@@ -15,6 +15,8 @@ pub trait IncidentStore: Send + Sync {
         status: &str,
         error: Option<&str>,
     ) -> Result<()>;
+    async fn get_recent_incidents(&self, limit: usize) -> Result<Vec<IncidentRecord>>;
+    async fn count_incidents(&self) -> Result<usize>;
 }
 
 #[derive(Clone)]
@@ -105,6 +107,61 @@ impl IncidentStore for SqliteStore {
         )
         .context("Failed to update execution status")?;
         Ok(())
+    }
+
+    async fn get_recent_incidents(&self, limit: usize) -> Result<Vec<IncidentRecord>> {
+        use chrono::{DateTime, Utc};
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, alert_name, severity, mode, root_cause,
+                    action_type, target_resource, policy_allowed,
+                    policy_violations, execution_status, execution_error,
+                    created_at, updated_at
+             FROM incidents
+             ORDER BY created_at DESC
+             LIMIT ?1",
+        )?;
+
+        let rows = stmt.query_map([limit as i64], |row| {
+            let policy_allowed: bool = row.get(7)?;
+            let created_at_str: String = row.get(11)?;
+            let updated_at_str: String = row.get(12)?;
+
+            let created_at = DateTime::parse_from_rfc3339(&created_at_str)
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(|_| Utc::now());
+            let updated_at = DateTime::parse_from_rfc3339(&updated_at_str)
+                .map(|dt| dt.with_timezone(&Utc))
+                .unwrap_or_else(|_| Utc::now());
+
+            Ok(IncidentRecord {
+                id: row.get(0)?,
+                alert_name: row.get(1)?,
+                severity: row.get(2)?,
+                mode: row.get(3)?,
+                root_cause: row.get(4)?,
+                action_type: row.get(5)?,
+                target_resource: row.get(6)?,
+                policy_allowed,
+                policy_violations: row.get(8)?,
+                execution_status: row.get(9)?,
+                execution_error: row.get(10)?,
+                created_at,
+                updated_at,
+            })
+        })?;
+
+        let mut list = Vec::new();
+        for r in rows {
+            list.push(r?);
+        }
+        Ok(list)
+    }
+
+    async fn count_incidents(&self) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM incidents", [], |r| r.get(0))?;
+        Ok(count as usize)
     }
 }
 

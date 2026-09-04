@@ -68,8 +68,8 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
         } else {
             "dry-run/simulated".to_string()
         },
-        total_incidents: 0, // Simplified for brevity in abstraction
-        recent_incidents: vec![],
+        total_incidents: state.store.count_incidents().await.unwrap_or(0),
+        recent_incidents: state.store.get_recent_incidents(10).await.unwrap_or_default(),
     };
 
     Json(status)
