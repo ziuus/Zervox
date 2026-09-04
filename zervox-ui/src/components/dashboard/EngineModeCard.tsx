@@ -29,20 +29,16 @@ export function EngineModeCard({
   const k8sConnected = k8sStatus === 'connected'
   const peerConnected = peerStatus === 'peer_connected'
 
-  // Harsh glowing neon border:
-  // #ff0000 for OPA Block/Primary Dead
-  // #ffb700 for Local Fallback Mode
-  // #00ff00 for Active Heartbeat / Normal Engine operation
-  const neonClass = hasOpaBlock
-    ? 'neon-border-red border-2'
+  const stateBorderClass = hasOpaBlock
+    ? 'border-rose-500/40 bg-gradient-to-b from-rose-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(244,63,94,0.12)]'
     : isFallback
-      ? 'neon-border-amber border-2'
+      ? 'border-amber-500/40 bg-gradient-to-b from-amber-950/20 via-transparent to-transparent shadow-[0_0_25px_rgba(245,158,11,0.12)]'
       : isAI
-        ? 'neon-border-green border-2'
-        : 'neon-border-sky border-2'
+        ? 'border-sky-500/40 bg-gradient-to-b from-sky-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(56,189,248,0.12)]'
+        : 'border-white/[0.08]'
 
   return (
-    <Card glow className={neonClass}>
+    <Card glow className={stateBorderClass}>
       {/* Engine Mode Banner */}
       <div className="mb-5 flex items-center justify-between">
         <CardLabel className="mb-0">Engine Mode</CardLabel>

@@ -357,4 +357,16 @@ pub struct SystemStatus {
     pub k8s_status: String,
     pub total_incidents: usize,
     pub recent_incidents: Vec<IncidentRecord>,
+    #[serde(default)]
+    pub hardware_breaker_status: Option<String>,
 }
+
+/// Hardware Circuit-Breaker Status for `/api/hardware/status`
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HardwareStatusResponse {
+    pub armed: bool,
+    pub coprocessor: String,
+    pub interface: String,
+    pub status: String,
+}
+

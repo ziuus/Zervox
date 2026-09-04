@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 3c5d5a4e8ed13b72ec572514962519ee52fa847d76a7cbf2ba24b1d4633961b7 # shrinks to payload = "", auth_header = "\u{b}"
+cc cbc72b8eae558202f4474e047f6ee9ff2ef718644e90eabcca0c8a5983f506cf # shrinks to payload = "0", auth_header = "a"

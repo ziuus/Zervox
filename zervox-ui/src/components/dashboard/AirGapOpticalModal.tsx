@@ -54,8 +54,8 @@ export function AirGapOpticalModal({
   const payloadString = JSON.stringify(airGapPayload)
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl rounded-xl border border-amber-500/40 bg-[#060913] p-6 shadow-[0_0_50px_rgba(245,158,11,0.2)] text-slate-100 font-mono">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-amber-500/40 bg-[#060913]/95 backdrop-blur-2xl p-6 shadow-[0_0_60px_rgba(245,158,11,0.25)] text-slate-100 font-mono">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-amber-500/30 pb-4">
@@ -92,11 +92,11 @@ export function AirGapOpticalModal({
         </div>
 
         {/* Tab switch */}
-        <div className="mt-4 flex items-center justify-between border-b border-[#1e3a5f] pb-2 text-[11px]">
+        <div className="mt-4 flex items-center justify-between border-b border-white/[0.08] pb-2 text-[11px]">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('qr')}
-              className={`rounded px-3 py-1 font-semibold transition-colors cursor-pointer ${
+              className={`rounded-xl px-3 py-1 font-semibold transition-colors cursor-pointer ${
                 activeTab === 'qr'
                   ? 'bg-amber-500/20 border border-amber-500/60 text-amber-300'
                   : 'text-slate-400 hover:text-slate-200'
@@ -106,7 +106,7 @@ export function AirGapOpticalModal({
             </button>
             <button
               onClick={() => setActiveTab('json')}
-              className={`rounded px-3 py-1 font-semibold transition-colors cursor-pointer ${
+              className={`rounded-xl px-3 py-1 font-semibold transition-colors cursor-pointer ${
                 activeTab === 'json'
                   ? 'bg-amber-500/20 border border-amber-500/60 text-amber-300'
                   : 'text-slate-400 hover:text-slate-200'
@@ -145,7 +145,7 @@ export function AirGapOpticalModal({
               </p>
             </div>
           ) : (
-            <div className="w-full max-h-[240px] overflow-auto rounded border border-amber-500/30 bg-[#020409] p-3 text-[10px] text-emerald-400">
+            <div className="w-full max-h-[240px] overflow-auto rounded-xl border border-amber-500/30 bg-[#020409] p-3 text-[10px] text-emerald-400">
               <pre className="font-mono whitespace-pre-wrap selection:bg-emerald-500/30">
                 {JSON.stringify(airGapPayload, null, 2)}
               </pre>
@@ -154,7 +154,7 @@ export function AirGapOpticalModal({
         </div>
 
         {/* Footer info */}
-        <div className="mt-4 pt-3 border-t border-[#1e3a5f] flex flex-col sm:flex-row sm:items-center justify-between text-[10px] text-slate-500 gap-2">
+        <div className="mt-4 pt-3 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between text-[10px] text-slate-500 gap-2">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-400 font-semibold">ED25519 AIR-GAP BROADCAST ACTIVE</span>

@@ -9,20 +9,20 @@ interface BadgeProps {
 }
 
 const variants = {
-  green:  'bg-emerald-400/10 text-emerald-400 border-emerald-400/30',
-  red:    'bg-red-400/10 text-red-400 border-red-400/30',
-  amber:  'bg-amber-400/10 text-amber-400 border-amber-400/30',
-  sky:    'bg-sky-400/10 text-sky-400 border-sky-400/30',
-  purple: 'bg-purple-400/10 text-purple-400 border-purple-400/30',
-  slate:  'bg-slate-500/10 text-slate-400 border-slate-500/30',
+  green:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]',
+  red:    'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.15)]',
+  amber:  'bg-amber-500/10 text-amber-300 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]',
+  sky:    'bg-sky-500/10 text-sky-300 border-sky-500/30 shadow-[0_0_12px_rgba(56,189,248,0.15)]',
+  purple: 'bg-purple-500/10 text-purple-300 border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.15)]',
+  slate:  'bg-slate-800/40 text-slate-300 border-slate-700/50',
 }
 
 const dotColors = {
-  green:  'bg-emerald-400',
-  red:    'bg-red-400',
-  amber:  'bg-amber-400',
-  sky:    'bg-sky-400',
-  purple: 'bg-purple-400',
+  green:  'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]',
+  red:    'bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.8)]',
+  amber:  'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]',
+  sky:    'bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)]',
+  purple: 'bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.8)]',
   slate:  'bg-slate-400',
 }
 
@@ -30,16 +30,17 @@ export function Badge({ children, variant = 'slate', size = 'sm', dot = false, c
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded border font-mono font-semibold uppercase tracking-wider',
-        size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-3 py-1 text-xs',
+        'inline-flex items-center gap-1.5 rounded-full border font-mono font-semibold uppercase tracking-wider backdrop-blur-sm',
+        size === 'sm' ? 'px-2.5 py-0.5 text-[9px]' : 'px-3 py-1 text-[11px]',
         variants[variant],
         className,
       )}
     >
       {dot && (
-        <span className={cn('h-1.5 w-1.5 rounded-full', dotColors[variant])} />
+        <span className={cn('h-1.5 w-1.5 rounded-full animate-pulse', dotColors[variant])} />
       )}
       {children}
     </span>
   )
 }
+

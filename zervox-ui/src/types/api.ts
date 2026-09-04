@@ -66,7 +66,16 @@ export interface SystemStatus {
   k8s_status: string        // 'connected' | 'dry-run/simulated'
   total_incidents: number
   recent_incidents: IncidentRecord[]
+  hardware_breaker_status?: string
 }
+
+export interface HardwareStatusResponse {
+  armed: boolean
+  coprocessor: string
+  interface: string
+  status: string
+}
+
 
 // ─── Health Check (/healthz) ─────────────────────────────────────────────────
 

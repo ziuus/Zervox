@@ -70,6 +70,11 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
         },
         total_incidents: state.store.count_incidents().await.unwrap_or(0),
         recent_incidents: state.store.get_recent_incidents(10).await.unwrap_or_default(),
+        hardware_breaker_status: Some(if state.executor.hardware_breaker.is_armed() {
+            "ARMED_RISCV_ESP32C3".to_string()
+        } else {
+            "DISARMED".to_string()
+        }),
     };
 
     Json(status)
@@ -135,3 +140,33 @@ pub async fn reset_immune_quarantine(
         "message": "Adaptive immune system quarantines successfully reset."
     }))
 }
+
+pub async fn get_hardware_status(
+    State(state): State<Arc<AppState>>,
+) -> Json<crate::types::HardwareStatusResponse> {
+    let armed = state.executor.hardware_breaker.is_armed();
+    Json(crate::types::HardwareStatusResponse {
+        armed,
+        coprocessor: "ESP32-C3_RISCV_EMBEDDED".to_string(),
+        interface: "UART_SERIAL_DUAL_KEY".to_string(),
+        status: if armed {
+            "ARMED_DUAL_KEY_ENFORCED".to_string()
+        } else {
+            "DISARMED_OPERATOR_BYPASS".to_string()
+        },
+    })
+}
+
+pub async fn toggle_hardware_breaker(
+    State(state): State<Arc<AppState>>,
+) -> Json<serde_json::Value> {
+    let currently_armed = state.executor.hardware_breaker.is_armed();
+    let new_state = !currently_armed;
+    state.executor.hardware_breaker.set_armed(new_state);
+    Json(json!({
+        "status": "success",
+        "armed": new_state,
+        "message": format!("Hardware Circuit-Breaker armed state set to {}", new_state)
+    }))
+}
+

@@ -7,6 +7,7 @@ use kube::api::{DeleteParams, Patch, PatchParams};
 use kube::{Api, Client, Config};
 use serde_json::json;
 use sha2::{Digest, Sha256};
+use crate::hardware_key::HardwareCircuitBreaker;
 use std::path::PathBuf;
 use tracing::{info, warn};
 use uuid::Uuid;
@@ -15,15 +16,20 @@ use uuid::Uuid;
 pub struct RemediationExecutor {
     k8s_client: Option<Client>,
     dry_run: bool,
+    pub hardware_breaker: HardwareCircuitBreaker,
 }
 
 impl RemediationExecutor {
     pub async fn new(kubeconfig_path: Option<PathBuf>, dry_run: bool) -> Self {
+        let hardware_breaker =
+            HardwareCircuitBreaker::new(std::env::var("ZERVOX_HW_SERIAL_PORT").ok());
+
         if dry_run {
             info!("RemediationExecutor initialized in DRY-RUN mode");
             return Self {
                 k8s_client: None,
                 dry_run: true,
+                hardware_breaker,
             };
         }
 
@@ -44,7 +50,13 @@ impl RemediationExecutor {
         Self {
             k8s_client: client,
             dry_run,
+            hardware_breaker,
         }
+    }
+
+    pub fn with_hardware_breaker(mut self, breaker: HardwareCircuitBreaker) -> Self {
+        self.hardware_breaker = breaker;
+        self
     }
 
     async fn init_kube_client(kubeconfig_path: Option<PathBuf>) -> Result<Client> {
@@ -346,9 +358,23 @@ impl RemediationExecutor {
     }
 
     async fn cordon_node(&self, node_name: &str) -> Result<String> {
+        // Enforce Physical Dual-Key Hardware Circuit-Breaker authorization
+        let hw_auth = self
+            .hardware_breaker
+            .verify_action("cordon_node", node_name)
+            .await?;
+
         if self.dry_run || self.k8s_client.is_none() {
-            info!(node_name, "[DRY-RUN] Simulated node cordon");
-            return Ok(format!("[DRY-RUN] Node '{}' cordoned", node_name));
+            info!(
+                node_name,
+                coprocessor = hw_auth.coprocessor,
+                signature = %hw_auth.hardware_signature,
+                "[DRY-RUN] Simulated node cordon with verified hardware signature"
+            );
+            return Ok(format!(
+                "[DRY-RUN] Node '{}' cordoned [HW Dual-Key: {} | Sig: {}]",
+                node_name, hw_auth.coprocessor, hw_auth.hardware_signature
+            ));
         }
 
         let client = self.k8s_client.as_ref().unwrap();
@@ -366,10 +392,15 @@ impl RemediationExecutor {
             .await
             .with_context(|| format!("Failed to cordon node '{}'", node_name))?;
 
-        info!(node_name, "Successfully cordoned node");
+        info!(
+            node_name,
+            coprocessor = hw_auth.coprocessor,
+            signature = %hw_auth.hardware_signature,
+            "Successfully cordoned node with verified hardware signature"
+        );
         Ok(format!(
-            "Node '{}' successfully cordoned (unschedulable=true)",
-            node_name
+            "Node '{}' successfully cordoned (unschedulable=true) [HW Dual-Key: {} | Sig: {}]",
+            node_name, hw_auth.coprocessor, hw_auth.hardware_signature
         ))
     }
 }
@@ -419,4 +450,18 @@ mod tests {
         assert!(snapshot.container_logs.contains("OOMKilled"));
         assert!(snapshot.pod_spec_json.contains("victim-api"));
     }
+
+    #[tokio::test]
+    async fn test_executor_cordon_node_with_hardware_breaker() {
+        let executor = RemediationExecutor::new(None, true).await;
+        let action = RemediationAction::CordonNode {
+            node_name: "node-k3s-worker-01".to_string(),
+        };
+
+        let res = executor.execute(&action).await.unwrap();
+        assert!(res.contains("node-k3s-worker-01"));
+        assert!(res.contains("HW Dual-Key"));
+        assert!(res.contains("ESP32-C3_RISCV_EMBEDDED"));
+    }
 }
+

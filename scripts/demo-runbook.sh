@@ -128,22 +128,65 @@ scenario_4() {
     pause
 }
 
+scenario_5() {
+    echo ""
+    echo -e "${PURPLE}╔═════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${PURPLE}║  SCENARIO 5: HARDWARE CIRCUIT-BREAKER DUAL-KEY AUTHORIZATION    ║${NC}"
+    echo -e "${PURPLE}╚═════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${YELLOW}👀 WHAT JUDGES SHOULD LOOK FOR ON THE DASHBOARD:${NC}"
+    echo -e "  1. Node degradation alert requires high blast-radius cordon action."
+    echo -e "  2. The Hardware Circuit-Breaker intercepts destructive action."
+    echo -e "  3. Physical ESP32-C3 / RISC-V coprocessor cryptographic handshake executes."
+    echo -e "  4. Timeline row displays ${PURPLE}'RISC-V GUARDED'${NC} with dual-key signature."
+    echo ""
+    echo -e "${BOLD}Executing chaos injection...${NC}"
+    "${CHAOS_DIR}/node-cordon-hardware.sh"
+    pause
+}
+
+scenario_6() {
+    echo ""
+    echo -e "${PURPLE}╔═════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${PURPLE}║  SCENARIO 6: ADAPTIVE IMMUNE SYSTEM DYNAMIC QUARANTINE          ║${NC}"
+    echo -e "${PURPLE}╚═════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${YELLOW}👀 WHAT JUDGES SHOULD LOOK FOR ON THE DASHBOARD:${NC}"
+    echo -e "  1. Multiple malicious attacks are fired consecutively against a target."
+    echo -e "  2. Adaptive Immune Engine detects repeating hostile attack vector."
+    echo -e "  3. Target is dynamically placed in ${RED}'30-MINUTE IMMUNE QUARANTINE'${NC}."
+    echo -e "  4. Immediate pre-evaluation rejection protects the cluster."
+    echo ""
+    echo -e "${BOLD}Executing chaos injection...${NC}"
+    echo "Firing Attack Vector 1..."
+    "${CHAOS_DIR}/rbac-attack.sh"
+    sleep 1
+    echo "Firing Attack Vector 2 (Threshold trigger)..."
+    "${CHAOS_DIR}/rbac-attack.sh"
+    echo ""
+    echo "Checking Adaptive Immune System Status:"
+    curl -s http://localhost:8080/api/immune/status | python3 -m json.tool 2>/dev/null || true
+    pause
+}
+
 # Interactive Main Loop
 while true; do
     clear_screen
     banner
     check_dashboard
 
-    echo -e "  ${BOLD}Select a Chaos Scenario to Trigger Live:${NC}"
+    echo -e "  ${BOLD}Select an Innovation Chaos Scenario to Trigger Live:${NC}"
     echo ""
-    echo -e "  ${CYAN}[1]${NC} Trigger Workload Failure ${DIM}(Pod Crash -> Auto-Heal)${NC}"
-    echo -e "  ${CYAN}[2]${NC} Trigger Malicious RBAC Attack ${DIM}(Hostile Action -> OPA Denial)${NC}"
+    echo -e "  ${CYAN}[1]${NC} Workload Failure ${DIM}(Pod Crash -> Forensic Freeze & SHA-256 Vault)${NC}"
+    echo -e "  ${CYAN}[2]${NC} Malicious RBAC Attack ${DIM}(Hostile Action -> OPA Denial Gate)${NC}"
     echo -e "  ${CYAN}[3]${NC} Sever Network Connection ${DIM}(LLM Drop -> Deterministic Fallback)${NC}"
     echo -e "  ${CYAN}[4]${NC} Assassinate Primary Node ${DIM}(SIGKILL 8080 -> Backup HA Failover)${NC}"
+    echo -e "  ${PURPLE}[5]${NC} Hardware Circuit-Breaker ${DIM}(Node Cordon -> RISC-V Dual-Key Auth)${NC}"
+    echo -e "  ${PURPLE}[6]${NC} Adaptive Immune Quarantine ${DIM}(Repeat Attacks -> 30-Min Threat Lock)${NC}"
     echo ""
     echo -e "  ${RED}[q]${NC} Exit Demo Orchestrator"
     echo ""
-    echo -ne "  ${BOLD}Enter choice [1-4, q]: ${NC}"
+    echo -ne "  ${BOLD}Enter choice [1-6, q]: ${NC}"
     read -r CHOICE
 
     case "${CHOICE}" in
@@ -151,13 +194,16 @@ while true; do
         2) scenario_2 ;;
         3) scenario_3 ;;
         4) scenario_4 ;;
+        5) scenario_5 ;;
+        6) scenario_6 ;;
         q|Q) 
             echo -e "\n${GREEN}Thank you for presenting Zervox! ⚡${NC}\n"
             exit 0
             ;;
         *)
-            echo -e "\n${RED}Invalid option. Please choose between 1 and 4.${NC}"
+            echo -e "\n${RED}Invalid option. Please choose between 1 and 6.${NC}"
             sleep 1
             ;;
     esac
 done
+

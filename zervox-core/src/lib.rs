@@ -1,6 +1,7 @@
 pub mod config;
 pub mod executor;
 pub mod fallback;
+pub mod hardware_key;
 pub mod ingest;
 pub mod llm;
 pub mod policy;
@@ -28,7 +29,10 @@ pub fn create_app(app_state: Arc<AppState>) -> Router {
         .route("/api/incidents/{id}/forensics", get(status::get_incident_forensics))
         .route("/api/immune/status", get(status::get_immune_status))
         .route("/api/immune/reset", post(status::reset_immune_quarantine))
+        .route("/api/hardware/status", get(status::get_hardware_status))
+        .route("/api/hardware/toggle", post(status::toggle_hardware_breaker))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(app_state)
 }
+

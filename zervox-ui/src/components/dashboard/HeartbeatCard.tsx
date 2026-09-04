@@ -14,20 +14,16 @@ export function HeartbeatCard({ instance }: HeartbeatCardProps) {
   const isActive = instance.health?.state === 'active'
   const isOnline = instance.isOnline
 
-  // Harsh glowing neon border classes:
-  // Active Heartbeat: #00ff00 (neon-border-green)
-  // Primary Dead / Offline: #ff0000 (neon-border-red)
-  // Standby: #ffb700 (neon-border-amber)
-  const neonClass = !isOnline
-    ? 'neon-border-red border-2'
+  const stateBorderClass = !isOnline
+    ? 'border-rose-500/40 bg-gradient-to-b from-rose-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(244,63,94,0.12)]'
     : isActive
-      ? 'neon-border-green border-2'
-      : 'neon-border-amber border-2'
+      ? 'border-emerald-500/40 bg-gradient-to-b from-emerald-950/25 via-transparent to-transparent shadow-[0_0_25px_rgba(16,185,129,0.12)]'
+      : 'border-amber-500/30 bg-gradient-to-b from-amber-950/20 via-transparent to-transparent shadow-[0_0_25px_rgba(245,158,11,0.08)]'
 
   return (
     <Card
-      glow={isOnline}
-      className={neonClass}
+      glow={isOnline && isActive}
+      className={stateBorderClass}
     >
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">

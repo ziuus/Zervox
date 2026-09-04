@@ -21,7 +21,7 @@ export function PulseRing({ online, size = 'md', className }: PulseRingProps) {
   const pingColor = online ? 'bg-emerald-400' : 'bg-red-500'
 
   return (
-    <span className={cn('relative inline-flex', outer, className)}>
+    <span className={cn('relative inline-flex items-center justify-center', outer, className)}>
       {online && (
         <span
           className={cn('absolute inline-flex h-full w-full animate-ping rounded-full opacity-60', pingColor)}
