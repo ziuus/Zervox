@@ -87,13 +87,13 @@ curl -s http://localhost:3000/api/telemetry
   5. `STEP 5`: Point out Air-Gap Attestation Beacon proving zero data exfiltration.
 
 ### 5. Pitch Deck & Presentation Materials
-- [ ] Prepare 5-slide deck:
+- [x] Prepare 5-slide deck:
   - Slide 1: Problem (Standard auto-healing obliterates forensic evidence & lacks safety bounds).
   - Slide 2: Solution (Zervox: Out-of-band SRE control plane with 5 zero-trust innovations).
   - Slide 3: Architecture Diagram (Primary/Backup mTLS, OPA Gate, SQLite WAL, Hardware Breaker).
   - Slide 4: Live Demo (Cause → Freeze → Cure in <10s).
   - Slide 5: Real-World Impact (Kerala Police Cyberdome, SCADA, defense, air-gapped critical infrastructure).
-- [ ] Print QR code flyer linking to GitHub repo `https://github.com/ziuus/Zervox`.
+- [x] Print QR code flyer linking to GitHub repo `https://github.com/ziuus/Zervox`.
 
 ---
 
