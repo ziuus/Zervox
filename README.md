@@ -6,7 +6,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.2%20App%20Router-black.svg?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v3%20Class%20Theme-blue.svg?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
 [![OPA](https://img.shields.io/badge/OPA-Rego%20v1-blue.svg?style=flat-square&logo=open-policy-agent)](https://www.openpolicyagent.org/)
-[![Tests](https://img.shields.io/badge/Tests-31%2F31%20Passed-emerald.svg?style=flat-square)]()
+[![Tests](https://img.shields.io/badge/Tests-41%2F41%20Passed-emerald.svg?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
 
 Zervox is an **out-of-band, high-availability SRE resilience engine** engineered to survive catastrophic Kubernetes control-plane failures. Operating strictly outside the clusters it protects, Zervox autonomously ingests alerts, conducts AI and deterministic root-cause analysis, preserves tamper-evident forensic memory traces, enforces unbypassable hardware and OPA security gates, and self-heals its own leadership topology via active-standby mTLS heartbeats.
@@ -123,6 +123,33 @@ See full technical documentation in [`docs/INNOVATIONS.md`](docs/INNOVATIONS.md)
 
 ---
 
+## 🛡️ Autonomous Cyber Threat Intelligence & Remediation Engine
+
+Zervox analyzes raw Kubernetes control plane behavior rather than just hardware telemetry, correlating multi-stage attacks across an uncompromisable out-of-band sliding window:
+
+### 1. Kubernetes Audit Webhook & Threat Signatures (`POST /api/v1/audit`)
+Ingests standard Kubernetes Audit Webhook JSON batches (`EventList`, single `Event`, or arrays) and executes real-time signature matching:
+- **`SIG-DESTRUCTIVE-API` (+80 Score)**: Malicious or unauthorized deletion of namespaces or cluster nodes.
+- **`SIG-PRIV-CONTAINER` (+50 Score)**: Spawning privileged containers, `hostPID`/`hostNetwork` escapes, or host root filesystem mounts.
+- **`SIG-RBAC-TAMPER` (+40 Score)**: Unauthorized patching or creation of `ClusterRole`, `Role`, `ClusterRoleBinding`, or `RoleBinding`.
+- **`SIG-SECRET-SWEEP` (+30 Score)**: Bulk unauthorized reconnaissance or sweeping access to cluster secrets (`GET /api/v1/secrets`).
+- **`SIG-UNKNOWN-IDENTITY` (+20 Score)**: Anomalous access patterns from unauthenticated subjects or unrecognized service accounts.
+
+### 2. Stateful Threat Correlation & Integer Scoring Matrix
+Suspicious events are buffered in a thread-safe sliding window (**5-minute TTL**) keyed by normalized actor identities (ServiceAccount > Source IP > User). Cumulative threat scores determine autonomous escalation:
+- **`0 – 30` (LOW)**: Passive logging & baseline observation.
+- **`31 – 60` (MEDIUM)**: Automatic alert elevation, SOC notification, and forensic memory snapshotting.
+- **`61 – 80` (HIGH)**: Targeted workload containment (safe pod eviction / replica restart).
+- **`81 – 100+` (CRITICAL)**: Immediate automated cluster isolation via zero-trust network quarantine.
+
+### 3. Closed-Loop Remediation Verification & Dynamic Containment
+- **Dynamic NetworkPolicy Quarantine**: When critical attacks or repeat violations occur, Zervox dynamically synthesizes and applies a default-deny Ingress and Egress `NetworkPolicy` targeting the compromised workload using `kube-rs` and `k8s-openapi`.
+- **Post-Action Polling Loop**: Following any remediation action (e.g. `RestartPod`), the engine polls the Kubernetes API until the target workload reaches desired state (`Pod phase == Running` and condition `Ready == True`), avoiding assumption-based healing.
+- **Automated Escalation Matrix**: If post-remediation polling times out or fails (e.g., container crashloops or threat score keeps rising), Zervox automatically escalates containment:
+  $$\text{RestartPod Failure} \longrightarrow \text{NetworkPolicy Quarantine} \longrightarrow \text{Node Cordon}$$
+
+---
+
 ## 📡 API Reference Catalog
 
 | Endpoint | Method | Description |
@@ -131,6 +158,7 @@ See full technical documentation in [`docs/INNOVATIONS.md`](docs/INNOVATIONS.md)
 | `/api/status` | `GET` | Telemetry payload (engine mode, peer status, incident feed, hardware state) |
 | `/api/telemetry` | `GET` | Next.js server-side unified telemetry route (zero CORS / zero browser shields issue) |
 | `/api/action` | `POST` | Next.js server-side chaos & simulation proxy route |
+| `/api/v1/audit` | `POST` | Kubernetes Audit Webhook ingestion for threat signatures & correlation |
 | `/api/grafana_webhook` | `POST` | Prometheus / Alertmanager / Grafana webhook ingestion endpoint |
 | `/api/v1/alerts` | `POST` | Prometheus native alert webhook endpoint |
 | `/api/simulate_attack` | `POST` | Security simulation trigger (evaluates OPA / Immune gate) |
@@ -149,10 +177,10 @@ cd zervox-core
 cargo test --all
 ```
 
-- **Unit Tests**: 25/25 PASSED (Policy OPA rules, LLM fallback timeouts, Hardware breaker, SQLite WAL retry, Watchdog promotion)
+- **Unit Tests**: 34/34 PASSED (Policy OPA rules, Threat signatures, Correlation sliding window, NetworkPolicy quarantine, Closed-loop verification & escalation, Hardware breaker, SQLite WAL retry, Watchdog promotion)
 - **Fuzz Tests**: 1/1 PASSED (Arbitrary byte Grafana webhook payload fuzzing)
-- **Integration Tests**: 5/5 PASSED (E2E Webhook, Security policy rejection, Health check, Status telemetry)
-- **Total**: **31/31 passing tests with 0 failures**.
+- **Integration Tests**: 6/6 PASSED (E2E Webhook, Audit Webhook threat detection & correlation, Security policy rejection, Health check, Status telemetry)
+- **Total**: **41/41 passing tests with 0 failures**.
 
 ---
 
