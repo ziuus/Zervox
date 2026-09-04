@@ -190,3 +190,61 @@ async fn test_system_status_endpoint() {
     assert_eq!(json["role"], "primary");
     assert_eq!(json["state"], "active");
 }
+
+#[tokio::test]
+async fn test_audit_webhook_endpoint() {
+    let (app, _db) = setup_test_app(NodeRole::Primary, true).await;
+
+    let payload = json!({
+        "kind": "EventList",
+        "apiVersion": "audit.k8s.io/v1",
+        "items": [
+            {
+                "auditID": "audit-12345",
+                "verb": "delete",
+                "requestURI": "/api/v1/namespaces/default",
+                "user": {
+                    "username": "system:serviceaccount:default:intruder-sa"
+                },
+                "objectRef": {
+                    "resource": "namespaces",
+                    "name": "default"
+                }
+            },
+            {
+                "auditID": "audit-67890",
+                "verb": "list",
+                "requestURI": "/api/v1/secrets",
+                "user": {
+                    "username": "system:serviceaccount:default:intruder-sa"
+                },
+                "objectRef": {
+                    "resource": "secrets"
+                }
+            }
+        ]
+    });
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/api/v1/audit")
+        .header("content-type", "application/json")
+        .header("x-api-key", "test-secret-key")
+        .body(Body::from(payload.to_string()))
+        .unwrap();
+
+    let response = app.oneshot(req).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(json["status"], "processed");
+    assert_eq!(json["events_received"], 2);
+    assert_eq!(json["threats_detected"], 2);
+
+    let detections = json["detections"].as_array().unwrap();
+    assert_eq!(detections.len(), 2);
+    assert!(detections.iter().any(|d| d["signature_id"] == "SIG-DESTRUCTIVE-API"));
+    assert!(detections.iter().any(|d| d["signature_id"] == "SIG-SECRET-SWEEP"));
+}

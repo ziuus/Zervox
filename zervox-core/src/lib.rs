@@ -7,6 +7,7 @@ pub mod llm;
 pub mod policy;
 pub mod status;
 pub mod store;
+pub mod threat;
 pub mod types;
 pub mod watchdog;
 
@@ -36,6 +37,8 @@ pub fn create_app(app_state: Arc<AppState>) -> Router {
         .route("/api/grafana_webhook", post(ingest::handle_grafana_webhook))
         // Prometheus native alerting format (same handler — parses both)
         .route("/api/v1/alerts", post(ingest::handle_grafana_webhook))
+        // Kubernetes Audit Log Webhook endpoint
+        .route("/api/v1/audit", post(ingest::handle_audit_webhook))
         // ── Security demo ───────────────────────────────────────────────────
         .route("/api/simulate_attack", post(ingest::simulate_attack))
         // ── HAC'KP Innovations ──────────────────────────────────────────────

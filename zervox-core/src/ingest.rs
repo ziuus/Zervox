@@ -319,3 +319,60 @@ pub async fn simulate_attack(
         })),
     )
 }
+
+/// Kubernetes Audit Webhook ingestion endpoint (`POST /api/v1/audit`)
+pub async fn handle_audit_webhook(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(payload): Json<crate::threat::KubeAuditPayload>,
+) -> impl IntoResponse {
+    // Verify optional authentication if provided
+    if let Some(key) = headers.get("x-api-key") {
+        if key.to_str().unwrap_or_default() != state.config.api_key {
+            return (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({
+                    "error": "Unauthorized",
+                    "message": "Invalid x-api-key"
+                })),
+            );
+        }
+    } else if let Some(auth_header) = headers.get("authorization") {
+        let auth_str = auth_header.to_str().unwrap_or_default();
+        if let Some(token) = auth_str.strip_prefix("Bearer ") {
+            if token != state.config.api_key {
+                return (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({
+                        "error": "Unauthorized",
+                        "message": "Invalid Authorization Bearer token"
+                    })),
+                );
+            }
+        }
+    }
+
+    let events = payload.into_events();
+    let events_count = events.len();
+    info!(events_count, "Processing Kubernetes Audit Webhook batch");
+
+    let mut all_detections = Vec::new();
+
+    for event in &events {
+        let detections = crate::threat::ThreatSignatureMatcher::evaluate(event);
+        all_detections.extend(detections);
+    }
+
+    let threats_count = all_detections.len();
+    info!(events_count, threats_count, "Completed Kubernetes audit log signature analysis");
+
+    (
+        StatusCode::OK,
+        Json(json!({
+            "status": "processed",
+            "events_received": events_count,
+            "threats_detected": threats_count,
+            "detections": all_detections
+        })),
+    )
+}
