@@ -38,7 +38,7 @@ services:
     # Uses a placeholder command if the Next.js frontend directory is empty, otherwise runs the dev server
     command: sh -c "if [ -f package.json ]; then npm install && npm run dev; else echo 'Waiting for Next.js initialization...' && sleep infinity; fi"
     volumes:
-      - ./frontend:/app
+      - ./zervox-ui:/app
     ports:
       - "3000:3000"
 
