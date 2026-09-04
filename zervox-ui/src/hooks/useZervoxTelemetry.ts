@@ -1,65 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { HealthResponse, SystemStatus, InstanceTelemetry } from '@/types/api'
+import type { InstanceTelemetry } from '@/types/api'
 
-const POLL_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_POLL_INTERVAL_MS ?? 3000)
-const PRIMARY_URL = process.env.NEXT_PUBLIC_PRIMARY_URL ?? 'http://localhost:8080'
-const BACKUP_URL = process.env.NEXT_PUBLIC_BACKUP_URL ?? 'http://localhost:8081'
-
-async function fetchWithLatency<T>(url: string, timeoutMs = 5000): Promise<{ data: T; latencyMs: number }> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  const t0 = performance.now()
-  try {
-    const res = await fetch(url, { signal: controller.signal, cache: 'no-store' })
-    const latencyMs = Math.round(performance.now() - t0)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data: T = await res.json()
-    return { data, latencyMs }
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
-async function pollInstance(baseUrl: string): Promise<Omit<InstanceTelemetry, 'label' | 'url'>> {
-  try {
-    const [healthResult, statusResult] = await Promise.allSettled([
-      fetchWithLatency<HealthResponse>(`${baseUrl}/healthz`),
-      fetchWithLatency<SystemStatus>(`${baseUrl}/api/status`),
-    ])
-
-    const health = healthResult.status === 'fulfilled' ? healthResult.value.data : null
-    const status = statusResult.status === 'fulfilled' ? statusResult.value.data : null
-    const latencyMs = healthResult.status === 'fulfilled' ? healthResult.value.latencyMs : null
-    const error =
-      healthResult.status === 'rejected'
-        ? String((healthResult as PromiseRejectedResult).reason)
-        : null
-
-    return {
-      health,
-      status,
-      error,
-      lastUpdated: new Date(),
-      latencyMs,
-      isOnline: health !== null,
-    }
-  } catch (err) {
-    return {
-      health: null,
-      status: null,
-      error: String(err),
-      lastUpdated: new Date(),
-      latencyMs: null,
-      isOnline: false,
-    }
-  }
-}
+const POLL_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_POLL_INTERVAL_MS ?? 2500)
 
 export function useZervoxTelemetry() {
   const [primary, setPrimary] = useState<InstanceTelemetry>({
-    url: PRIMARY_URL,
+    url: 'http://localhost:8080',
     label: 'PRIMARY',
     health: null,
     status: null,
@@ -70,7 +18,7 @@ export function useZervoxTelemetry() {
   })
 
   const [backup, setBackup] = useState<InstanceTelemetry>({
-    url: BACKUP_URL,
+    url: 'http://localhost:8081',
     label: 'BACKUP',
     health: null,
     status: null,
@@ -84,18 +32,28 @@ export function useZervoxTelemetry() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const poll = useCallback(async () => {
-    const [primResult, backResult] = await Promise.allSettled([
-      pollInstance(PRIMARY_URL),
-      pollInstance(BACKUP_URL),
-    ])
+    try {
+      const res = await fetch('/api/telemetry', { cache: 'no-store' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
 
-    if (primResult.status === 'fulfilled') {
-      setPrimary(prev => ({ ...prev, ...primResult.value }))
+      if (json.primary) {
+        setPrimary({
+          ...json.primary,
+          lastUpdated: json.primary.lastUpdated ? new Date(json.primary.lastUpdated) : null,
+        })
+      }
+      if (json.backup) {
+        setBackup({
+          ...json.backup,
+          lastUpdated: json.backup.lastUpdated ? new Date(json.backup.lastUpdated) : null,
+        })
+      }
+    } catch (err) {
+      console.warn('Telemetry poll error:', err)
+    } finally {
+      setIsInitializing(false)
     }
-    if (backResult.status === 'fulfilled') {
-      setBackup(prev => ({ ...prev, ...backResult.value }))
-    }
-    setIsInitializing(false)
   }, [])
 
   useEffect(() => {
@@ -107,7 +65,7 @@ export function useZervoxTelemetry() {
     }
   }, [poll])
 
-  // Derive the active instance (whichever is active state)
+  // Active instance is whichever is in active state (or primary by default)
   const activeInstance =
     primary.health?.state === 'active'
       ? primary

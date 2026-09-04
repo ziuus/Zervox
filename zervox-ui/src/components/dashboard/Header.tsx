@@ -2,6 +2,7 @@
 
 import { useTheme } from '@/components/ui/ThemeProvider'
 import { PulseRing } from '@/components/ui/PulseRing'
+import { AirGapBeacon } from '@/components/dashboard/AirGapBeacon'
 
 interface HeaderProps {
   primaryOnline: boolean
@@ -134,6 +135,9 @@ export function Header({
 
         {/* ── Right Controls ────────────────────────────────────── */}
         <div className="flex items-center gap-2.5">
+          {/* Feature 5: Air-Gap Attestation Beacon */}
+          <AirGapBeacon />
+
           {/* Last updated */}
           {lastUpdated && (
             <span className="hidden font-mono text-[10px] tracking-wider sm:block" style={{ color: 'var(--text-muted)' }}>
@@ -193,7 +197,7 @@ export function Header({
             </button>
           )}
 
-          {/* ── Theme Toggle ─────────────────────────────────────── */}
+          {/* Theme Toggle */}
           <button
             onClick={toggle}
             type="button"
