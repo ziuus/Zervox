@@ -183,10 +183,12 @@ while true; do
     echo -e "  ${CYAN}[4]${NC} Assassinate Primary Node ${DIM}(SIGKILL 8080 -> Backup HA Failover)${NC}"
     echo -e "  ${PURPLE}[5]${NC} Hardware Circuit-Breaker ${DIM}(Node Cordon -> RISC-V Dual-Key Auth)${NC}"
     echo -e "  ${PURPLE}[6]${NC} Adaptive Immune Quarantine ${DIM}(Repeat Attacks -> 30-Min Threat Lock)${NC}"
+    echo -e "  ${GREEN}[7]${NC} Forensic Freeze Snapshot ${DIM}(Memory Dump -> SHA-256 Vault Sealing)${NC}"
+    echo -e "  ${GREEN}[8]${NC} Air-Gap Attestation Audit ${DIM}(Cryptographic Beacon -> Zero Egress)${NC}"
     echo ""
     echo -e "  ${RED}[q]${NC} Exit Demo Orchestrator"
     echo ""
-    echo -ne "  ${BOLD}Enter choice [1-6, q]: ${NC}"
+    echo -ne "  ${BOLD}Enter choice [1-8, q]: ${NC}"
     read -r CHOICE
 
     case "${CHOICE}" in
@@ -196,12 +198,20 @@ while true; do
         4) scenario_4 ;;
         5) scenario_5 ;;
         6) scenario_6 ;;
+        7) 
+            "${CHAOS_DIR}/forensic-freeze-test.sh"
+            pause
+            ;;
+        8) 
+            "${CHAOS_DIR}/airgap-beacon-test.sh"
+            pause
+            ;;
         q|Q) 
             echo -e "\n${GREEN}Thank you for presenting Zervox! ⚡${NC}\n"
             exit 0
             ;;
         *)
-            echo -e "\n${RED}Invalid option. Please choose between 1 and 6.${NC}"
+            echo -e "\n${RED}Invalid option. Please choose between 1 and 8.${NC}"
             sleep 1
             ;;
     esac
