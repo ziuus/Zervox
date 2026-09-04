@@ -10,7 +10,7 @@ use zervox_core::executor::RemediationExecutor;
 use zervox_core::llm::LlmAnalyzer;
 use zervox_core::policy::PolicyEngine;
 use zervox_core::status::AppState;
-use zervox_core::store::IncidentStore;
+use zervox_core::store::{IncidentStore, SqliteStore};
 use zervox_core::watchdog::{Watchdog, wait_for_primary_failure};
 use zervox_core::types::NodeRole;
 
@@ -18,8 +18,8 @@ async fn start_active_node(config: AppConfig, is_promoted: bool) -> anyhow::Resu
     let http_port = config.http_port;
     let heartbeat_port = config.heartbeat_port;
 
-    // Initialize active services
-    let store = IncidentStore::new(&config.db_path)?;
+    let sqlite_store = SqliteStore::new(&config.db_path)?;
+    let store: Arc<dyn IncidentStore> = Arc::new(sqlite_store);
     info!("SQLite incident store initialized (WAL mode active)");
 
     let policy = PolicyEngine::new(config.opa_url.clone());
@@ -34,8 +34,12 @@ async fn start_active_node(config: AppConfig, is_promoted: bool) -> anyhow::Resu
 
     let watchdog = Watchdog::new(NodeRole::Primary, config.peer.clone());
     let watchdog_bg = watchdog.clone();
+    
+    let cert_path = config.tls_cert_path.clone();
+    let key_path = config.tls_key_path.clone();
+
     tokio::spawn(async move {
-        watchdog_bg.run_primary_listener(heartbeat_port).await;
+        watchdog_bg.run_primary_listener(heartbeat_port, cert_path, key_path).await;
     });
 
     let app_state = Arc::new(AppState {
@@ -77,9 +81,8 @@ async fn main() -> anyhow::Result<()> {
     if node_role == NodeRole::Primary {
         start_active_node(config, false).await?;
     } else {
-        let peer = config.peer.clone().unwrap_or_else(|| format!("127.0.0.1:{}", config.heartbeat_port));
         info!("BACKUP mode enabled. Engine is fully dormant.");
-        wait_for_primary_failure(&peer).await;
+        wait_for_primary_failure(config.clone()).await;
         
         info!("🚨 PRIMARY FAILURE CONFIRMED! Breaking dormant state. Promoting to ACTIVE leader.");
         start_active_node(config, true).await?;

@@ -70,16 +70,8 @@ pub async fn handle_grafana_webhook(
     }
 
     // 2. Verify Instance Active/Standby State
-    if !state.watchdog.is_active().await {
-        info!("Webhook received while in STANDBY mode; ignoring execution");
-        return (
-            StatusCode::OK,
-            Json(json!({
-                "status": "standby_ignored",
-                "message": "Instance is in standby mode; primary node handles execution"
-            })),
-        );
-    }
+    // Note: The Axum server is now completely dormant on backup nodes.
+    // If this webhook receives traffic, it is guaranteed to be the active primary leader.
 
     info!(
         alerts_count = payload.alerts.len(),
@@ -134,7 +126,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
         updated_at: Utc::now(),
     };
 
-    if let Err(err) = state.store.insert_incident(&record) {
+    if let Err(err) = state.store.insert_incident(&record).await {
         error!(incident_id = %incident_id, error = %err, "Failed to persist initial incident record");
     }
 
@@ -194,6 +186,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
     if let Err(err) = state
         .store
         .update_execution_status(&incident_id, &execution_status, exec_err)
+        .await
     {
         error!(incident_id = %incident_id, error = %err, "Failed to update incident in store");
     }
@@ -275,7 +268,7 @@ pub async fn simulate_attack(
         updated_at: Utc::now(),
     };
 
-    let _ = state.store.insert_incident(&record);
+    let _ = state.store.insert_incident(&record).await;
 
     (
         StatusCode::OK,

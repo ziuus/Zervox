@@ -15,7 +15,7 @@ path = "src/main.rs"
 tokio = { version = "1.40", features = ["full"] }
 axum = "0.8"
 tower = "0.5"
-tower-http = { version = "0.6", features = ["trace", "cors"] }
+tower-http = { version = "0.6", features = ["trace", "cors", "limit"] }
 rusqlite = { version = "0.32", features = ["bundled", "chrono"] }
 kube = { version = "0.93", default-features = false, features = ["runtime", "client", "derive"] }
 k8s-openapi = { version = "0.22.0", default-features = false, features = ["v1_30"] }
@@ -30,7 +30,13 @@ uuid = { version = "1.10", features = ["v4", "serde"] }
 thiserror = "1.0"
 anyhow = "1.0"
 async-trait = "0.1"
+rustls = "0.23"
+tokio-rustls = "0.26"
+rustls-pemfile = "2.1"
+rcgen = "0.13"
+mdns-sd = "0.13"
 
 [dev-dependencies]
 tempfile = "3.12"
 http-body-util = "0.1"
+proptest = "1.5"
