@@ -52,7 +52,7 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
                 simulatedSever ? 'bg-amber-500' : 'bg-emerald-500'
               }`}
             />
-            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Split-Brain Sentinel & Network Topology
             </h3>
           </div>
@@ -102,7 +102,7 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Primary Engine (8080)</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Primary Engine (8080)</span>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
                   !effectivePrimaryOnline ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
@@ -134,7 +134,7 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Backup Engine (8081)</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Backup Engine (8081)</span>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
                   effectiveBackupActive
@@ -237,7 +237,7 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
 
           <div className="rounded-xl border border-teal-500/30 dark:border-teal-500/20 bg-teal-50/20 dark:bg-teal-950/10 p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">k3s Cluster Perimeter</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">k3s Cluster Perimeter</span>
               <span className="h-2.5 w-2.5 rounded-full bg-teal-500" />
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">

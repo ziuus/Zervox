@@ -86,11 +86,11 @@ export function Header({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100">
+                <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
                   Zervox
                 </span>
                 <span
-                  className="rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-slate-200/80 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-slate-200/80 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
                 >
                   SRE
                 </span>
@@ -109,8 +109,8 @@ export function Header({
                 href={href}
                 className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
                   isActive
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold shadow-sm border border-slate-300 dark:border-slate-700'
-                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800/60'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold shadow-sm border border-slate-300 dark:border-slate-700'
+                    : 'text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
                 }`}
               >
                 <span className="text-xs">{icon}</span>
@@ -142,7 +142,7 @@ export function Header({
           <button
             onClick={onRefresh}
             type="button"
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-300 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-900 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
             title="Poll fresh telemetry"
           >
             <span className="text-xs font-bold">↻</span>
@@ -154,7 +154,7 @@ export function Header({
             onClick={toggle}
             type="button"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-300 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-900 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
             title={isDark ? 'Light mode' : 'Dark mode'}
           >
             {isDark ? <SunIcon /> : <MoonIcon />}

@@ -30,10 +30,10 @@ export default function OverviewPage() {
       {/* ── Page Header ────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            System Overview & Cluster Telemetry
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            System Dashboard & Cluster Telemetry
           </h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1">
             Real-time multi-node health, mutual TLS heartbeat tunnel (TCP 9000), and cluster failover sentinel.
           </p>
         </div>
@@ -59,10 +59,10 @@ export default function OverviewPage() {
       {/* ── ROW 1: PRIMARY, BACKUP & ENGINE SENTINELS ──────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
             Active Nodes & Dual-Engine Watchdog
           </h2>
-          <span className="text-[11px] text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             Zero-single-point-of-failure topology
           </span>
         </div>
@@ -84,10 +84,10 @@ export default function OverviewPage() {
       {/* ── ROW 2: FULL-WIDTH TOPOLOGY MINI-MAP ───────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
             High-Availability Network Graph
           </h2>
-          <span className="text-[11px] text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             Autonomous failover routing (Track A → Track B)
           </span>
         </div>
@@ -109,10 +109,10 @@ export default function OverviewPage() {
       {/* ── ROW 3: CLEAN KPI METRICS MATRIX ────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
             Cluster Telemetry Key Performance Indicators
           </h2>
-          <span className="text-[11px] text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             8 live health checkpoints
           </span>
         </div>
@@ -193,7 +193,7 @@ export default function OverviewPage() {
               className="p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-150"
             >
               <div>
-                <CardLabel>{label}</CardLabel>
+                <CardLabel className="text-slate-900 dark:text-slate-200 font-bold">{label}</CardLabel>
                 <p
                   className="font-mono text-base font-bold tracking-tight mt-1"
                   style={{ color }}
@@ -201,7 +201,7 @@ export default function OverviewPage() {
                   {value}
                 </p>
               </div>
-              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 mt-2 block">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-2 block">
                 {sub}
               </span>
             </Card>

@@ -35,10 +35,10 @@ export function HeartbeatCard({ instance, peerStatus }: HeartbeatCardProps) {
           <div className="flex items-center gap-3">
             <PulseRing online={!isTrulyDead} size="md" />
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {instance.label === 'PRIMARY' ? 'Primary Engine (Track A)' : 'Backup Engine (Track B)'}
               </h3>
-              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-0.5">
                 {instance.label === 'PRIMARY' ? 'Active leader & crisis orchestrator' : 'Hot standby sentinel with mTLS watchdog'}
               </p>
             </div>
@@ -53,14 +53,14 @@ export function HeartbeatCard({ instance, peerStatus }: HeartbeatCardProps) {
         {/* Key-Value Pairs Evenly Distributed with Strict High Contrast */}
         <div className="divide-y divide-slate-200 dark:divide-slate-800 mt-2">
           <div className="flex items-center justify-between py-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Heartbeat Status</span>
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-200">Heartbeat Status</span>
             <span
               className={`text-xs font-bold ${
                 !isTrulyDead
                   ? isDormantStandby
                     ? 'text-amber-800 dark:text-amber-300'
                     : 'text-emerald-800 dark:text-emerald-300'
-                  : 'text-red-800 dark:text-red-400'
+                  : 'text-rose-800 dark:text-rose-400'
               }`}
             >
               {!isTrulyDead ? (isDormantStandby ? '● Standby (mTLS Active)' : '● Alive & Answering') : '○ Heartbeat Lost'}
@@ -68,29 +68,29 @@ export function HeartbeatCard({ instance, peerStatus }: HeartbeatCardProps) {
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Round-Trip Latency</span>
-            <span className="text-xs font-bold font-mono text-slate-900 dark:text-slate-100">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-200">Round-Trip Latency</span>
+            <span className="text-xs font-bold font-mono text-slate-900 dark:text-slate-200">
               {isTrulyDead ? 'N/A' : isDormantStandby ? '< 2ms (Internal mTLS)' : instance.latencyMs !== null ? `${instance.latencyMs}ms` : '—'}
             </span>
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Designated Role</span>
-            <span className="text-xs font-bold uppercase text-slate-900 dark:text-slate-100">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-200">Designated Role</span>
+            <span className="text-xs font-bold uppercase text-slate-900 dark:text-slate-200">
               {instance.health?.role ?? (isDormantStandby ? 'Standby Sentinel' : isTrulyDead ? 'Offline' : '—')}
             </span>
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">System Uptime</span>
-            <span className="text-xs font-bold font-mono text-slate-900 dark:text-slate-100">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-200">System Uptime</span>
+            <span className="text-xs font-bold font-mono text-slate-900 dark:text-slate-200">
               {isTrulyDead ? 'N/A' : isDormantStandby ? 'Syncing with Peer' : instance.health?.uptime_seconds != null ? formatUptime(instance.health.uptime_seconds) : '—'}
             </span>
           </div>
 
           <div className="flex items-center justify-between py-3">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Control Endpoint</span>
-            <span className="text-xs font-mono font-bold truncate text-teal-800 dark:text-teal-300 max-w-[200px]" title={instance.url}>
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-200">Control Endpoint</span>
+            <span className="text-xs font-mono font-bold truncate text-teal-900 dark:text-teal-300 max-w-[200px]" title={instance.url}>
               {instance.url}
             </span>
           </div>

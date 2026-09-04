@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Inline script to apply stored theme before first paint — prevents FOUC */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem('zervox-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}})()`,
+            __html: `(function(){var t=localStorage.getItem('zervox-theme')||'light';document.documentElement.setAttribute('data-theme',t);if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}})()`,
           }}
         />
       </head>

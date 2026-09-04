@@ -21,22 +21,25 @@ export function useTheme() {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
 
-  // On mount: resolve theme from localStorage → system preference → default light
+  // On mount: resolve theme from localStorage (default light)
   useEffect(() => {
     const stored = localStorage.getItem('zervox-theme') as Theme | null
     if (stored === 'light' || stored === 'dark') {
       apply(stored)
       setTheme(stored)
     } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const resolved: Theme = prefersDark ? 'dark' : 'light'
-      apply(resolved)
-      setTheme(resolved)
+      apply('light')
+      setTheme('light')
     }
   }, [])
 
   const apply = (t: Theme) => {
     document.documentElement.setAttribute('data-theme', t)
+    if (t === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
   }
 
   const toggle = useCallback(() => {

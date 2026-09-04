@@ -10,6 +10,7 @@
 @layer base {
   /* ── LIGHT MODE (Crisp White with High-Contrast Dark Slate & Deep Teal) ──── */
   :root,
+  .light,
   [data-theme='light'] {
     color-scheme: light;
 
@@ -72,6 +73,7 @@
   }
 
   /* ── DARK MODE (Deep Slate-950 Modern SaaS) ──────────────────── */
+  .dark,
   [data-theme='dark'] {
     color-scheme: dark;
 

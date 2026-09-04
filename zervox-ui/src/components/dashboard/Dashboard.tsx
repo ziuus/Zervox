@@ -203,7 +203,7 @@ export function Dashboard() {
                   ⚡
                 </div>
                 <div>
-                  <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-100" style={{ color: 'var(--text-primary)' }}>
+                  <h4 className="font-mono text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white" style={{ color: 'var(--text-primary)' }}>
                     Judges Chaos Simulation Console
                   </h4>
                   <p className="font-mono text-xs text-slate-300 font-medium" style={{ color: 'var(--text-secondary)' }}>
@@ -389,7 +389,7 @@ function SectionLabel({ title, subtitle }: { title: string; subtitle: string }) 
     <div className="mb-3 flex items-center gap-3">
       <div className="hr-gradient flex-1" />
       <div className="text-right shrink-0">
-        <p className="font-mono text-xs font-extrabold uppercase tracking-[0.25em] text-slate-100" style={{ color: 'var(--text-primary)' }}>
+        <p className="font-mono text-xs font-extrabold uppercase tracking-[0.25em] text-slate-900 dark:text-white" style={{ color: 'var(--text-primary)' }}>
           {title}
         </p>
         <p className="font-mono text-[10px] text-slate-300 font-medium" style={{ color: 'var(--text-secondary)' }}>{subtitle}</p>
