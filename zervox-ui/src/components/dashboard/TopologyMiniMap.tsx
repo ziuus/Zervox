@@ -79,8 +79,8 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
       {/* Center Visualization */}
       <div className="relative flex items-center justify-between py-2 px-1 flex-1">
         {/* Track A: Engines */}
-        <div className="flex flex-col gap-2.5 z-10 w-[140px]">
-          <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex flex-col gap-2.5 z-10 w-[150px]">
+          <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300" style={{ color: 'var(--text-secondary)' }}>
             TRACK A · ENGINES
           </div>
 
@@ -95,14 +95,14 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>PRIMARY</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>PRIMARY</span>
               <span
-                className={`h-2 w-2 rounded-full ${
+                className={`h-2.5 w-2.5 rounded-full ${
                   !effectivePrimaryOnline ? 'bg-red-500 animate-ping' : 'bg-emerald-400'
                 }`}
               />
             </div>
-            <p className="text-[9px] mt-0.5" style={{ color: !effectivePrimaryOnline ? '#f87171' : 'var(--status-green)' }}>
+            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: !effectivePrimaryOnline ? '#f87171' : 'var(--status-green)' }}>
               {!effectivePrimaryOnline ? 'OFFLINE / SEVERED' : 'ACTIVE LEADER'}
             </p>
           </div>
@@ -116,14 +116,14 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>BACKUP</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>BACKUP</span>
               <span
-                className={`h-2 w-2 rounded-full ${
+                className={`h-2.5 w-2.5 rounded-full ${
                   effectiveBackupActive ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]' : 'bg-slate-500'
                 }`}
               />
             </div>
-            <p className="text-[9px] mt-0.5 font-bold" style={{ color: effectiveBackupActive ? '#fbbf24' : 'var(--text-muted)' }}>
+            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: effectiveBackupActive ? '#fbbf24' : 'var(--text-secondary)' }}>
               {isElecting
                 ? 'ELECTING LEADER…'
                 : effectiveBackupActive
@@ -173,17 +173,17 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
           </svg>
 
           {/* Status Overlay Pill */}
-          <div className="absolute inset-x-0 bottom-[-6px] text-center">
+          <div className="absolute inset-x-0 bottom-[-8px] text-center z-20">
             {isElecting ? (
-              <span className="text-[9px] font-extrabold text-amber-300 bg-amber-950/90 px-2.5 py-0.5 rounded-full border border-amber-400 animate-pulse">
+              <span className="text-[11px] font-extrabold text-amber-300 bg-amber-950/95 px-3 py-1 rounded-full border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)] animate-pulse">
                 ⏳ ELECTING BACKUP LEADER (2.4s)…
               </span>
             ) : simulatedSever ? (
-              <span className="text-[9px] font-extrabold text-amber-300 bg-black px-2.5 py-0.5 rounded-full border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.3)]">
+              <span className="text-[11px] font-extrabold text-amber-300 bg-slate-950/95 px-3 py-1 rounded-full border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.5)]">
                 ⚡ BACKUP SEIZED ACTIVE CONTROL · 0 DATA LOSS
               </span>
             ) : (
-              <span className="text-[9px] font-bold text-emerald-400 bg-black px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="text-[11px] font-extrabold text-emerald-300 bg-slate-950/95 px-3.5 py-1 rounded-full border border-emerald-400/60 shadow-[0_0_14px_rgba(52,211,153,0.35)] tracking-wide">
                 ● mTLS HEARTBEAT TUNNEL HEALTHY (TCP 9000)
               </span>
             )}
@@ -191,18 +191,18 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
         </div>
 
         {/* Track B: k3s Cluster */}
-        <div className="flex flex-col gap-2 z-10 w-[140px]">
-          <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex flex-col gap-2 z-10 w-[150px]">
+          <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300" style={{ color: 'var(--text-secondary)' }}>
             TRACK B · TARGET
           </div>
           <div className="rounded-xl border p-2.5 surface space-y-1.5" style={{ borderColor: 'var(--accent-border)' }}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>k3s CLUSTER</span>
-              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
+              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>k3s CLUSTER</span>
+              <span className="h-2.5 w-2.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
             </div>
-            <p className="text-[9px]" style={{ color: 'var(--text-muted)' }}>Autonomous Perimeter</p>
+            <p className="text-[10px] font-medium text-slate-300" style={{ color: 'var(--text-secondary)' }}>Autonomous Perimeter</p>
             <div
-              className="text-center rounded py-0.5 text-[8px] font-extrabold tracking-wider uppercase"
+              className="text-center rounded py-0.5 text-[9px] font-extrabold tracking-wider uppercase"
               style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }}
             >
               PODS / DEPLOYMENTS

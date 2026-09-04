@@ -78,9 +78,9 @@
     --border-medium:    rgba(255, 255, 255, 0.12);
     --border-strong:    rgba(255, 255, 255, 0.20);
 
-    --text-primary:     #f1f5f9;
-    --text-secondary:   #94a3b8;
-    --text-muted:       #4b5563;
+    --text-primary:     #f8fafc;
+    --text-secondary:   #cbd5e1;
+    --text-muted:       #94a3b8;
     --text-code:        #e2e8f0;
 
     --accent:           #38bdf8;

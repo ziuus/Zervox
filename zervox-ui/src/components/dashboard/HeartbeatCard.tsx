@@ -57,25 +57,25 @@ export function HeartbeatCard({ instance }: HeartbeatCardProps) {
         </div>
         <div>
           <CardLabel>Latency</CardLabel>
-          <p className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-            {instance.latencyMs !== null ? `${instance.latencyMs}ms` : '—'}
+          <p className="font-mono text-sm font-semibold" style={{ color: isOnline && instance.latencyMs !== null ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {!isOnline ? 'N/A' : instance.latencyMs !== null ? `${instance.latencyMs}ms` : '—'}
           </p>
         </div>
         <div>
           <CardLabel>Role</CardLabel>
           <p className="font-mono text-sm font-semibold uppercase" style={{ color: 'var(--text-primary)' }}>
-            {instance.health?.role ?? '—'}
+            {instance.health?.role ?? (!isOnline ? 'OFFLINE' : '—')}
           </p>
         </div>
         <div>
           <CardLabel>Uptime</CardLabel>
-          <p className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-            {instance.health?.uptime_seconds != null ? formatUptime(instance.health.uptime_seconds) : '—'}
+          <p className="font-mono text-sm font-semibold" style={{ color: isOnline && instance.health?.uptime_seconds != null ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {!isOnline ? 'N/A' : instance.health?.uptime_seconds != null ? formatUptime(instance.health.uptime_seconds) : '—'}
           </p>
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 my-2 py-1">
           <CardLabel>Endpoint</CardLabel>
-          <p className="truncate font-mono text-xs" style={{ color: 'var(--accent)' }}>{instance.url}</p>
+          <p className="truncate font-mono text-xs py-1" style={{ color: 'var(--accent)' }}>{instance.url}</p>
         </div>
       </div>
 

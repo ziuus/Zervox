@@ -112,7 +112,7 @@ export function GlassBoxVisualizer() {
             <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
               Glass Box Root Cause Trail
             </h3>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs text-slate-300 font-medium" style={{ color: 'var(--text-secondary)' }}>
               LLM Reasoning Chain &amp; Deterministic Fallback Visualizer
             </p>
           </div>
@@ -146,17 +146,17 @@ export function GlassBoxVisualizer() {
       </div>
 
       {/* Narrative status bar */}
-      <div className="flex items-center justify-between px-3 py-2 rounded-xl text-[11px]" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)' }}>
+      <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)' }}>
         <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${activeBranch === 'ai' ? 'bg-sky-400' : 'bg-amber-400'} animate-pulse`} />
-          <span style={{ color: 'var(--text-secondary)' }}>
+          <span className={`h-2.5 w-2.5 rounded-full ${activeBranch === 'ai' ? 'bg-sky-400' : 'bg-amber-400'} animate-pulse`} />
+          <span className="text-slate-200 font-medium" style={{ color: 'var(--text-secondary)' }}>
             {activeBranch === 'ai'
               ? 'LLM DECISION GRAPH: 4-step chain-of-thought verification with confidence validation'
               : 'DETERMINISTIC FAILOVER: LLM timeout intercepted — 1.2ms local rule-table execution'}
           </span>
         </div>
         {isSimulating && (
-          <span className="text-[10px] font-bold text-sky-400 animate-pulse">STREAMING DECISION GRAPH…</span>
+          <span className="text-[11px] font-bold text-sky-300 animate-pulse">STREAMING DECISION GRAPH…</span>
         )}
       </div>
 
@@ -178,29 +178,29 @@ export function GlassBoxVisualizer() {
               }}
             >
               <div className="flex items-center justify-between border-b pb-1.5" style={{ borderColor: 'var(--border-subtle)' }}>
-                <span className="text-[9px] font-extrabold uppercase tracking-widest" style={{ color: activeBranch === 'ai' ? 'var(--accent)' : 'var(--status-amber)' }}>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: activeBranch === 'ai' ? 'var(--accent)' : 'var(--status-amber)' }}>
                   STEP 0{n.step}
                 </span>
                 {n.confidence && (
-                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                  <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30">
                     {n.confidence}% CONF
                   </span>
                 )}
                 {n.status === 'rerouted' && (
-                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30 animate-pulse">
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/40 animate-pulse">
                     ⚡ REROUTED
                   </span>
                 )}
               </div>
 
               <div>
-                <p className="text-xs font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
-                <p className="text-[10px] mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{n.detail}</p>
+                <p className="text-xs font-bold leading-tight text-slate-100" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
+                <p className="text-xs mt-1.5 leading-relaxed text-slate-200 font-normal" style={{ color: 'var(--text-secondary)' }}>{n.detail}</p>
               </div>
 
-              <div className="pt-1 flex items-center justify-between text-[9px]">
-                <span style={{ color: 'var(--text-muted)' }}>Status:</span>
-                <span className={`font-bold ${n.status === 'executed' ? 'text-emerald-400' : n.status === 'rerouted' ? 'text-amber-400' : 'text-sky-400'}`}>
+              <div className="pt-1 flex items-center justify-between text-[10px]">
+                <span className="text-slate-400 font-medium" style={{ color: 'var(--text-muted)' }}>Status:</span>
+                <span className={`font-bold tracking-wider ${n.status === 'executed' ? 'text-emerald-300' : n.status === 'rerouted' ? 'text-amber-300' : 'text-sky-300'}`}>
                   {n.status.toUpperCase()}
                 </span>
               </div>

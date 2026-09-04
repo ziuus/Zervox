@@ -78,7 +78,7 @@ export function ForensicFreezeFrame({ onTriggerLiveFreeze }: ForensicFreezeFrame
                 PRE-REMEDIATION LOCK
               </span>
             </div>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs text-slate-300 font-medium" style={{ color: 'var(--text-secondary)' }}>
               Immutable Evidence Snapshot: Cause → Freeze → Cure in &lt;10s
             </p>
           </div>

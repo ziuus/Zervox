@@ -274,10 +274,20 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                         </td>
 
                         {/* Target Resource */}
-                        <td className="px-4 py-2.5">
-                          <p className="max-w-[180px] truncate font-mono text-xs font-medium" style={{ color: 'var(--accent)' }} title={inc.target_resource}>
-                            {truncate(inc.target_resource, 32)}
-                          </p>
+                        <td className="px-4 py-2.5 min-w-[200px] max-w-[280px]">
+                          <div className="group relative inline-block max-w-full">
+                            <p
+                              className="truncate font-mono text-xs font-semibold cursor-help"
+                              style={{ color: 'var(--accent)' }}
+                              title={inc.target_resource}
+                            >
+                              {inc.target_resource}
+                            </p>
+                            {/* Hover tooltip */}
+                            <div className="pointer-events-none absolute bottom-full left-0 z-50 mb-1.5 hidden rounded-lg px-2.5 py-1 text-[10px] font-mono text-slate-100 bg-slate-900 border border-slate-700 shadow-xl group-hover:block whitespace-nowrap">
+                              {inc.target_resource}
+                            </div>
+                          </div>
                         </td>
 
                         {/* OPA Gate */}
