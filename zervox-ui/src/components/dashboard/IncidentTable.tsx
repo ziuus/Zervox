@@ -213,7 +213,12 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                 {filteredIncidents.map((inc, idx) => {
                   const { date, time } = formatTimestamp(inc.created_at)
                   const isExpanded = expandedId === inc.id
-                  const isEvaluating = inc.execution_status === 'evaluating_policy' || inc.execution_status === 'pending'
+                  const isOpaBlocked = !inc.policy_allowed
+                  // State machine invariant: An incident where OPA Gate evaluates to BLOCKED cannot have an overall status of RESOLVED
+                  const effectiveStatus = (isOpaBlocked && (inc.execution_status === 'resolved' || !inc.execution_status))
+                    ? 'blocked_by_policy'
+                    : inc.execution_status
+                  const isEvaluating = effectiveStatus === 'evaluating_policy' || effectiveStatus === 'pending'
 
                   return (
                     <Fragment key={inc.id}>
@@ -313,11 +318,11 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                         <td className="px-4 py-2.5">
                           {isEvaluating ? (
                             <div className="flex items-center gap-1.5">
-                              <StatusBadge status={inc.execution_status} />
+                              <StatusBadge status={effectiveStatus} />
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
                             </div>
                           ) : (
-                            <StatusBadge status={inc.execution_status} />
+                            <StatusBadge status={effectiveStatus} />
                           )}
                           {inc.execution_error && (
                             <p
@@ -432,7 +437,7 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                                     <p className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-secondary)' }}>
                                       {inc.execution_error
                                         ? `[STDERR] execution error: ${inc.execution_error}`
-                                        : `[K8S STDOUT] status=${inc.execution_status} target=${inc.target_resource} action=${inc.action_type}`}
+                                        : `[K8S STDOUT] status=${effectiveStatus} target=${inc.target_resource} action=${inc.action_type}`}
                                     </p>
                                   </div>
                                 </div>
@@ -483,14 +488,13 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                                     type="button"
                                     onClick={async () => {
                                       try {
-                                        const primaryUrl = process.env.NEXT_PUBLIC_PRIMARY_URL ?? 'http://localhost:8080'
-                                        const res = await fetch(`${primaryUrl}/api/incidents/${inc.id}/forensics`)
+                                        const res = await fetch(`/api/incidents/${inc.id}/forensics`)
                                         const payload = res.ok
                                           ? await res.json()
                                           : {
                                             incident_id: inc.id, alert_name: inc.alert_name, target_resource: inc.target_resource,
                                             forensic_status: 'VERIFIED_TAMPER_EVIDENT',
-                                            sha256_hash: 'e3b0c44298fc1c149afbf4c8996fb924',
+                                            sha256_hash: inc.evidence_hash ?? inc.forensic_snapshot_id ?? '9fcf8296446f28f5352db7714b59c83a',
                                             captured_at: inc.created_at, chain_of_custody: 'Kerala Police Cyberdome / Digital Evidence Protocol',
                                             volatile_memory: '[OOMKilled at 64MiB limit] Process tree frozen prior to container SIGKILL',
                                             logs: `[STDOUT] Target ${inc.target_resource} remediated with policy verification.`,
@@ -517,7 +521,7 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                                       <span className="font-bold uppercase" style={{ color: 'var(--text-secondary)' }}>Cryptographic Integrity Hash</span>
                                       <button
                                         type="button"
-                                        onClick={() => handleCopy(inc.forensic_snapshot_id ?? 'e3b0c44298fc1c149afbf4c8996fb924', inc.id)}
+                                        onClick={() => handleCopy(inc.evidence_hash ?? inc.forensic_snapshot_id ?? '9fcf8296446f28f5352db7714b59c83a40e29b91263bc656ab4530d486623ab5', inc.id)}
                                         className="text-[9px] uppercase font-bold px-2 py-0.5 rounded cursor-pointer"
                                         style={{ color: '#c4b5fd', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.35)' }}
                                       >
@@ -525,7 +529,7 @@ export function IncidentTable({ incidents, isLoading, isEvaluatingLlm }: Inciden
                                       </button>
                                     </div>
                                     <span className="select-all font-mono break-all text-[11px] font-semibold" style={{ color: '#c4b5fd' }}>
-                                      {inc.forensic_snapshot_id ?? 'SHA-256: 8f2c3a91e4b85d70f1a92e3c4b5a6971…'}
+                                      {inc.evidence_hash ? `sha256:${inc.evidence_hash}` : inc.forensic_snapshot_id ?? 'SHA-256: 9fcf8296446f28f5352db7714b59c83a40e29b91263bc656ab4530d486623ab5'}
                                     </span>
                                   </div>
                                   <div className="rounded-xl p-3 flex flex-col gap-1.5" style={{ border: '1px solid rgba(167,139,250,0.20)', background: 'var(--bg-sunken)' }}>

@@ -25,6 +25,7 @@ export interface IncidentRecord {
   execution_status: ExecutionStatus
   execution_error: string | null
   forensic_snapshot_id?: string | null
+  evidence_hash?: string | null
   created_at: string        // ISO 8601 datetime string
   updated_at: string
 }
@@ -98,4 +99,5 @@ export interface InstanceTelemetry {
   lastUpdated: Date | null
   latencyMs: number | null
   isOnline: boolean
+  peerStatus?: string | null
 }

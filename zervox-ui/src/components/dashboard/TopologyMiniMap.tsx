@@ -6,17 +6,20 @@ interface SplitBrainSentinelProps {
   primaryOnline: boolean
   backupOnline: boolean
   activeRole: 'primary' | 'backup' | string
+  peerStatus?: string | null
 }
 
-export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: SplitBrainSentinelProps) {
+export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerStatus }: SplitBrainSentinelProps) {
   const [simulatedSever, setSimulatedSever] = useState(false)
   const [isElecting, setIsElecting] = useState(false)
 
-  // Derive active states factoring in simulation
+  // Derive active states factoring in simulation and mTLS peer connectivity
   const effectivePrimaryOnline = simulatedSever ? false : primaryOnline
+  const isPeerConnected = peerStatus === 'peer_connected'
+  const isBackupReachable = backupOnline || isPeerConnected
   const effectiveBackupActive = simulatedSever
     ? !isElecting
-    : ((activeRole === 'backup' && backupOnline) || (!primaryOnline && backupOnline))
+    : ((activeRole === 'backup' && isBackupReachable) || (!primaryOnline && isBackupReachable))
   const effectivePrimaryActive = !simulatedSever && activeRole === 'primary' && primaryOnline
 
   const triggerSeverSimulation = () => {
@@ -112,6 +115,8 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
             className={`rounded-xl border p-2.5 transition-all duration-300 ${
               effectiveBackupActive
                 ? 'border-amber-400 bg-amber-950/30 shadow-[0_0_20px_rgba(251,191,36,0.3)] ring-1 ring-amber-400'
+                : !isBackupReachable && !simulatedSever
+                ? 'border-red-500/60 bg-red-950/20 shadow-[0_0_16px_rgba(239,68,68,0.2)]'
                 : 'border-white/10'
             }`}
           >
@@ -119,16 +124,22 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
               <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>BACKUP</span>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  effectiveBackupActive ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]' : 'bg-slate-500'
+                  effectiveBackupActive
+                    ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]'
+                    : !isBackupReachable && !simulatedSever
+                    ? 'bg-red-500 animate-ping'
+                    : 'bg-slate-500'
                 }`}
               />
             </div>
-            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: effectiveBackupActive ? '#fbbf24' : 'var(--text-secondary)' }}>
+            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: effectiveBackupActive ? '#fbbf24' : !isBackupReachable && !simulatedSever ? '#f87171' : 'var(--text-secondary)' }}>
               {isElecting
                 ? 'ELECTING LEADER…'
                 : effectiveBackupActive
                 ? '★ ACTIVE PROMOTED LEADER'
-                : 'DORMANT STANDBY (mTLS)'}
+                : isBackupReachable
+                ? 'DORMANT STANDBY (mTLS)'
+                : 'OFFLINE / SEVERED'}
             </p>
           </div>
         </div>
@@ -181,6 +192,10 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole }: Spl
             ) : simulatedSever ? (
               <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-amber-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.5)]">
                 ⚡ BACKUP SEIZED ACTIVE CONTROL · 0 DATA LOSS
+              </span>
+            ) : !isBackupReachable || !effectivePrimaryOnline ? (
+              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-red-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-red-500/60 shadow-[0_0_14px_rgba(239,68,68,0.35)] tracking-wide">
+                ✕ mTLS HEARTBEAT TUNNEL SEVERED
               </span>
             ) : (
               <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-emerald-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-emerald-400/60 shadow-[0_0_14px_rgba(52,211,153,0.35)] tracking-wide">

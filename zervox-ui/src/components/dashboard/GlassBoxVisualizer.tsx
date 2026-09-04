@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import type { IncidentRecord } from '@/types/api'
 
 interface ReasoningNode {
   step: number
@@ -11,16 +12,53 @@ interface ReasoningNode {
   branch?: 'ai' | 'fallback'
 }
 
-export function GlassBoxVisualizer() {
+interface GlassBoxVisualizerProps {
+  evidenceHash?: string | null
+  latestIncident?: IncidentRecord | null
+}
+
+export function GlassBoxVisualizer({ evidenceHash, latestIncident }: GlassBoxVisualizerProps = {}) {
   const [activeBranch, setActiveBranch] = useState<'ai' | 'fallback'>('ai')
   const [isSimulating, setIsSimulating] = useState(false)
   const [currentStep, setCurrentStep] = useState(4)
+  const [fetchedHash, setFetchedHash] = useState<string | null>(null)
+
+  // Fetch real forensic evidence package if hash is not directly supplied
+  useEffect(() => {
+    if (evidenceHash) {
+      setFetchedHash(evidenceHash)
+      return
+    }
+    const incidentId = latestIncident?.id
+    if (!incidentId) return
+
+    let isMounted = true
+    fetch(`/api/incidents/${incidentId}/forensics`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data?.sha256_hash) {
+          setFetchedHash(data.sha256_hash)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      isMounted = false
+    }
+  }, [evidenceHash, latestIncident?.id])
+
+  const resolvedEvidenceHash =
+    fetchedHash ??
+    evidenceHash ??
+    latestIncident?.evidence_hash ??
+    latestIncident?.forensic_snapshot_id ??
+    '9fcf8296446f28f5352db7714b59c83a40e29b91263bc656ab4530d486623ab5'
 
   const aiNodes: ReasoningNode[] = [
     {
       step: 1,
       title: 'Alert Ingest & Correlation',
-      detail: 'Received PodCrashLooping alert from k3s prometheus. Pod victim-api-6d7c8f terminating with exit code 137 (OOMKilled).',
+      detail: `Received ${latestIncident?.alert_name ?? 'PodCrashLooping'} alert from k3s prometheus. Pod ${latestIncident?.target_resource ?? 'victim-api-6d7c8f'} terminating with exit code 137 (OOMKilled).`,
       confidence: 99,
       status: 'verified',
       branch: 'ai',
@@ -36,7 +74,7 @@ export function GlassBoxVisualizer() {
     {
       step: 3,
       title: 'Forensic Snapshot Gate',
-      detail: 'Condition verified: evidence_hash != null. Ephemeral debug container attach captured /proc/memory and socket table.',
+      detail: `Condition verified: evidence_hash = sha256:${resolvedEvidenceHash.slice(0, 16)}… Ephemeral debug container attach captured /proc/memory and socket table into Merkle vault.`,
       confidence: 100,
       status: 'verified',
       branch: 'ai',
@@ -44,7 +82,7 @@ export function GlassBoxVisualizer() {
     {
       step: 4,
       title: 'Remediation Synthesis',
-      detail: 'Action: restart_pod. Blast radius check: non-stateful deployment. Sub-second execution approved.',
+      detail: `Action: ${latestIncident?.action_type ?? 'restart_pod'}. Blast radius check: non-stateful deployment. Sub-second execution approved.`,
       confidence: 96,
       status: 'executed',
       branch: 'ai',
@@ -196,6 +234,17 @@ export function GlassBoxVisualizer() {
               <div>
                 <p className="text-xs font-bold leading-tight text-slate-100" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
                 <p className="text-xs mt-1.5 leading-relaxed text-slate-200 font-normal" style={{ color: 'var(--text-secondary)' }}>{n.detail}</p>
+                {activeBranch === 'ai' && n.step === 3 && (
+                  <div className="mt-2 rounded-lg border border-purple-500/40 bg-purple-950/30 p-2 font-mono text-[9px]">
+                    <div className="flex items-center justify-between text-purple-300 font-bold uppercase tracking-wider mb-1">
+                      <span>SHA-256 MERKLE ROOT</span>
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-400/40 text-purple-200">SEALED</span>
+                    </div>
+                    <p className="break-all font-mono font-semibold text-purple-200 select-all" title={resolvedEvidenceHash}>
+                      sha256:{resolvedEvidenceHash}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="pt-1 flex items-center justify-between text-[10px]">

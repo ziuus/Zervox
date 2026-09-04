@@ -40,7 +40,8 @@ export async function GET() {
   ])
 
   const primaryOnline = primHealth.data !== null
-  const backupOnline = backHealth.data !== null
+  const isBackupPeerConnected = primStatus.data?.peer_status === 'peer_connected'
+  const isBackupOnline = backHealth.data !== null || (primaryOnline && isBackupPeerConnected)
 
   const primaryTelemetry = {
     url: primHealth.url.replace('/healthz', ''),
@@ -51,6 +52,7 @@ export async function GET() {
     lastUpdated: new Date().toISOString(),
     latencyMs: primHealth.latencyMs,
     isOnline: primaryOnline,
+    peerStatus: primStatus.data?.peer_status ?? null,
   }
 
   const backupTelemetry = {
@@ -58,10 +60,14 @@ export async function GET() {
     label: 'BACKUP',
     health: backHealth.data as HealthResponse | null,
     status: backStatus.data as SystemStatus | null,
-    error: backupOnline ? null : (primaryOnline ? 'Dormant standby (mTLS monitor active)' : backHealth.error),
+    // If evaluated as DEAD/offline, conditionally hide or replace 'mTLS monitor active'
+    error: isBackupOnline
+      ? (isBackupPeerConnected && backHealth.data === null ? 'Dormant standby (mTLS monitor active)' : null)
+      : 'Heartbeat severed / node unreachable',
     lastUpdated: new Date().toISOString(),
     latencyMs: backHealth.latencyMs,
-    isOnline: backupOnline,
+    isOnline: isBackupOnline,
+    peerStatus: primStatus.data?.peer_status ?? null,
   }
 
   return NextResponse.json({

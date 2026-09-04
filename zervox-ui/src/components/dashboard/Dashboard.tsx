@@ -35,6 +35,8 @@ export function Dashboard() {
 
   const hasOpaBlock = incidents.some(inc => !inc.policy_allowed)
   const hardwareStatus = activeInstance.status?.hardware_breaker_status
+  const latestForensicIncident = incidents.find(inc => inc.evidence_hash || inc.forensic_snapshot_id) ?? incidents[0] ?? null
+  const evidenceHash = latestForensicIncident?.evidence_hash ?? latestForensicIncident?.forensic_snapshot_id ?? null
 
   // Trigger chaos via server-side /api/action route
   const triggerChaosScenario = async (
@@ -278,15 +280,15 @@ export function Dashboard() {
 
           {/* ── FEATURE 2: GLASS BOX ROOT CAUSE TRAIL ─────────────── */}
           <section className="animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-            <GlassBoxVisualizer />
+            <GlassBoxVisualizer latestIncident={latestForensicIncident} evidenceHash={evidenceHash} />
           </section>
 
           {/* ── TELEMETRY NODES & WATCHDOG ────────────────────────── */}
           <section className="animate-fade-in-up" style={{ animationDelay: '0.18s' }}>
             <SectionLabel title="INSTANCE TELEMETRY" subtitle="mTLS Heartbeat · TCP 9000 · High-Availability Watchdog" />
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <HeartbeatCard instance={primary} />
-              <HeartbeatCard instance={backup} />
+              <HeartbeatCard instance={primary} peerStatus={peerStatus} />
+              <HeartbeatCard instance={backup} peerStatus={peerStatus} />
               <EngineModeCard
                 mode={engineMode}
                 opaStatus={opaStatus}
@@ -328,6 +330,7 @@ export function Dashboard() {
                   primaryOnline={primary.isOnline}
                   backupOnline={backup.isOnline}
                   activeRole={activeInstance.health?.role ?? (primary.isOnline ? 'primary' : 'backup')}
+                  peerStatus={peerStatus}
                 />
               </div>
             </div>

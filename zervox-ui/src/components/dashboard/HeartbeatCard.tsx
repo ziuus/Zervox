@@ -8,14 +8,21 @@ import type { InstanceTelemetry } from '@/types/api'
 
 interface HeartbeatCardProps {
   instance: InstanceTelemetry
+  peerStatus?: string | null
 }
 
-export function HeartbeatCard({ instance }: HeartbeatCardProps) {
+export function HeartbeatCard({ instance, peerStatus }: HeartbeatCardProps) {
+  const isBackup = instance.label === 'BACKUP'
   const isActive = instance.health?.state === 'active'
-  const isOnline = instance.isOnline
+
+  // Derive whether backup is in connected dormant standby mode
+  const peerConnected = peerStatus === 'peer_connected' || instance.peerStatus === 'peer_connected'
+  const isDormantStandby = isBackup && !instance.health && (instance.isOnline || peerConnected)
+  const isOnline = instance.isOnline || isDormantStandby
+  const isTrulyDead = !isOnline
 
   // Derive accent border/glow for this card
-  const stateStyle = !isOnline
+  const stateStyle = isTrulyDead
     ? { borderColor: 'var(--status-red-bdr)',   shadow: '0 0 24px var(--status-red-bg)' }
     : isActive
     ? { borderColor: 'var(--status-green-bdr)', shadow: '0 0 24px var(--status-green-bg)' }
@@ -32,15 +39,16 @@ export function HeartbeatCard({ instance }: HeartbeatCardProps) {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <PulseRing online={isOnline} size="md" />
+          <PulseRing online={!isTrulyDead} size="md" />
           <span className="font-mono text-xs font-bold tracking-widest" style={{ color: 'var(--text-primary)' }}>
             {instance.label}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {isActive && isOnline && <Badge variant="sky" dot>ACTIVE</Badge>}
-          {!isActive && isOnline && <Badge variant="amber" dot>STANDBY</Badge>}
-          {!isOnline && <Badge variant="red" dot>OFFLINE</Badge>}
+          {!isActive && isOnline && isDormantStandby && <Badge variant="amber" dot>STANDBY</Badge>}
+          {!isActive && isOnline && !isDormantStandby && <Badge variant="amber" dot>STANDBY</Badge>}
+          {isTrulyDead && <Badge variant="red" dot>OFFLINE</Badge>}
         </div>
       </div>
 
@@ -51,26 +59,26 @@ export function HeartbeatCard({ instance }: HeartbeatCardProps) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <CardLabel>Heartbeat TCP</CardLabel>
-          <p className="font-mono text-sm font-semibold" style={{ color: isOnline ? 'var(--status-green)' : 'var(--status-red)' }}>
-            {isOnline ? '● ALIVE' : '○ DEAD'}
+          <p className="font-mono text-sm font-semibold" style={{ color: !isTrulyDead ? (isDormantStandby ? 'var(--status-amber)' : 'var(--status-green)') : 'var(--status-red)' }}>
+            {!isTrulyDead ? (isDormantStandby ? '● STANDBY (mTLS)' : '● ALIVE') : '○ DEAD'}
           </p>
         </div>
         <div>
           <CardLabel>Latency</CardLabel>
-          <p className="font-mono text-sm font-semibold" style={{ color: isOnline && instance.latencyMs !== null ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-            {!isOnline ? 'N/A' : instance.latencyMs !== null ? `${instance.latencyMs}ms` : '—'}
+          <p className="font-mono text-sm font-semibold" style={{ color: !isTrulyDead ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {isTrulyDead ? 'N/A' : isDormantStandby ? '< 2ms (mTLS)' : instance.latencyMs !== null ? `${instance.latencyMs}ms` : '—'}
           </p>
         </div>
         <div>
           <CardLabel>Role</CardLabel>
           <p className="font-mono text-sm font-semibold uppercase" style={{ color: 'var(--text-primary)' }}>
-            {instance.health?.role ?? (!isOnline ? 'OFFLINE' : '—')}
+            {instance.health?.role ?? (isDormantStandby ? 'STANDBY' : isTrulyDead ? 'OFFLINE' : '—')}
           </p>
         </div>
         <div>
           <CardLabel>Uptime</CardLabel>
-          <p className="font-mono text-sm font-semibold" style={{ color: isOnline && instance.health?.uptime_seconds != null ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-            {!isOnline ? 'N/A' : instance.health?.uptime_seconds != null ? formatUptime(instance.health.uptime_seconds) : '—'}
+          <p className="font-mono text-sm font-semibold" style={{ color: !isTrulyDead && instance.health?.uptime_seconds != null ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {isTrulyDead ? 'N/A' : isDormantStandby ? 'STANDBY (PEER)' : instance.health?.uptime_seconds != null ? formatUptime(instance.health.uptime_seconds) : '—'}
           </p>
         </div>
         <div className="col-span-2 my-2 py-1">
@@ -79,17 +87,28 @@ export function HeartbeatCard({ instance }: HeartbeatCardProps) {
         </div>
       </div>
 
-      {/* Error state */}
-      {instance.error && (
+      {/* Subtext display: Conditionally hide or replace 'mTLS monitor active' when dead */}
+      {isDormantStandby ? (
+        <div
+          className="mt-3 rounded-xl px-3 py-2"
+          style={{ border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)' }}
+        >
+          <p className="truncate font-mono text-[10px] text-amber-300">
+            Dormant standby (mTLS monitor active)
+          </p>
+        </div>
+      ) : instance.error ? (
         <div
           className="mt-3 rounded-xl px-3 py-2"
           style={{ border: '1px solid var(--status-red-bdr)', background: 'var(--status-red-bg)' }}
         >
           <p className="truncate font-mono text-[10px]" style={{ color: 'var(--status-red)' }}>
-            {instance.error}
+            {isTrulyDead && instance.error.includes('mTLS monitor active')
+              ? 'Heartbeat severed / node unreachable'
+              : instance.error}
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Last polled */}
       {instance.lastUpdated && (
