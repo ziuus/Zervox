@@ -12,7 +12,7 @@ use zervox_core::executor::RemediationExecutor;
 use zervox_core::llm::LlmAnalyzer;
 use zervox_core::policy::PolicyEngine;
 use zervox_core::status::AppState;
-use zervox_core::store::{IncidentStore, SqliteStore};
+use zervox_core::store::SqliteStore;
 use zervox_core::types::NodeRole;
 use zervox_core::watchdog::Watchdog;
 
