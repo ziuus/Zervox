@@ -12,13 +12,13 @@ use zervox_core::executor::RemediationExecutor;
 use zervox_core::llm::LlmAnalyzer;
 use zervox_core::policy::PolicyEngine;
 use zervox_core::status::AppState;
-use zervox_core::store::IncidentStore;
+use zervox_core::store::{IncidentStore, SqliteStore};
 use zervox_core::types::NodeRole;
 use zervox_core::watchdog::Watchdog;
 
 async fn setup_test_app(role: NodeRole, force_fallback: bool) -> (axum::Router, NamedTempFile) {
     let tmp_db = NamedTempFile::new().unwrap();
-    let store = IncidentStore::new(tmp_db.path()).unwrap();
+    let store = Arc::new(SqliteStore::new(tmp_db.path()).unwrap());
     let policy = PolicyEngine::new("http://127.0.0.1:8181/v1/data/zervox/authz".to_string());
     let executor = RemediationExecutor::new(None, true).await;
     let llm = LlmAnalyzer::new(None, None, "gpt-4o-mini".to_string(), force_fallback);
@@ -38,6 +38,8 @@ async fn setup_test_app(role: NodeRole, force_fallback: bool) -> (axum::Router, 
         force_fallback,
         dry_run: true,
         kubeconfig: None,
+        tls_cert_path: None,
+        tls_key_path: None,
     };
 
     let app_state = Arc::new(AppState {
