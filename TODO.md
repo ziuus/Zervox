@@ -71,7 +71,7 @@ curl -s http://localhost:3000/api/telemetry
   - Add real Merkle root calculation over `/proc/$PID/cmdline`, `/proc/$PID/net/tcp`, and `/proc/$PID/environ`.
 
 ### 3. Physical Hardware Circuit-Breaker (Optional Live Physical Demo)
-- [ ] **ESP32-C3 / RISC-V Microcontroller**:
+- [x] **ESP32-C3 / RISC-V Microcontroller**:
   - The software emulation (`ARMED_RISCV_ESP32C3`) is 100% functional.
   - If bringing a physical ESP32-C3 board to the hackathon booth:
     - Flash the challenge-response firmware in `hardware/firmware/`.
