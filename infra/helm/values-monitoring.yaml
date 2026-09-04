@@ -1,0 +1,80 @@
+# ==========================================================
+# Helm values for kube-prometheus-stack integration with Zervox
+# ==========================================================
+
+global:
+  rbac:
+    create: true
+
+alertmanager:
+  enabled: true
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname', 'namespace', 'pod', 'deployment']
+      group_wait: 5s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'zervox-webhook'
+      routes:
+        - matchers:
+            - severity =~ "critical|warning"
+          receiver: 'zervox-webhook'
+          continue: false
+    receivers:
+      - name: 'zervox-webhook'
+        webhook_configs:
+          - url: 'http://zervox-primary:8080/api/grafana_webhook'
+            send_resolved: false
+            http_config:
+              bearer_token: 'zervox-secret-token'
+            max_alerts: 10
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    evaluationInterval: 10s
+    scrapeInterval: 10s
+
+grafana:
+  enabled: true
+  adminPassword: "prom-operator"
+  service:
+    type: ClusterIP
+    port: 80
+
+# Additional SRE Prometheus alerting rules for victim application
+additionalPrometheusRulesMap:
+  zervox-alerts:
+    groups:
+      - name: zervox.remediation.rules
+        rules:
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total[2m]) * 60 > 2
+            for: 10s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is in CrashLoopBackOff"
+              description: "Container restarts exceeded threshold; automatic remediation required."
+
+          - alert: HighLatency
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[2m])) by (le, app)) > 1.5
+            for: 15s
+            labels:
+              severity: warning
+            annotations:
+              summary: "Service {{ $labels.app }} p95 latency is exceeding 1500ms"
+              description: "Deployment requires scale out within cap."
+
+          - alert: NodeNotReady
+            expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Node {{ $labels.node }} is not in Ready state"
+              description: "Degraded node requires immediate cordon."

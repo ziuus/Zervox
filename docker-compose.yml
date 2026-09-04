@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  opa:
+    image: openpolicyagent/opa:latest-rootless
+    container_name: zervox-opa
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "/policies"
+    volumes:
+      - ./zervox-core/policies:/policies:ro
+    ports:
+      - "8181:8181"
+    restart: unless-stopped
+
+  zervox-primary:
+    build:
+      context: ./zervox-core
+      dockerfile: Dockerfile
+    container_name: zervox-primary
+    environment:
+      - ZERVOX_ROLE=primary
+      - ZERVOX_HTTP_PORT=8080
+      - ZERVOX_HEARTBEAT_PORT=9000
+      - ZERVOX_API_KEY=zervox-secret-token
+      - ZERVOX_DB_PATH=/app/data/zervox.db
+      - OPA_URL=http://opa:8181/v1/data/zervox/authz
+      - ZERVOX_DRY_RUN=true
+    volumes:
+      - zervox_data:/app/data
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    depends_on:
+      - opa
+    restart: unless-stopped
+
+  zervox-backup:
+    build:
+      context: ./zervox-core
+      dockerfile: Dockerfile
+    container_name: zervox-backup
+    environment:
+      - ZERVOX_ROLE=backup
+      - ZERVOX_HTTP_PORT=8081
+      - ZERVOX_HEARTBEAT_PORT=9001
+      - ZERVOX_PEER=zervox-primary:9000
+      - ZERVOX_API_KEY=zervox-secret-token
+      - ZERVOX_DB_PATH=/app/data/zervox.db
+      - OPA_URL=http://opa:8181/v1/data/zervox/authz
+      - ZERVOX_DRY_RUN=true
+    volumes:
+      - zervox_data:/app/data
+    ports:
+      - "8081:8081"
+      - "9001:9001"
+    depends_on:
+      - opa
+      - zervox-primary
+    restart: unless-stopped
+
+volumes:
+  zervox_data:
