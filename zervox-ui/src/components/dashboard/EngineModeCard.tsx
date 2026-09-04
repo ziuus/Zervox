@@ -5,12 +5,13 @@ import { Badge } from '@/components/ui/Badge'
 import { getEngineModeLabel } from '@/lib/utils'
 import type { EngineMode } from '@/types/api'
 
-interface EngineModeCardProps {
+export interface EngineModeCardProps {
   mode: EngineMode | null
   opaStatus: string | null
   k8sStatus: string | null
   peerStatus: string | null
   totalIncidents: number
+  hasOpaBlock?: boolean
 }
 
 export function EngineModeCard({
@@ -19,6 +20,7 @@ export function EngineModeCard({
   k8sStatus,
   peerStatus,
   totalIncidents,
+  hasOpaBlock = false,
 }: EngineModeCardProps) {
   const isAI = mode === 'ai'
   const isFallback = mode === 'fallback'
@@ -27,8 +29,20 @@ export function EngineModeCard({
   const k8sConnected = k8sStatus === 'connected'
   const peerConnected = peerStatus === 'peer_connected'
 
+  // Harsh glowing neon border:
+  // #ff0000 for OPA Block/Primary Dead
+  // #ffb700 for Local Fallback Mode
+  // #00ff00 for Active Heartbeat / Normal Engine operation
+  const neonClass = hasOpaBlock
+    ? 'neon-border-red border-2'
+    : isFallback
+      ? 'neon-border-amber border-2'
+      : isAI
+        ? 'neon-border-green border-2'
+        : 'neon-border-sky border-2'
+
   return (
-    <Card glow className="border-[#1e3a5f]">
+    <Card glow className={neonClass}>
       {/* Engine Mode Banner */}
       <div className="mb-5 flex items-center justify-between">
         <CardLabel className="mb-0">Engine Mode</CardLabel>
