@@ -1,4 +1,5 @@
 pub mod config;
+pub mod correlation;
 pub mod executor;
 pub mod fallback;
 pub mod hardware_key;

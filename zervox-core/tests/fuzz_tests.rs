@@ -29,6 +29,7 @@ fn build_test_app() -> axum::Router {
     
     let llm = LlmAnalyzer::new(None, None, "gpt-4o-mini".to_string(), true);
     let watchdog = Watchdog::new(NodeRole::Primary, None);
+    let correlation = Arc::new(zervox_core::correlation::ThreatCorrelationEngine::default());
 
     let app_state = Arc::new(AppState {
         config,
@@ -38,6 +39,7 @@ fn build_test_app() -> axum::Router {
         watchdog,
         start_time: Instant::now(),
         llm,
+        correlation,
     });
 
     create_app(app_state)

@@ -366,13 +366,48 @@ pub async fn handle_audit_webhook(
     let threats_count = all_detections.len();
     info!(events_count, threats_count, "Completed Kubernetes audit log signature analysis");
 
+    // Pass detections through the Stateful Correlation Engine (sliding window & scoring matrix)
+    let correlated_incidents = state.correlation.ingest(&all_detections).await;
+    let correlated_count = correlated_incidents.len();
+
+    // Persist any escalated incidents (tier >= MEDIUM) into the Incident Store
+    for incident in &correlated_incidents {
+        let record = crate::types::IncidentRecord {
+            id: incident.incident_id.clone(),
+            alert_name: format!("Threat_{}", incident.primary_signature),
+            severity: incident.tier.to_string(),
+            mode: "ai_correlated".to_string(),
+            root_cause: incident.summary.clone(),
+            action_type: incident.recommended_action.action_type().to_string(),
+            target_resource: incident.recommended_action.target_resource(),
+            policy_allowed: true,
+            policy_violations: None,
+            execution_status: if incident.tier.should_remediate() {
+                "pending".to_string()
+            } else {
+                "observed".to_string()
+            },
+            execution_error: None,
+            forensic_snapshot_id: None,
+            evidence_hash: None,
+            created_at: incident.window_end,
+            updated_at: incident.window_end,
+        };
+
+        if let Err(e) = state.store.insert_incident(&record).await {
+            error!(incident_id = %incident.incident_id, error = %e, "Failed to persist correlated incident");
+        }
+    }
+
     (
         StatusCode::OK,
         Json(json!({
             "status": "processed",
             "events_received": events_count,
             "threats_detected": threats_count,
-            "detections": all_detections
+            "detections": all_detections,
+            "correlated_incidents": correlated_incidents,
+            "escalated_count": correlated_count,
         })),
     )
 }

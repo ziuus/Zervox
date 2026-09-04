@@ -20,6 +20,7 @@ pub struct AppState {
     pub watchdog: Watchdog,
     pub start_time: Instant,
     pub llm: crate::llm::LlmAnalyzer,
+    pub correlation: Arc<crate::correlation::ThreatCorrelationEngine>,
 }
 
 pub async fn health_check(State(state): State<Arc<AppState>>) -> impl IntoResponse {

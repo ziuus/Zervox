@@ -42,6 +42,8 @@ async fn setup_test_app(role: NodeRole, force_fallback: bool) -> (axum::Router, 
         tls_key_path: None,
     };
 
+    let correlation = Arc::new(zervox_core::correlation::ThreatCorrelationEngine::default());
+
     let app_state = Arc::new(AppState {
         config,
         store,
@@ -50,6 +52,7 @@ async fn setup_test_app(role: NodeRole, force_fallback: bool) -> (axum::Router, 
         watchdog,
         start_time: Instant::now(),
         llm,
+        correlation,
     });
 
     (create_app(app_state), tmp_db)
@@ -247,4 +250,11 @@ async fn test_audit_webhook_endpoint() {
     assert_eq!(detections.len(), 2);
     assert!(detections.iter().any(|d| d["signature_id"] == "SIG-DESTRUCTIVE-API"));
     assert!(detections.iter().any(|d| d["signature_id"] == "SIG-SECRET-SWEEP"));
+
+    assert_eq!(json["escalated_count"], 1);
+    let correlated = json["correlated_incidents"].as_array().unwrap();
+    assert_eq!(correlated.len(), 1);
+    assert_eq!(correlated[0]["tier"], "CRITICAL");
+    assert_eq!(correlated[0]["total_score"], 110);
+    assert_eq!(correlated[0]["actor"], "system:serviceaccount:default:intruder-sa");
 }

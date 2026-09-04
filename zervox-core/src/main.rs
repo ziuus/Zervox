@@ -42,6 +42,8 @@ async fn start_active_node(config: AppConfig, is_promoted: bool) -> anyhow::Resu
         watchdog_bg.run_primary_listener(heartbeat_port, cert_path, key_path).await;
     });
 
+    let correlation = Arc::new(zervox_core::correlation::ThreatCorrelationEngine::default());
+
     let app_state = Arc::new(AppState {
         config: config.clone(),
         store,
@@ -50,6 +52,7 @@ async fn start_active_node(config: AppConfig, is_promoted: bool) -> anyhow::Resu
         watchdog,
         start_time: Instant::now(),
         llm,
+        correlation,
     });
 
     let app = create_app(app_state);
