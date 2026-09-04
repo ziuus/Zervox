@@ -263,6 +263,8 @@ pub struct IncidentRecord {
     pub execution_status: String,
     pub execution_error: Option<String>,
     pub forensic_snapshot_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_hash: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

@@ -21,6 +21,8 @@ pub struct ProcessAlertResult {
     pub policy_violations: Vec<String>,
     pub execution_status: String,
     pub execution_output: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence_hash: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -123,6 +125,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
         execution_status: "evaluating_policy".to_string(),
         execution_error: None,
         forensic_snapshot_id: None,
+        evidence_hash: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -153,6 +156,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
                         "[FORENSIC FREEZE] Evidence snapshot captured and hashed before pod destruction"
                     );
                     record.forensic_snapshot_id = Some(snapshot.id.clone());
+                    record.evidence_hash = Some(snapshot.sha256_hash.clone());
                     if let Err(e) = state.store.save_forensic_snapshot(&snapshot).await {
                         error!(error = %e, "Failed to persist forensic snapshot to SQLite vault");
                     }
@@ -208,7 +212,14 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
 
     if let Err(err) = state
         .store
-        .update_execution_status(&incident_id, &execution_status, exec_err)
+        .update_execution_status(
+            &incident_id,
+            &execution_status,
+            exec_err,
+            Some(record.policy_allowed),
+            record.policy_violations.as_deref(),
+            record.forensic_snapshot_id.as_deref(),
+        )
         .await
     {
         error!(incident_id = %incident_id, error = %err, "Failed to update incident in store");
@@ -224,6 +235,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
         policy_violations: policy_decision.violations,
         execution_status,
         execution_output,
+        evidence_hash: record.evidence_hash,
     }
 }
 
@@ -288,6 +300,7 @@ pub async fn simulate_attack(
         },
         execution_error: None,
         forensic_snapshot_id: None,
+        evidence_hash: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };

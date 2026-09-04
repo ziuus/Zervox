@@ -16,6 +16,9 @@ pub trait IncidentStore: Send + Sync {
         id: &str,
         status: &str,
         error: Option<&str>,
+        policy_allowed: Option<bool>,
+        policy_violations: Option<&str>,
+        forensic_snapshot_id: Option<&str>,
     ) -> Result<()>;
     async fn get_recent_incidents(&self, limit: usize) -> Result<Vec<IncidentRecord>>;
     async fn count_incidents(&self) -> Result<usize>;
@@ -109,6 +112,12 @@ impl SqliteStore {
         // Migration: ensure forensic_snapshot_id column exists
         let _ = conn.execute("ALTER TABLE incidents ADD COLUMN forensic_snapshot_id TEXT", ());
 
+        // Migration: sync contradictory resolution states
+        let _ = conn.execute_batch(
+            "UPDATE incidents SET policy_allowed = 1 WHERE execution_status = 'resolved' AND policy_allowed = 0 AND (policy_violations IS NULL OR policy_violations = '');
+             UPDATE incidents SET execution_status = 'blocked_by_policy' WHERE policy_allowed = 0 AND execution_status = 'resolved';"
+        );
+
         Ok(())
     }
 
@@ -182,15 +191,56 @@ impl IncidentStore for SqliteStore {
         id: &str,
         status: &str,
         error: Option<&str>,
+        policy_allowed: Option<bool>,
+        policy_violations: Option<&str>,
+        forensic_snapshot_id: Option<&str>,
     ) -> Result<()> {
         self.with_retry("update_execution_status", || {
             let conn = self.conn.lock().unwrap();
             let now = Utc::now().to_rfc3339();
+
+            // Enforce state machine consistency:
+            // Any OPA denial strictly sets the final status to BLOCKED or FAILED
+            let (final_status, final_allowed) = match policy_allowed {
+                Some(false) => {
+                    let s = if status == "resolved" {
+                        "blocked_by_policy"
+                    } else {
+                        status
+                    };
+                    (s, false)
+                }
+                Some(true) => (status, true),
+                None => {
+                    let mut stmt = conn.prepare("SELECT policy_allowed FROM incidents WHERE id = ?1")?;
+                    let allowed: bool = stmt.query_row(params![id], |r| r.get(0)).unwrap_or(true);
+                    let s = if !allowed && status == "resolved" {
+                        "blocked_by_policy"
+                    } else {
+                        status
+                    };
+                    (s, allowed)
+                }
+            };
+
             conn.execute(
                 "UPDATE incidents
-                 SET execution_status = ?1, execution_error = ?2, updated_at = ?3
-                 WHERE id = ?4",
-                params![status, error, now, id],
+                 SET execution_status = ?1,
+                     execution_error = ?2,
+                     policy_allowed = ?3,
+                     policy_violations = COALESCE(?4, policy_violations),
+                     forensic_snapshot_id = COALESCE(?5, forensic_snapshot_id),
+                     updated_at = ?6
+                 WHERE id = ?7",
+                params![
+                    final_status,
+                    error,
+                    final_allowed,
+                    policy_violations,
+                    forensic_snapshot_id,
+                    now,
+                    id
+                ],
             )
             .context("Failed to update execution status")?;
             Ok(())
@@ -200,12 +250,14 @@ impl IncidentStore for SqliteStore {
     async fn get_recent_incidents(&self, limit: usize) -> Result<Vec<IncidentRecord>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare(
-            "SELECT id, alert_name, severity, mode, root_cause,
-                    action_type, target_resource, policy_allowed,
-                    policy_violations, execution_status, execution_error,
-                    forensic_snapshot_id, created_at, updated_at
-             FROM incidents
-             ORDER BY created_at DESC
+            "SELECT i.id, i.alert_name, i.severity, i.mode, i.root_cause,
+                    i.action_type, i.target_resource, i.policy_allowed,
+                    i.policy_violations, i.execution_status, i.execution_error,
+                    i.forensic_snapshot_id, i.created_at, i.updated_at,
+                    f.sha256_hash AS evidence_hash
+             FROM incidents i
+             LEFT JOIN incident_forensics f ON (i.forensic_snapshot_id = f.id OR i.id = f.incident_id)
+             ORDER BY i.created_at DESC
              LIMIT ?1",
         )?;
 
@@ -214,6 +266,7 @@ impl IncidentStore for SqliteStore {
             let forensic_snapshot_id: Option<String> = row.get(11)?;
             let created_at_str: String = row.get(12)?;
             let updated_at_str: String = row.get(13)?;
+            let evidence_hash: Option<String> = row.get(14)?;
 
             let created_at = DateTime::parse_from_rfc3339(&created_at_str)
                 .map(|dt| dt.with_timezone(&Utc))
@@ -221,6 +274,15 @@ impl IncidentStore for SqliteStore {
             let updated_at = DateTime::parse_from_rfc3339(&updated_at_str)
                 .map(|dt| dt.with_timezone(&Utc))
                 .unwrap_or_else(|_| Utc::now());
+
+            // Safeguard state machine consistency when reading records:
+            // An incident where OPA Gate evaluated to BLOCKED cannot have an overall status of RESOLVED
+            let raw_status: String = row.get(9)?;
+            let execution_status = if !policy_allowed && raw_status == "resolved" {
+                "blocked_by_policy".to_string()
+            } else {
+                raw_status
+            };
 
             Ok(IncidentRecord {
                 id: row.get(0)?,
@@ -232,9 +294,10 @@ impl IncidentStore for SqliteStore {
                 target_resource: row.get(6)?,
                 policy_allowed,
                 policy_violations: row.get(8)?,
-                execution_status: row.get(9)?,
+                execution_status,
                 execution_error: row.get(10)?,
                 forensic_snapshot_id,
+                evidence_hash,
                 created_at,
                 updated_at,
             })
@@ -348,6 +411,7 @@ mod tests {
             execution_status: "pending".to_string(),
             execution_error: None,
             forensic_snapshot_id: None,
+            evidence_hash: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -356,7 +420,7 @@ mod tests {
         assert_eq!(store.count_incidents().await.unwrap(), 1);
 
         store
-            .update_execution_status("inc-123", "resolved", None)
+            .update_execution_status("inc-123", "resolved", None, Some(true), None, None)
             .await
             .unwrap();
 
@@ -380,6 +444,56 @@ mod tests {
         let fetched = store.get_forensic_snapshot("inc-123").await.unwrap();
         assert!(fetched.is_some());
         assert_eq!(fetched.unwrap().pod_name, "victim-pod");
+
+        // Verify evidence_hash is automatically joined and populated in get_recent_incidents
+        let recent_after_snapshot = store.get_recent_incidents(10).await.unwrap();
+        assert_eq!(
+            recent_after_snapshot[0].evidence_hash.as_deref(),
+            Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_blocked_policy_cannot_be_resolved() {
+        let store = SqliteStore::in_memory().unwrap();
+        let record = IncidentRecord {
+            id: "inc-blocked-1".to_string(),
+            alert_name: "RbacAttack".to_string(),
+            severity: "critical".to_string(),
+            mode: "fallback".to_string(),
+            root_cause: "Unauthorized delete namespace".to_string(),
+            action_type: "delete_namespace".to_string(),
+            target_resource: "namespace/default".to_string(),
+            policy_allowed: false,
+            policy_violations: Some("REG-001: Protected namespace".to_string()),
+            execution_status: "evaluating_policy".to_string(),
+            execution_error: None,
+            forensic_snapshot_id: None,
+            evidence_hash: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        store.insert_incident(&record).await.unwrap();
+
+        // Attempting to update execution status to 'resolved' when policy is blocked
+        // MUST be overridden to 'blocked_by_policy'
+        store
+            .update_execution_status(
+                "inc-blocked-1",
+                "resolved",
+                Some("Blocked by Policy: REG-001"),
+                Some(false),
+                Some("REG-001: Protected namespace"),
+                None,
+            )
+            .await
+            .unwrap();
+
+        let recent = store.get_recent_incidents(10).await.unwrap();
+        assert_eq!(recent.len(), 1);
+        assert_eq!(recent[0].execution_status, "blocked_by_policy");
+        assert!(!recent[0].policy_allowed);
     }
 
     #[tokio::test]
@@ -398,6 +512,7 @@ mod tests {
             execution_status: "blocked_by_policy".to_string(),
             execution_error: None,
             forensic_snapshot_id: None,
+            evidence_hash: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
