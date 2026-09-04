@@ -4,11 +4,13 @@ interface CardProps {
   children: React.ReactNode
   className?: string
   glow?: boolean
+  style?: React.CSSProperties
 }
 
-export function Card({ children, className, glow }: CardProps) {
+export function Card({ children, className, glow, style }: CardProps) {
   return (
     <div
+      style={style}
       className={cn('rounded-2xl p-5 transition-all duration-300 surface', glow && 'glow-sky', className)}
     >
       {children}

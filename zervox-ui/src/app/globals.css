@@ -8,60 +8,60 @@
    ================================================================ */
 
 @layer base {
-  /* ── LIGHT MODE (default) ────────────────────────────────────── */
+  /* ── LIGHT MODE (Crisp White & Deep Legible Teal) ─────────────── */
   :root,
   [data-theme='light'] {
     color-scheme: light;
 
     /* Canvas */
-    --bg-page:          #f5f5f3;
-    --bg-surface:       rgba(255, 255, 255, 0.85);
-    --bg-elevated:      rgba(255, 255, 255, 0.95);
-    --bg-sunken:        rgba(0, 0, 0, 0.04);
-    --bg-code:          #1a1a2e;
+    --bg-page:          #ffffff;
+    --bg-surface:       rgba(255, 255, 255, 0.94);
+    --bg-elevated:      #f8fafc;
+    --bg-sunken:        #f0fdfa;
+    --bg-code:          #0f172a;
 
-    /* Borders */
-    --border-subtle:    rgba(0, 0, 0, 0.08);
-    --border-medium:    rgba(0, 0, 0, 0.14);
-    --border-strong:    rgba(0, 0, 0, 0.22);
+    /* Borders — crisp teal borders */
+    --border-subtle:    rgba(15, 118, 110, 0.16);
+    --border-medium:    rgba(15, 118, 110, 0.28);
+    --border-strong:    rgba(15, 118, 110, 0.48);
 
-    /* Text */
-    --text-primary:     #111111;
-    --text-secondary:   #555555;
-    --text-muted:       #888888;
-    --text-code:        #e2e8f0;
+    /* Text — deep, legible teal replacing default gray/black */
+    --text-primary:     #115e59;
+    --text-secondary:   #0f766e;
+    --text-muted:       #0d9488;
+    --text-code:        #f1f5f9;
 
-    /* Accent — sky blue */
-    --accent:           #0ea5e9;
-    --accent-hover:     #0284c7;
-    --accent-subtle:    rgba(14, 165, 233, 0.10);
-    --accent-border:    rgba(14, 165, 233, 0.30);
+    /* Accent — rich teal */
+    --accent:           #0f766e;
+    --accent-hover:     #115e59;
+    --accent-subtle:    rgba(15, 118, 110, 0.10);
+    --accent-border:    rgba(15, 118, 110, 0.35);
 
     /* Status colours */
-    --status-green:     #16a34a;
-    --status-green-bg:  rgba(22, 163, 74, 0.08);
-    --status-green-bdr: rgba(22, 163, 74, 0.25);
+    --status-green:     #059669;
+    --status-green-bg:  rgba(5, 150, 105, 0.10);
+    --status-green-bdr: rgba(5, 150, 105, 0.30);
     --status-amber:     #d97706;
-    --status-amber-bg:  rgba(217, 119, 6, 0.08);
-    --status-amber-bdr: rgba(217, 119, 6, 0.25);
+    --status-amber-bg:  rgba(217, 119, 6, 0.10);
+    --status-amber-bdr: rgba(217, 119, 6, 0.30);
     --status-red:       #dc2626;
-    --status-red-bg:    rgba(220, 38, 38, 0.08);
-    --status-red-bdr:   rgba(220, 38, 38, 0.25);
+    --status-red-bg:    rgba(220, 38, 38, 0.10);
+    --status-red-bdr:   rgba(220, 38, 38, 0.30);
 
-    /* Glows — subtle in light mode */
-    --glow-sky:         rgba(14, 165, 233, 0.15);
-    --glow-purple:      rgba(147, 51, 234, 0.12);
+    /* Glows — luminous teal glows */
+    --glow-sky:         rgba(15, 118, 110, 0.25);
+    --glow-purple:      rgba(147, 51, 234, 0.15);
 
     /* Header */
-    --header-bg:        rgba(245, 245, 243, 0.92);
-    --header-border:    rgba(0, 0, 0, 0.08);
+    --header-bg:        rgba(255, 255, 255, 0.94);
+    --header-border:    rgba(15, 118, 110, 0.18);
 
     /* Scrollbar */
-    --scrollbar-track:  #e5e5e3;
-    --scrollbar-thumb:  #b0b0b0;
+    --scrollbar-track:  #f8fafc;
+    --scrollbar-thumb:  #99f6e4;
 
     /* Grid */
-    --grid-line:        rgba(0, 0, 0, 0.06);
+    --grid-line:        rgba(15, 118, 110, 0.08);
   }
 
   /* ── DARK MODE ───────────────────────────────────────────────── */

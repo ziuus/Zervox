@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useTheme } from '@/components/ui/ThemeProvider'
 import { PulseRing } from '@/components/ui/PulseRing'
 import { AirGapBeacon } from '@/components/dashboard/AirGapBeacon'
@@ -45,6 +47,7 @@ export function Header({
   onOpenAirGap,
   hardwareStatus,
 }: HeaderProps) {
+  const pathname = usePathname()
   const { theme, toggle } = useTheme()
   const anyOnline = primaryOnline || backupOnline
   const isDark = theme === 'dark'
@@ -132,6 +135,47 @@ export function Header({
             </div>
           </div>
         </div>
+
+        {/* ── Persistent Navigation Menu ───────────────────────── */}
+        <nav
+          className="flex items-center gap-1 rounded-2xl p-1 font-mono"
+          style={{
+            background: 'var(--bg-sunken)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          {[
+            { href: '/', label: 'Overview', icon: '🌐' },
+            { href: '/incidents', label: 'Incidents', icon: '🚨' },
+            { href: '/forensics', label: 'Forensics', icon: '📸' },
+            { href: '/chaos', label: 'Chaos Sandbox', icon: '⚡' },
+          ].map(({ href, label, icon }) => {
+            const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+            return (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-all duration-200"
+                style={
+                  isActive
+                    ? {
+                        background: 'var(--accent-subtle)',
+                        border: '1px solid var(--accent-border)',
+                        color: 'var(--text-primary)',
+                        boxShadow: '0 0 14px var(--glow-sky)',
+                      }
+                    : {
+                        color: 'var(--text-secondary)',
+                        border: '1px solid transparent',
+                      }
+                }
+              >
+                <span>{icon}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </Link>
+            )
+          })}
+        </nav>
 
         {/* ── Right Controls ────────────────────────────────────── */}
         <div className="flex items-center gap-2.5">
