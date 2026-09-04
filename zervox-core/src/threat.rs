@@ -12,7 +12,7 @@ pub enum KubeAuditPayload {
         #[serde(default)]
         items: Vec<KubeAuditEvent>,
     },
-    Single(KubeAuditEvent),
+    Single(Box<KubeAuditEvent>),
     RawList(Vec<KubeAuditEvent>),
 }
 
@@ -20,7 +20,7 @@ impl KubeAuditPayload {
     pub fn into_events(self) -> Vec<KubeAuditEvent> {
         match self {
             KubeAuditPayload::EventList { items, .. } => items,
-            KubeAuditPayload::Single(event) => vec![event],
+            KubeAuditPayload::Single(event) => vec![*event],
             KubeAuditPayload::RawList(items) => items,
         }
     }

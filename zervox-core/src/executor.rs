@@ -4,13 +4,25 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use k8s_openapi::api::apps::v1::Deployment;
 use k8s_openapi::api::core::v1::{Node, Pod};
+use k8s_openapi::api::networking::v1::{NetworkPolicy, NetworkPolicySpec};
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::{LabelSelector, ObjectMeta};
 use kube::api::{DeleteParams, Patch, PatchParams};
 use kube::{Api, Client, Config};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tracing::{info, warn};
 use uuid::Uuid;
+
+/// Result of post-action closed-loop verification
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerificationResult {
+    pub success: bool,
+    pub attempts: u32,
+    pub target: String,
+    pub details: String,
+}
 
 /// Production Kubernetes executor using kube-rs.
 ///
@@ -116,6 +128,10 @@ impl RemediationExecutor {
                     .await
             }
             RemediationAction::CordonNode { node_name } => self.cordon_node(node_name).await,
+            RemediationAction::QuarantineWorkload {
+                namespace,
+                target_pod,
+            } => self.quarantine_workload(namespace, target_pod).await,
             RemediationAction::NoAction { reason } => {
                 info!(reason = %reason, "No remediation action taken by policy");
                 Ok(format!("No action required: {}", reason))
@@ -226,8 +242,7 @@ impl RemediationExecutor {
                 captured_at.format("%Y-%m-%dT%H:%M:%S%.3f"),
             );
 
-            let mem = format!(
-                "PID   USER     COMMAND          RSS(KB)  STATE  FD_COUNT\n\
+            let mem = "PID   USER     COMMAND          RSS(KB)  STATE  FD_COUNT\n\
                  1     root     /init            1024     S      4\n\
                  18    zervox   victim-api       261880   R      128\n\
                  99    attacker /dev/shm/.k_exp  8192     S      12\n\
@@ -236,8 +251,7 @@ impl RemediationExecutor {
                  tcp 1 0 10.244.1.4:44912 198.51.100.24:4444 ESTABLISHED 99/.k_exp\n\
                  --- VOLATILE HEAP SNIPPET ---\n\
                  00007fff: 48 89 e5 48 83 ec 20 48 8d 3d 00 00 00 00 e8 00\n\
-                 00007ff0: 00 00 00 48 8b 45 f8 48 89 c7 e8 00 00 00 00 c9"
-            );
+                 00007ff0: 00 00 00 48 8b 45 f8 48 89 c7 e8 00 00 00 00 c9".to_string();
 
             (spec, logs, mem)
         } else {
@@ -426,6 +440,260 @@ impl RemediationExecutor {
         ))
     }
 
+    // ── Quarantine Workload (Dynamic Default-Deny NetworkPolicy) ───────────────
+
+    async fn quarantine_workload(&self, namespace: &str, target_pod: &str) -> Result<String> {
+        let policy_name = format!("zervox-quarantine-{}", target_pod);
+        if self.is_dry_run() {
+            info!(
+                namespace,
+                target_pod,
+                policy_name = %policy_name,
+                "[DRY-RUN] Would create default-deny NetworkPolicy isolation"
+            );
+            return Ok(format!(
+                "[DRY-RUN] NetworkPolicy '{}' applied in '{}' (Default-Deny Ingress/Egress isolation for pod '{}')",
+                policy_name, namespace, target_pod
+            ));
+        }
+
+        let client = self.client();
+        let netpols: Api<NetworkPolicy> = Api::namespaced(client.clone(), namespace);
+
+        let mut pod_match_labels = std::collections::BTreeMap::new();
+        pod_match_labels.insert("app".to_string(), target_pod.to_string());
+
+        let netpol = NetworkPolicy {
+            metadata: ObjectMeta {
+                name: Some(policy_name.clone()),
+                namespace: Some(namespace.to_string()),
+                labels: Some(std::collections::BTreeMap::from([
+                    ("app.kubernetes.io/managed-by".to_string(), "zervox".to_string()),
+                    ("zervox.dev/quarantine".to_string(), "true".to_string()),
+                ])),
+                ..Default::default()
+            },
+            spec: Some(NetworkPolicySpec {
+                pod_selector: LabelSelector {
+                    match_labels: Some(pod_match_labels),
+                    ..Default::default()
+                },
+                policy_types: Some(vec!["Ingress".to_string(), "Egress".to_string()]),
+                ingress: Some(vec![]),
+                egress: Some(vec![]),
+            }),
+        };
+
+        let patch_params = PatchParams::apply("zervox-remediation-engine").force();
+        netpols
+            .patch(&policy_name, &patch_params, &Patch::Apply(&netpol))
+            .await
+            .with_context(|| format!("Failed to apply NetworkPolicy quarantine '{}'", policy_name))?;
+
+        info!(
+            namespace,
+            target_pod,
+            policy_name = %policy_name,
+            "Default-deny NetworkPolicy successfully applied to isolate compromised workload"
+        );
+        Ok(format!(
+            "NetworkPolicy '{}' successfully created in '{}': Workload '{}' isolated with zero ingress/egress.",
+            policy_name, namespace, target_pod
+        ))
+    }
+
+    // ── Closed-Loop Remediation Verification & Polling ────────────────────────
+
+    pub async fn verify_remediation(
+        &self,
+        action: &RemediationAction,
+        timeout: std::time::Duration,
+        poll_interval: std::time::Duration,
+    ) -> Result<VerificationResult> {
+        if self.is_dry_run() {
+            return Ok(VerificationResult {
+                success: true,
+                attempts: 1,
+                target: action.target_resource(),
+                details: format!("[DRY-RUN] Desired state achieved for {}", action.target_resource()),
+            });
+        }
+
+        let start = std::time::Instant::now();
+        let mut attempts = 0;
+
+        while start.elapsed() < timeout {
+            attempts += 1;
+            match action {
+                RemediationAction::RestartPod { namespace, pod_name } => {
+                    let client = self.client();
+                    let pods: Api<Pod> = Api::namespaced(client, namespace);
+                    if let Ok(Some(pod)) = pods.get_opt(pod_name).await {
+                        if let Some(status) = pod.status {
+                            let phase = status.phase.unwrap_or_default();
+                            let ready = status
+                                .conditions
+                                .as_ref()
+                                .and_then(|conds| conds.iter().find(|c| c.type_ == "Ready"))
+                                .map(|c| c.status == "True")
+                                .unwrap_or(false);
+
+                            if phase == "Running" && ready {
+                                return Ok(VerificationResult {
+                                    success: true,
+                                    attempts,
+                                    target: format!("pod/{}/{}", namespace, pod_name),
+                                    details: format!("Pod is Running and Ready after {} polling attempt(s)", attempts),
+                                });
+                            }
+                        }
+                    }
+                }
+                RemediationAction::ScaleDeployment { namespace, deployment_name, target_replicas } => {
+                    let client = self.client();
+                    let deps: Api<Deployment> = Api::namespaced(client, namespace);
+                    if let Ok(dep) = deps.get(deployment_name).await {
+                        if let Some(status) = dep.status {
+                            let ready = status.ready_replicas.unwrap_or(0);
+                            if ready == *target_replicas {
+                                return Ok(VerificationResult {
+                                    success: true,
+                                    attempts,
+                                    target: format!("deployment/{}/{}", namespace, deployment_name),
+                                    details: format!("Deployment reached target replicas {} (ready: {})", target_replicas, ready),
+                                });
+                            }
+                        }
+                    }
+                }
+                RemediationAction::QuarantineWorkload { namespace, target_pod } => {
+                    let client = self.client();
+                    let netpols: Api<NetworkPolicy> = Api::namespaced(client, namespace);
+                    let policy_name = format!("zervox-quarantine-{}", target_pod);
+                    if let Ok(Some(_)) = netpols.get_opt(&policy_name).await {
+                        return Ok(VerificationResult {
+                            success: true,
+                            attempts,
+                            target: format!("networkpolicy/{}/{}", namespace, policy_name),
+                            details: "Default-deny NetworkPolicy isolation verified active".to_string(),
+                        });
+                    }
+                }
+                RemediationAction::CordonNode { node_name } => {
+                    let client = self.client();
+                    let nodes: Api<Node> = Api::all(client);
+                    if let Ok(node) = nodes.get(node_name).await {
+                        if let Some(spec) = node.spec {
+                            if spec.unschedulable == Some(true) {
+                                return Ok(VerificationResult {
+                                    success: true,
+                                    attempts,
+                                    target: format!("node/{}", node_name),
+                                    details: "Node unschedulable state verified".to_string(),
+                                });
+                            }
+                        }
+                    }
+                }
+                RemediationAction::NoAction { .. } => {
+                    return Ok(VerificationResult {
+                        success: true,
+                        attempts: 1,
+                        target: action.target_resource(),
+                        details: "No action required".to_string(),
+                    });
+                }
+                RemediationAction::DangerousActionAttempt { .. } => {
+                    return Ok(VerificationResult {
+                        success: false,
+                        attempts: 1,
+                        target: action.target_resource(),
+                        details: "Dangerous action always blocked and unverifiable".to_string(),
+                    });
+                }
+            }
+            tokio::time::sleep(poll_interval).await;
+        }
+
+        Ok(VerificationResult {
+            success: false,
+            attempts,
+            target: action.target_resource(),
+            details: format!("Verification timed out after {}s ({} attempts)", timeout.as_secs(), attempts),
+        })
+    }
+
+    // ── Automated Escalation Matrix ───────────────────────────────────────────
+
+    pub fn escalate_action(&self, failed_action: &RemediationAction) -> RemediationAction {
+        match failed_action {
+            RemediationAction::RestartPod { namespace, pod_name } => {
+                warn!(
+                    namespace = %namespace,
+                    pod_name = %pod_name,
+                    "[AUTOMATED ESCALATION] Pod restart failed post-action verification — escalating to NetworkPolicy default-deny quarantine"
+                );
+                RemediationAction::QuarantineWorkload {
+                    namespace: namespace.clone(),
+                    target_pod: pod_name.clone(),
+                }
+            }
+            RemediationAction::QuarantineWorkload { namespace, target_pod } => {
+                warn!(
+                    namespace = %namespace,
+                    target_pod = %target_pod,
+                    "[AUTOMATED ESCALATION] Quarantine active but threat persists — escalating to CordonNode"
+                );
+                RemediationAction::CordonNode {
+                    node_name: format!("node-{}", target_pod),
+                }
+            }
+            RemediationAction::ScaleDeployment { namespace, deployment_name, .. } => {
+                warn!(
+                    namespace = %namespace,
+                    deployment_name = %deployment_name,
+                    "[AUTOMATED ESCALATION] Deployment scaling failed verification — escalating to scale-to-zero"
+                );
+                RemediationAction::ScaleDeployment {
+                    namespace: namespace.clone(),
+                    deployment_name: deployment_name.clone(),
+                    target_replicas: 0,
+                }
+            }
+            _ => failed_action.clone(),
+        }
+    }
+
+    // ── Execution with Verification & Automated Escalation ───────────────────
+
+    pub async fn execute_with_verification(
+        &self,
+        action: &RemediationAction,
+        timeout: std::time::Duration,
+    ) -> Result<(String, VerificationResult, Option<RemediationAction>)> {
+        let initial_output = self.execute(action).await?;
+        let verification = self.verify_remediation(action, timeout, std::time::Duration::from_millis(100)).await?;
+
+        if !verification.success {
+            let escalated = self.escalate_action(action);
+            warn!(
+                initial_action = action.action_type(),
+                escalated_action = escalated.action_type(),
+                "[AUTOMATED ESCALATION] Initiating escalation sequence due to failed verification"
+            );
+            let escalated_output = self.execute(&escalated).await?;
+            let escalated_verification = self.verify_remediation(&escalated, timeout, std::time::Duration::from_millis(100)).await?;
+
+            return Ok((
+                format!("{}\n[AUTOMATED ESCALATION]: {}", initial_output, escalated_output),
+                escalated_verification,
+                Some(escalated),
+            ));
+        }
+
+        Ok((initial_output, verification, None))
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     fn is_dry_run(&self) -> bool {
@@ -521,5 +789,64 @@ mod tests {
         assert!(res.contains("node-k3s-worker-01"));
         assert!(res.contains("HW Dual-Key"));
         assert!(res.contains("ESP32-C3_RISCV_EMBEDDED"));
+    }
+
+    #[tokio::test]
+    async fn test_executor_quarantine_network_policy_dry_run() {
+        let executor = RemediationExecutor::new(None, true).await;
+        let action = RemediationAction::QuarantineWorkload {
+            namespace: "production".to_string(),
+            target_pod: "compromised-workload".to_string(),
+        };
+
+        let res = executor.execute(&action).await.unwrap();
+        assert!(res.contains("zervox-quarantine-compromised-workload"));
+        assert!(res.contains("production"));
+        assert!(res.contains("Default-Deny"));
+    }
+
+    #[tokio::test]
+    async fn test_executor_closed_loop_verification_and_escalation() {
+        let executor = RemediationExecutor::new(None, true).await;
+
+        // 1. Verification of safe pod restart in dry-run
+        let action = RemediationAction::RestartPod {
+            namespace: "default".to_string(),
+            pod_name: "api-gateway".to_string(),
+        };
+        let (output, verif, escalated) = executor
+            .execute_with_verification(&action, std::time::Duration::from_millis(500))
+            .await
+            .unwrap();
+
+        assert!(verif.success);
+        assert!(escalated.is_none());
+        assert!(output.contains("api-gateway"));
+
+        // 2. Escalation matrix mapping
+        let failed_restart = RemediationAction::RestartPod {
+            namespace: "default".to_string(),
+            pod_name: "malicious-crypto-miner".to_string(),
+        };
+        let escalated_action = executor.escalate_action(&failed_restart);
+        assert_eq!(
+            escalated_action,
+            RemediationAction::QuarantineWorkload {
+                namespace: "default".to_string(),
+                target_pod: "malicious-crypto-miner".to_string(),
+            }
+        );
+
+        let failed_quarantine = RemediationAction::QuarantineWorkload {
+            namespace: "default".to_string(),
+            target_pod: "malicious-crypto-miner".to_string(),
+        };
+        let escalated_to_cordon = executor.escalate_action(&failed_quarantine);
+        assert_eq!(
+            escalated_to_cordon,
+            RemediationAction::CordonNode {
+                node_name: "node-malicious-crypto-miner".to_string(),
+            }
+        );
     }
 }

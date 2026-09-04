@@ -167,15 +167,33 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
             }
         }
 
-        // 4. Execution via K8s Executor
-        match state.executor.execute(&decision.action).await {
-            Ok(output) => {
+        // 4. Execution via K8s Executor with Closed-Loop Verification & Automated Escalation
+        match state
+            .executor
+            .execute_with_verification(&decision.action, std::time::Duration::from_secs(5))
+            .await
+        {
+            Ok((output, verif, escalated)) => {
+                let final_output = if let Some(esc) = escalated {
+                    format!(
+                        "{} [AUTOMATED ESCALATION: {} | verified={}]",
+                        output,
+                        esc.target_resource(),
+                        verif.success
+                    )
+                } else {
+                    format!(
+                        "{} [Closed-loop verified: {} ({} attempts)]",
+                        output, verif.success, verif.attempts
+                    )
+                };
                 info!(
                     incident_id = %incident_id,
-                    output = %output,
-                    "Remediation action executed successfully"
+                    output = %final_output,
+                    verified = verif.success,
+                    "Remediation action executed and verified"
                 );
-                ("resolved".to_string(), Some(output))
+                ("resolved".to_string(), Some(final_output))
             }
             Err(err) => {
                 error!(
@@ -370,8 +388,50 @@ pub async fn handle_audit_webhook(
     let correlated_incidents = state.correlation.ingest(&all_detections).await;
     let correlated_count = correlated_incidents.len();
 
-    // Persist any escalated incidents (tier >= MEDIUM) into the Incident Store
+    // Persist any escalated incidents (tier >= MEDIUM) into the Incident Store and execute closed-loop remediation
     for incident in &correlated_incidents {
+        let (exec_status, exec_output) = if incident.tier.should_remediate() {
+            let policy_decision = state.policy.evaluate(&incident.recommended_action).await;
+            if policy_decision.allowed {
+                match state
+                    .executor
+                    .execute_with_verification(
+                        &incident.recommended_action,
+                        std::time::Duration::from_secs(5),
+                    )
+                    .await
+                {
+                    Ok((output, verif, escalated)) => {
+                        let final_msg = if let Some(esc) = escalated {
+                            format!(
+                                "{} [AUTOMATED ESCALATION: {} | verified={}]",
+                                output,
+                                esc.target_resource(),
+                                verif.success
+                            )
+                        } else {
+                            format!(
+                                "{} [Closed-loop verified: {} ({} attempts)]",
+                                output, verif.success, verif.attempts
+                            )
+                        };
+                        ("resolved".to_string(), Some(final_msg))
+                    }
+                    Err(e) => ("failed".to_string(), Some(e.to_string())),
+                }
+            } else {
+                (
+                    "blocked_by_policy".to_string(),
+                    Some(policy_decision.violations.join(", ")),
+                )
+            }
+        } else {
+            (
+                "observed".to_string(),
+                Some("Threat score within baseline tolerance; trace preserved.".to_string()),
+            )
+        };
+
         let record = crate::types::IncidentRecord {
             id: incident.incident_id.clone(),
             alert_name: format!("Threat_{}", incident.primary_signature),
@@ -382,12 +442,8 @@ pub async fn handle_audit_webhook(
             target_resource: incident.recommended_action.target_resource(),
             policy_allowed: true,
             policy_violations: None,
-            execution_status: if incident.tier.should_remediate() {
-                "pending".to_string()
-            } else {
-                "observed".to_string()
-            },
-            execution_error: None,
+            execution_status: exec_status,
+            execution_error: exec_output,
             forensic_snapshot_id: None,
             evidence_hash: None,
             created_at: incident.window_end,

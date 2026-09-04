@@ -268,6 +268,7 @@ impl PolicyEngine {
             "restart_pod" => input.resource == "pod" && !input.name.is_empty(),
             "scale" => input.resource == "deployment" && !input.name.is_empty(),
             "cordon" => input.resource == "node" && !input.name.is_empty(),
+            "quarantine" => input.resource == "networkpolicy" && !input.name.is_empty(),
             "no_action" => true,
             _ => false,
         };
@@ -320,6 +321,17 @@ impl PolicyEngine {
                 resource: "node".to_string(),
                 name: node_name.clone(),
                 namespace: String::new(),
+                target_replicas: None,
+                command: None,
+            },
+            RemediationAction::QuarantineWorkload {
+                namespace,
+                target_pod,
+            } => PolicyInput {
+                action: "quarantine".to_string(),
+                resource: "networkpolicy".to_string(),
+                name: format!("zervox-quarantine-{}", target_pod),
+                namespace: namespace.clone(),
                 target_replicas: None,
                 command: None,
             },

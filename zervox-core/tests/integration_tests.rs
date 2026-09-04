@@ -257,4 +257,5 @@ async fn test_audit_webhook_endpoint() {
     assert_eq!(correlated[0]["tier"], "CRITICAL");
     assert_eq!(correlated[0]["total_score"], 110);
     assert_eq!(correlated[0]["actor"], "system:serviceaccount:default:intruder-sa");
+    assert_eq!(correlated[0]["recommended_action"]["type"], "quarantine_workload");
 }

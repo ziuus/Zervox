@@ -161,6 +161,11 @@ pub enum RemediationAction {
     CordonNode {
         node_name: String,
     },
+    /// Dynamic NetworkPolicy isolation for compromised pods / critical attacks
+    QuarantineWorkload {
+        namespace: String,
+        target_pod: String,
+    },
     NoAction {
         reason: String,
     },
@@ -181,6 +186,7 @@ impl RemediationAction {
             RemediationAction::RestartPod { .. } => "restart_pod",
             RemediationAction::ScaleDeployment { .. } => "scale",
             RemediationAction::CordonNode { .. } => "cordon",
+            RemediationAction::QuarantineWorkload { .. } => "quarantine",
             RemediationAction::NoAction { .. } => "no_action",
             RemediationAction::DangerousActionAttempt { .. } => "dangerous_action",
         }
@@ -205,6 +211,10 @@ impl RemediationAction {
                 )
             }
             RemediationAction::CordonNode { node_name } => format!("node/{}", node_name),
+            RemediationAction::QuarantineWorkload {
+                namespace,
+                target_pod,
+            } => format!("quarantine/{}/{}", namespace, target_pod),
             RemediationAction::NoAction { reason } => format!("none ({})", reason),
             RemediationAction::DangerousActionAttempt {
                 resource,

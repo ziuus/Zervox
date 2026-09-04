@@ -49,11 +49,11 @@ impl SqliteStore {
 
     fn configure_and_init(conn: Connection) -> Result<Self> {
         // WAL mode: allows one writer + many readers concurrently
-        let _ = conn.pragma_update(None, "journal_mode", &"WAL");
-        let _ = conn.pragma_update(None, "synchronous", &"NORMAL");
-        let _ = conn.pragma_update(None, "cache_size", &-65536i64); // 64MB cache
+        let _ = conn.pragma_update(None, "journal_mode", "WAL");
+        let _ = conn.pragma_update(None, "synchronous", "NORMAL");
+        let _ = conn.pragma_update(None, "cache_size", -65536i64); // 64MB cache
         let _ = conn.busy_timeout(Duration::from_secs(5));
-        let _ = conn.pragma_update(None, "foreign_keys", &"ON");
+        let _ = conn.pragma_update(None, "foreign_keys", "ON");
 
         let store = Self {
             conn: Arc::new(Mutex::new(conn)),
@@ -132,16 +132,14 @@ impl SqliteStore {
                 Ok(()) => return Ok(()),
                 Err(e) => {
                     let msg = e.to_string();
-                    if msg.contains("locked") || msg.contains("SQLITE_BUSY") {
-                        if attempt < MAX_ATTEMPTS {
-                            warn!(
-                                op,
-                                attempt,
-                                "SQLite busy/locked during failover; retrying in 50ms"
-                            );
-                            std::thread::sleep(Duration::from_millis(50 * attempt as u64));
-                            continue;
-                        }
+                    if (msg.contains("locked") || msg.contains("SQLITE_BUSY")) && attempt < MAX_ATTEMPTS {
+                        warn!(
+                            op,
+                            attempt,
+                            "SQLite busy/locked during failover; retrying in 50ms"
+                        );
+                        std::thread::sleep(Duration::from_millis(50 * attempt as u64));
+                        continue;
                     }
                     error!(op, error = %e, "SQLite operation failed");
                     return Err(e);

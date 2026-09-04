@@ -199,9 +199,9 @@ impl ThreatCorrelationEngine {
                                 score = total_score,
                                 "[CORRELATION ESCALATION: CRITICAL] Aggregated threat exceeded critical threshold (81+)"
                             );
-                            RemediationAction::RestartPod {
+                            RemediationAction::QuarantineWorkload {
                                 namespace: namespace.clone(),
-                                pod_name: pod_or_target.clone(),
+                                target_pod: pod_or_target.clone(),
                             }
                         }
                         ThreatTier::High => {

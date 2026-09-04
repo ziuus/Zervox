@@ -34,6 +34,13 @@ valid_action if {
 }
 
 valid_action if {
+    input.action == "quarantine"
+    input.resource == "networkpolicy"
+    input.name != ""
+    input.namespace != ""
+}
+
+valid_action if {
     input.action == "no_action"
 }
 
