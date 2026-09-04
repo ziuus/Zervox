@@ -66,7 +66,7 @@ curl -s http://localhost:3000/api/telemetry
   - Deploy a simple `victim-api` deployment in namespace `default` with resource memory limit `64Mi` so it actually OOMKills during demo.
 
 ### 2. Forensic Freeze Ephemeral Container Script (`zervox-core`)
-- [ ] **Enhance `status::get_incident_forensics`**:
+- [x] **Enhance `status::get_incident_forensics`**:
   - Wire a real `kubectl debug` ephemeral container or crictl `/proc` snapshot dump script if running directly on a Linux host with containerd socket mounted (`/run/containerd/containerd.sock`).
   - Add real Merkle root calculation over `/proc/$PID/cmdline`, `/proc/$PID/net/tcp`, and `/proc/$PID/environ`.
 
