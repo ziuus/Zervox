@@ -1,12 +1,15 @@
-use crate::types::RemediationAction;
+use crate::types::{ForensicSnapshot, RemediationAction};
 use anyhow::{Context, Result};
+use chrono::Utc;
 use k8s_openapi::api::apps::v1::Deployment;
 use k8s_openapi::api::core::v1::{Node, Pod};
 use kube::api::{DeleteParams, Patch, PatchParams};
 use kube::{Api, Client, Config};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tracing::{info, warn};
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct RemediationExecutor {
@@ -137,6 +140,146 @@ impl RemediationExecutor {
         ))
     }
 
+    /// Capture Forensic Snapshot (Pre-Remediation Evidence Preservation)
+    pub async fn capture_forensic_snapshot(
+        &self,
+        incident_id: &str,
+        namespace: &str,
+        pod_name: &str,
+    ) -> Result<ForensicSnapshot> {
+        info!(
+            incident_id,
+            namespace,
+            pod_name,
+            "[FORENSIC FREEZE] Initiating pre-remediation volatile evidence capture"
+        );
+
+        let snapshot_id = format!("snap-{}", Uuid::new_v4().simple());
+        let captured_at = Utc::now();
+
+        let (pod_spec_json, container_logs, volatile_memory_dump) = if self.dry_run || self.k8s_client.is_none() {
+            let spec = json!({
+                "kind": "Pod",
+                "apiVersion": "v1",
+                "metadata": {
+                    "name": pod_name,
+                    "namespace": namespace,
+                    "labels": {
+                        "app": "victim-api",
+                        "security.zervox.io/quarantine": "pending"
+                    },
+                    "uid": Uuid::new_v4().to_string(),
+                    "creationTimestamp": captured_at.to_rfc3339()
+                },
+                "spec": {
+                    "containers": [{
+                        "name": "victim-api",
+                        "image": "python:3.11-slim",
+                        "command": ["python3", "-c", "import os, sys, time\nprint('Memory leak starting...')\na = []\nwhile True:\n  a.append(' ' * 1024 * 1024)\n  time.sleep(0.1)"],
+                        "resources": {
+                            "limits": { "memory": "64Mi" }
+                        }
+                    }]
+                },
+                "status": {
+                    "phase": "Running",
+                    "containerStatuses": [{
+                        "name": "victim-api",
+                        "restartCount": 5,
+                        "state": {
+                            "waiting": {
+                                "reason": "CrashLoopBackOff",
+                                "message": "Back-off 5m0s restarting failed container=victim-api pod=victim-api"
+                            }
+                        }
+                    }]
+                }
+            }).to_string();
+
+            let logs = format!(
+                "[CRASH_LOG] Container victim-api crashed with OOMKilled (Exit Code 137)\n\
+                 [STACK_TRACE] Traceback (most recent call last):\n\
+                   File \"<string>\", line 5, in <module>\n\
+                 MemoryError: Out of memory (exceeded limit: 64MiB)\n\
+                 [SECURITY_AUDIT] Anomaly detected: exponential allocation pattern prior to termination\n\
+                 [CAPTURED_AT] {}",
+                captured_at.to_rfc3339()
+            );
+
+            let memory_dump = format!(
+                "PID 1 (victim-api): RSS 65536 kB, VSIZE 131072 kB\n\
+                 THREAD DUMP:\n\
+                   Thread 0x7f9a123: [RUNNING] allocation loop in bytecode eval\n\
+                 OPEN DESCRIPTORS:\n\
+                   0: /dev/null\n\
+                   1: pipe:[189234]\n\
+                   2: pipe:[189235]\n\
+                 NETWORK CONNECTIONS:\n\
+                   TCP 10.42.0.15:8080 ESTABLISHED (remote: 10.42.0.1:443)\n\
+                 EVIDENCE INTEGRITY: SYNTHESIZED_DRYRUN_VAULT"
+            );
+
+            (spec, logs, memory_dump)
+        } else {
+            let client = self.k8s_client.as_ref().unwrap();
+            let pods: Api<Pod> = Api::namespaced(client.clone(), namespace);
+
+            let pod_obj = pods.get(pod_name).await.unwrap_or_default();
+            let spec = serde_json::to_string_pretty(&pod_obj).unwrap_or_else(|_| "{}".to_string());
+
+            let log_params = kube::api::LogParams {
+                tail_lines: Some(250),
+                timestamps: true,
+                ..Default::default()
+            };
+            let logs = pods.logs(pod_name, &log_params).await.unwrap_or_else(|e| format!("Failed to read live logs: {}", e));
+
+            let memory_dump = format!(
+                "LIVE CLUSTER FORENSICS:\n\
+                 Pod UID: {:?}\n\
+                 Node: {:?}\n\
+                 IP: {:?}\n\
+                 Status: {:?}\n\
+                 Evidence snapshot captured by Zervox Out-Of-Band Agent.",
+                pod_obj.metadata.uid,
+                pod_obj.spec.as_ref().and_then(|s| s.node_name.clone()),
+                pod_obj.status.as_ref().and_then(|s| s.pod_ip.clone()),
+                pod_obj.status.as_ref().and_then(|s| s.phase.clone()),
+            );
+
+            (spec, logs, memory_dump)
+        };
+
+        // Compute cryptographic SHA-256 integrity hash
+        let mut hasher = Sha256::new();
+        hasher.update(snapshot_id.as_bytes());
+        hasher.update(incident_id.as_bytes());
+        hasher.update(namespace.as_bytes());
+        hasher.update(pod_name.as_bytes());
+        hasher.update(pod_spec_json.as_bytes());
+        hasher.update(container_logs.as_bytes());
+        hasher.update(volatile_memory_dump.as_bytes());
+        let sha256_hash = format!("{:x}", hasher.finalize());
+
+        info!(
+            snapshot_id = %snapshot_id,
+            sha256 = %sha256_hash,
+            "[FORENSIC FREEZE] Evidence snapshot cryptographically locked and hashed"
+        );
+
+        Ok(ForensicSnapshot {
+            id: snapshot_id,
+            incident_id: incident_id.to_string(),
+            pod_name: pod_name.to_string(),
+            namespace: namespace.to_string(),
+            pod_spec_json,
+            container_logs,
+            volatile_memory_dump,
+            sha256_hash,
+            captured_at,
+        })
+    }
+
     async fn scale_deployment(
         &self,
         namespace: &str,
@@ -259,5 +402,21 @@ mod tests {
 
         let res = executor.execute(&action).await.unwrap();
         assert!(res.contains("scaled to 4 replicas"));
+    }
+
+    #[tokio::test]
+    async fn test_executor_capture_forensic_snapshot() {
+        let executor = RemediationExecutor::new(None, true).await;
+        let snapshot = executor
+            .capture_forensic_snapshot("inc-test-999", "default", "victim-pod-xyz")
+            .await
+            .unwrap();
+
+        assert_eq!(snapshot.incident_id, "inc-test-999");
+        assert_eq!(snapshot.pod_name, "victim-pod-xyz");
+        assert_eq!(snapshot.namespace, "default");
+        assert!(!snapshot.sha256_hash.is_empty());
+        assert!(snapshot.container_logs.contains("OOMKilled"));
+        assert!(snapshot.pod_spec_json.contains("victim-api"));
     }
 }

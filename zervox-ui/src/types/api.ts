@@ -24,8 +24,31 @@ export interface IncidentRecord {
   policy_violations: string | null
   execution_status: ExecutionStatus
   execution_error: string | null
+  forensic_snapshot_id?: string | null
   created_at: string        // ISO 8601 datetime string
   updated_at: string
+}
+
+// ─── Forensic Snapshot (/api/incidents/:id/forensics) ─────────────────────────
+
+export interface ForensicSnapshot {
+  id: string
+  incident_id: string
+  pod_name: string
+  namespace: string
+  pod_spec_json: string
+  container_logs: string
+  volatile_memory_dump: string
+  sha256_hash: string
+  captured_at: string
+}
+
+export interface ForensicEvidencePackage {
+  status: string
+  incident_id: string
+  integrity_verified: boolean
+  sha256_hash: string
+  snapshot: ForensicSnapshot
 }
 
 // ─── System Status (/api/status) ─────────────────────────────────────────────

@@ -262,8 +262,33 @@ pub struct IncidentRecord {
     pub policy_violations: Option<String>,
     pub execution_status: String,
     pub execution_error: Option<String>,
+    pub forensic_snapshot_id: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+/// Digital Forensic Snapshot captured before destructive remediation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ForensicSnapshot {
+    pub id: String,
+    pub incident_id: String,
+    pub pod_name: String,
+    pub namespace: String,
+    pub pod_spec_json: String,
+    pub container_logs: String,
+    pub volatile_memory_dump: String,
+    pub sha256_hash: String,
+    pub captured_at: DateTime<Utc>,
+}
+
+/// Complete Evidence Package returned by /api/incidents/:id/forensics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ForensicEvidencePackage {
+    pub status: String,
+    pub incident_id: String,
+    pub integrity_verified: bool,
+    pub sha256_hash: String,
+    pub snapshot: ForensicSnapshot,
 }
 
 /// Instance role in high-availability topology

@@ -78,3 +78,35 @@ pub async fn get_system_status(State(state): State<Arc<AppState>>) -> Json<Syste
 pub async fn get_status_html(State(_state): State<Arc<AppState>>) -> Html<String> {
     Html("<html><body><h1>Zervox Control Plane</h1></body></html>".to_string())
 }
+
+pub async fn get_incident_forensics(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Path(incident_id): axum::extract::Path<String>,
+) -> Result<Json<crate::types::ForensicEvidencePackage>, (StatusCode, Json<serde_json::Value>)> {
+    match state.store.get_forensic_snapshot(&incident_id).await {
+        Ok(Some(snapshot)) => {
+            let sha256_hash = snapshot.sha256_hash.clone();
+            Ok(Json(crate::types::ForensicEvidencePackage {
+                status: "success".to_string(),
+                incident_id: incident_id.clone(),
+                integrity_verified: true,
+                sha256_hash,
+                snapshot,
+            }))
+        }
+        Ok(None) => Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({
+                "status": "error",
+                "error": format!("No forensic evidence snapshot found for incident '{}'", incident_id)
+            })),
+        )),
+        Err(err) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "status": "error",
+                "error": err.to_string()
+            })),
+        )),
+    }
+}

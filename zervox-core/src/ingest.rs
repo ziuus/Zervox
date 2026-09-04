@@ -122,6 +122,7 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
         policy_violations: None,
         execution_status: "evaluating_policy".to_string(),
         execution_error: None,
+        forensic_snapshot_id: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
@@ -140,6 +141,28 @@ async fn process_single_alert(state: &Arc<AppState>, alert: &AlertItem) -> Proce
     };
 
     let (execution_status, execution_output) = if policy_decision.allowed {
+        // Innovation 1: Forensic Freeze (Pre-Remediation Evidence Preservation)
+        // Before executing pod deletion/restart, capture volatile logs & state into isolated tamper-evident vault
+        if let RemediationAction::RestartPod { namespace, pod_name } = &decision.action {
+            match state.executor.capture_forensic_snapshot(&incident_id, namespace, pod_name).await {
+                Ok(snapshot) => {
+                    info!(
+                        incident_id = %incident_id,
+                        snapshot_id = %snapshot.id,
+                        sha256 = %snapshot.sha256_hash,
+                        "[FORENSIC FREEZE] Evidence snapshot captured and hashed before pod destruction"
+                    );
+                    record.forensic_snapshot_id = Some(snapshot.id.clone());
+                    if let Err(e) = state.store.save_forensic_snapshot(&snapshot).await {
+                        error!(error = %e, "Failed to persist forensic snapshot to SQLite vault");
+                    }
+                }
+                Err(e) => {
+                    warn!(error = %e, "Failed to capture forensic snapshot before pod deletion");
+                }
+            }
+        }
+
         // 4. Execution via K8s Executor
         match state.executor.execute(&decision.action).await {
             Ok(output) => {
@@ -264,6 +287,7 @@ pub async fn simulate_attack(
             "blocked_by_policy".to_string()
         },
         execution_error: None,
+        forensic_snapshot_id: None,
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
