@@ -6,24 +6,7 @@ import { HeartbeatCard } from '@/components/dashboard/HeartbeatCard'
 import { EngineModeCard } from '@/components/dashboard/EngineModeCard'
 import { TopologyMiniMap } from '@/components/dashboard/TopologyMiniMap'
 import { Card, CardLabel } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
 import { formatUptime } from '@/lib/utils'
-
-function SectionLabel({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="mb-3 flex items-center gap-3">
-      <div className="hr-gradient flex-1" />
-      <div className="text-right shrink-0">
-        <p className="font-mono text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: 'var(--text-primary)' }}>
-          {title}
-        </p>
-        <p className="font-mono text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-          {subtitle}
-        </p>
-      </div>
-    </div>
-  )
-}
 
 export default function OverviewPage() {
   const {
@@ -45,56 +28,46 @@ export default function OverviewPage() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* ── Page Header ────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl text-base" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
-              🌐
-            </span>
-            <h1 className="font-mono text-lg font-black uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-              Command Center // Telemetry & HA Topology
-            </h1>
-          </div>
-          <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Real-time multi-node health, mTLS heartbeat tunnel (TCP 9000), and cluster failover sentinel.
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            System Overview & Cluster Telemetry
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Real-time multi-node health, mutual TLS heartbeat tunnel (TCP 9000), and cluster failover sentinel.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Link
             href="/chaos"
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            style={{
-              background: 'var(--accent-subtle)',
-              border: '1px solid var(--accent-border)',
-              color: 'var(--text-primary)',
-            }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer shadow-sm"
           >
             <span>⚡</span>
             <span>Chaos Sandbox</span>
           </Link>
           <Link
             href="/incidents"
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            style={{
-              background: 'var(--bg-sunken)',
-              border: '1px solid var(--border-medium)',
-              color: 'var(--text-secondary)',
-            }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all cursor-pointer shadow-sm"
           >
             <span>🚨</span>
-            <span>View {incidents.length} Incidents</span>
+            <span>Incidents ({incidents.length})</span>
           </Link>
         </div>
       </div>
 
-      {/* ── SECTION 1: INSTANCE TELEMETRY NODES ─────────────────── */}
-      <section>
-        <SectionLabel
-          title="INSTANCE TELEMETRY"
-          subtitle="mTLS Heartbeat · TCP 9000 · High-Availability Watchdog"
-        />
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      {/* ── ROW 1: PRIMARY, BACKUP & ENGINE SENTINELS ──────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Active Nodes & Dual-Engine Watchdog
+          </h2>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+            Zero-single-point-of-failure topology
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <HeartbeatCard instance={primary} peerStatus={peerStatus} />
           <HeartbeatCard instance={backup} peerStatus={peerStatus} />
           <EngineModeCard
@@ -108,104 +81,131 @@ export default function OverviewPage() {
         </div>
       </section>
 
-      {/* ── SECTION 2: SPLIT-BRAIN SENTINEL & CLUSTER METRICS ──── */}
-      <section>
-        <SectionLabel
-          title="SPLIT-BRAIN SENTINEL & CLUSTER METRICS"
-          subtitle="Autonomous Failover Routing Track A → Track B"
-        />
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 items-stretch">
-          {/* KPI Metrics Matrix */}
-          <div className="xl:col-span-7 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
-            {[
-              {
-                label: 'Active Node',
-                value: activeInstance.health?.role?.toUpperCase() ?? '—',
-                color: 'var(--accent)',
-              },
-              {
-                label: 'Cluster State',
-                value: activeInstance.health?.state?.toUpperCase() ?? '—',
-                color:
-                  activeInstance.health?.state === 'active'
-                    ? 'var(--status-green)'
-                    : 'var(--status-amber)',
-              },
-              {
-                label: 'Engine Mode',
-                value:
-                  engineMode === 'ai'
-                    ? 'LLM / AI'
-                    : engineMode === 'fallback'
-                    ? 'FALLBACK'
-                    : '—',
-                color: engineMode === 'ai' ? 'var(--accent)' : 'var(--status-amber)',
-              },
-              {
-                label: 'HW Dual-Key',
-                value: hardwareStatus?.includes('ARMED')
-                  ? 'RISC-V ARMED'
-                  : 'STANDALONE',
-                color: hardwareStatus?.includes('ARMED')
-                  ? '#a78bfa'
-                  : 'var(--text-secondary)',
-              },
-              {
-                label: 'Uptime',
-                value:
-                  uptimeSeconds != null ? formatUptime(uptimeSeconds) : '—',
-                color: 'var(--text-primary)',
-              },
-              {
-                label: 'Total Incidents',
-                value: totalIncidents.toLocaleString(),
-                color: 'var(--accent)',
-              },
-              {
-                label: 'OPA Gate',
-                value:
-                  opaStatus === 'reachable' ? 'EXTERNAL' : 'EMBEDDED',
-                color:
-                  opaStatus === 'reachable'
-                    ? 'var(--status-green)'
-                    : 'var(--status-amber)',
-              },
-              {
-                label: 'K8s Status',
-                value: k8sStatus ? k8sStatus.toUpperCase() : 'STANDBY',
-                color:
-                  k8sStatus === 'connected'
-                    ? 'var(--status-green)'
-                    : 'var(--status-amber)',
-              },
-            ].map(({ label, value, color }) => (
-              <Card
-                key={label}
-                className="p-4.5 hover:-translate-y-0.5 transition-transform duration-200"
-              >
+      {/* ── ROW 2: FULL-WIDTH TOPOLOGY MINI-MAP ───────────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            High-Availability Network Graph
+          </h2>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+            Autonomous failover routing (Track A → Track B)
+          </span>
+        </div>
+
+        {/* Full-Width Prominent Container */}
+        <div className="w-full">
+          <TopologyMiniMap
+            primaryOnline={primary.isOnline}
+            backupOnline={backup.isOnline}
+            activeRole={
+              activeInstance.health?.role ??
+              (primary.isOnline ? 'primary' : 'backup')
+            }
+            peerStatus={peerStatus}
+          />
+        </div>
+      </section>
+
+      {/* ── ROW 3: CLEAN KPI METRICS MATRIX ────────────────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Cluster Telemetry Key Performance Indicators
+          </h2>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+            8 live health checkpoints
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            {
+              label: 'Active Commander',
+              value: activeInstance.health?.role?.toUpperCase() ?? '—',
+              sub: 'Designated leader',
+              color: 'var(--accent)',
+            },
+            {
+              label: 'Cluster State',
+              value: activeInstance.health?.state?.toUpperCase() ?? '—',
+              sub: 'Operational status',
+              color:
+                activeInstance.health?.state === 'active'
+                  ? 'var(--status-green)'
+                  : 'var(--status-amber)',
+            },
+            {
+              label: 'Reasoning Mode',
+              value:
+                engineMode === 'ai'
+                  ? 'LLM / AI'
+                  : engineMode === 'fallback'
+                  ? 'FALLBACK'
+                  : '—',
+              sub: engineMode === 'ai' ? 'Cloud model' : 'Deterministic rules',
+              color: engineMode === 'ai' ? 'var(--accent)' : 'var(--status-amber)',
+            },
+            {
+              label: 'Hardware Interlock',
+              value: hardwareStatus?.includes('ARMED')
+                ? 'RISC-V ARMED'
+                : 'STANDALONE',
+              sub: 'Microcontroller breaker',
+              color: hardwareStatus?.includes('ARMED')
+                ? '#a855f7'
+                : 'var(--text-secondary)',
+            },
+            {
+              label: 'Leader Uptime',
+              value:
+                uptimeSeconds != null ? formatUptime(uptimeSeconds) : '—',
+              sub: 'Continuous runtime',
+              color: 'var(--text-primary)',
+            },
+            {
+              label: 'Total Incidents',
+              value: totalIncidents.toLocaleString(),
+              sub: 'Persisted in WAL',
+              color: 'var(--accent)',
+            },
+            {
+              label: 'OPA Safety Gate',
+              value:
+                opaStatus === 'reachable' ? 'ENFORCING' : 'STANDBY',
+              sub: 'Zero-trust policies',
+              color:
+                opaStatus === 'reachable'
+                  ? 'var(--status-green)'
+                  : 'var(--status-amber)',
+            },
+            {
+              label: 'K8s Cluster',
+              value: k8sStatus ? k8sStatus.toUpperCase() : 'STANDBY',
+              sub: 'Remediation executor',
+              color:
+                k8sStatus === 'connected'
+                  ? 'var(--status-green)'
+                  : 'var(--status-amber)',
+            },
+          ].map(({ label, value, sub, color }) => (
+            <Card
+              key={label}
+              className="p-5 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-150"
+            >
+              <div>
                 <CardLabel>{label}</CardLabel>
                 <p
-                  className="font-mono text-sm font-bold tracking-wider"
+                  className="font-mono text-base font-bold tracking-tight mt-1"
                   style={{ color }}
                 >
                   {value}
                 </p>
-              </Card>
-            ))}
-          </div>
-
-          {/* Split-Brain Sentinel Interactive Map */}
-          <div className="xl:col-span-5 flex flex-col">
-            <TopologyMiniMap
-              primaryOnline={primary.isOnline}
-              backupOnline={backup.isOnline}
-              activeRole={
-                activeInstance.health?.role ??
-                (primary.isOnline ? 'primary' : 'backup')
-              }
-              peerStatus={peerStatus}
-            />
-          </div>
+              </div>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 block">
+                {sub}
+              </span>
+            </Card>
+          ))}
         </div>
       </section>
     </div>

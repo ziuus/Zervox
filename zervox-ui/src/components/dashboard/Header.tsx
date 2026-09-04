@@ -17,7 +17,7 @@ interface HeaderProps {
 
 function SunIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -33,7 +33,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   )
@@ -52,227 +52,197 @@ export function Header({
   const anyOnline = primaryOnline || backupOnline
   const isDark = theme === 'dark'
 
+  const navLinks = [
+    { href: '/', label: 'Overview', icon: '🌐' },
+    { href: '/incidents', label: 'Incidents', icon: '🚨' },
+    { href: '/forensics', label: 'Forensics & Air-Gap', icon: '📸' },
+    { href: '/chaos', label: 'Chaos Sandbox', icon: '⚡' },
+  ]
+
   return (
     <header
-      className="sticky top-0 z-50 backdrop-blur-xl transition-all animate-slide-down"
+      className="sticky top-0 z-50 transition-all border-b"
       style={{
         background: 'var(--header-bg)',
-        borderBottom: '1px solid var(--header-border)',
+        borderColor: 'var(--border-subtle)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
       }}
     >
-      <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-3">
-
-        {/* ── Brand ─────────────────────────────────────────────── */}
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-3">
-            {/* Logo mark */}
+      {/* ── TOP HEADER: Brand & Clean Navigation ───────────────── */}
+      <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-2.5">
+        {/* Brand */}
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2.5 group">
             <div
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-lg font-bold text-sm transition-transform group-hover:scale-105"
               style={{
                 background: 'var(--accent-subtle)',
                 border: '1px solid var(--accent-border)',
-                boxShadow: anyOnline ? '0 0 14px var(--glow-sky)' : 'none',
+                color: 'var(--accent)',
               }}
             >
-              <span className="text-lg select-none">⚡</span>
-              {anyOnline && (
-                <span
-                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full animate-pulse"
-                  style={{ background: 'var(--status-green)', boxShadow: '0 0 8px var(--status-green)' }}
-                />
-              )}
+              ⚡
             </div>
-
-            {/* Wordmark */}
             <div>
               <div className="flex items-center gap-2">
-                <p
-                  className="font-mono text-sm font-extrabold tracking-[0.25em]"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  ZERVOX
-                </p>
+                <span className="font-semibold text-base tracking-tight text-slate-900 dark:text-slate-100">
+                  Zervox
+                </span>
                 <span
-                  className="rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest"
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase"
                   style={{
-                    color: 'var(--accent)',
-                    background: 'var(--accent-subtle)',
-                    border: '1px solid var(--accent-border)',
+                    background: 'var(--bg-sunken)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-secondary)',
                   }}
                 >
-                  DEFENSE
+                  SRE
                 </span>
               </div>
-              <p className="font-mono text-[9px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                CYBERDOME SRE CORE · HAC&apos;KP
-              </p>
             </div>
-          </div>
-
-          {/* Divider */}
-          <div className="h-6 w-px" style={{ background: 'var(--border-medium)' }} />
-
-          {/* Instance health pills */}
-          <div
-            className="hidden md:flex items-center gap-3 rounded-full px-3.5 py-1"
-            style={{
-              background: 'var(--bg-sunken)',
-              border: '1px solid var(--border-subtle)',
-            }}
-          >
-            <div className="flex items-center gap-1.5">
-              <PulseRing online={primaryOnline} size="sm" />
-              <span className="font-mono text-[10px] font-semibold tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                PRIMARY
-              </span>
-            </div>
-            <span style={{ color: 'var(--border-medium)' }} className="text-xs">/</span>
-            <div className="flex items-center gap-1.5">
-              <PulseRing online={backupOnline} size="sm" />
-              <span className="font-mono text-[10px] font-semibold tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                BACKUP
-              </span>
-            </div>
-          </div>
+          </Link>
         </div>
 
-        {/* ── Persistent Navigation Menu ───────────────────────── */}
-        <nav
-          className="flex items-center gap-1 rounded-2xl p-1 font-mono"
-          style={{
-            background: 'var(--bg-sunken)',
-            border: '1px solid var(--border-subtle)',
-          }}
-        >
-          {[
-            { href: '/', label: 'Overview', icon: '🌐' },
-            { href: '/incidents', label: 'Incidents', icon: '🚨' },
-            { href: '/forensics', label: 'Forensics', icon: '📸' },
-            { href: '/chaos', label: 'Chaos Sandbox', icon: '⚡' },
-          ].map(({ href, label, icon }) => {
+        {/* Center: Clean Linear/Vercel Style Navigation Tabs */}
+        <nav className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'var(--bg-sunken)' }}>
+          {navLinks.map(({ href, label, icon }) => {
             const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
             return (
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-1.5 rounded-xl px-2.5 sm:px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-all duration-200"
-                style={
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-150 ${
                   isActive
-                    ? {
-                        background: 'var(--accent-subtle)',
-                        border: '1px solid var(--accent-border)',
-                        color: 'var(--text-primary)',
-                        boxShadow: '0 0 14px var(--glow-sky)',
-                      }
-                    : {
-                        color: 'var(--text-secondary)',
-                        border: '1px solid transparent',
-                      }
-                }
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold shadow-sm border border-slate-200 dark:border-slate-700/60'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/50 dark:hover:bg-slate-800/40'
+                }`}
               >
-                <span>{icon}</span>
-                <span className="hidden sm:inline">{label}</span>
+                <span className="text-xs">{icon}</span>
+                <span>{label}</span>
               </Link>
             )
           })}
         </nav>
 
-        {/* ── Right Controls ────────────────────────────────────── */}
-        <div className="flex items-center gap-2.5">
-          {/* Feature 5: Air-Gap Attestation Beacon */}
-          <AirGapBeacon />
-
-          {/* Last updated */}
-          {lastUpdated && (
-            <span className="hidden font-mono text-[10px] tracking-wider sm:block" style={{ color: 'var(--text-muted)' }}>
-              SYNC {lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
-
-          {/* Hardware Circuit Breaker Chip */}
-          {hardwareStatus && (
-            <div
-              className="hidden lg:flex items-center gap-1.5 rounded-full px-3 py-1"
-              style={{
-                border: '1px solid rgba(168,85,247,0.35)',
-                background: 'rgba(168,85,247,0.08)',
-                color: isDark ? '#c4b5fd' : '#7c3aed',
-              }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="font-mono text-[9px] font-bold tracking-wider uppercase">
-                {hardwareStatus.includes('ARMED') ? 'RISC-V ARMED' : 'HW BREAKER'}
-              </span>
-            </div>
-          )}
-
-          {/* System Status Pill */}
+        {/* Right Tools */}
+        <div className="flex items-center gap-2">
+          {/* Operational status badge */}
           <div
-            className="flex items-center gap-1.5 rounded-full px-3 py-1 transition-all"
+            className="flex items-center gap-2 rounded-lg px-2.5 py-1 text-xs font-medium"
             style={{
-              border: anyOnline ? '1px solid var(--status-green-bdr)' : '1px solid var(--status-red-bdr)',
               background: anyOnline ? 'var(--status-green-bg)' : 'var(--status-red-bg)',
+              border: `1px solid ${anyOnline ? 'var(--status-green-bdr)' : 'var(--status-red-bdr)'}`,
               color: anyOnline ? 'var(--status-green)' : 'var(--status-red)',
             }}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${anyOnline ? 'animate-pulse' : ''}`}
-              style={{ background: anyOnline ? 'var(--status-green)' : 'var(--status-red)' }}
+              className={`h-1.5 w-1.5 rounded-full ${anyOnline ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}
             />
-            <span className="font-mono text-[10px] font-bold tracking-widest uppercase">
-              {anyOnline ? 'OPERATIONAL' : 'OFFLINE'}
+            <span className="text-[11px] font-medium">
+              {anyOnline ? 'Operational' : 'Offline'}
             </span>
           </div>
 
-          {/* Air-Gap Optical Button */}
-          {onOpenAirGap && (
-            <button
-              onClick={onOpenAirGap}
-              type="button"
-              className="flex items-center gap-2 rounded-xl px-3.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
-              style={{
-                border: '1px solid rgba(245,158,11,0.40)',
-                background: 'rgba(245,158,11,0.08)',
-                color: isDark ? '#fcd34d' : '#92400e',
-              }}
-            >
-              <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" style={{ boxShadow: '0 0 6px #fbbf24' }} />
-              AIR-GAP OPTICAL
-            </button>
-          )}
+          {/* Sync Button */}
+          <button
+            onClick={onRefresh}
+            type="button"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer"
+            title="Poll fresh telemetry"
+          >
+            <span className="text-xs">↻</span>
+            <span className="hidden sm:inline text-[11px]">Sync</span>
+          </button>
 
           {/* Theme Toggle */}
           <button
             onClick={toggle}
             type="button"
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="flex items-center justify-center w-9 h-9 rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            style={{
-              border: '1px solid var(--border-medium)',
-              background: 'var(--bg-sunken)',
-              color: 'var(--text-secondary)',
-            }}
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer"
             title={isDark ? 'Light mode' : 'Dark mode'}
           >
-            <span className="transition-transform duration-300" style={{ display: 'flex', alignItems: 'center' }}>
-              {isDark ? <SunIcon /> : <MoonIcon />}
-            </span>
+            {isDark ? <SunIcon /> : <MoonIcon />}
           </button>
+        </div>
+      </div>
 
-          {/* Refresh button */}
-          <button
-            onClick={onRefresh}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
-            style={{
-              border: '1px solid var(--border-medium)',
-              background: 'var(--bg-sunken)',
-              color: 'var(--text-secondary)',
-            }}
-            title="Poll fresh telemetry"
-          >
-            <span className="text-xs">↻</span>
-            <span className="hidden sm:inline">SYNC</span>
-          </button>
+      {/* ── SECONDARY SUB-HEADER: System Telemetry & Attestation Bar ── */}
+      <div
+        className="px-6 py-1.5 border-t text-xs flex flex-wrap items-center justify-between gap-3 text-slate-500 dark:text-slate-400"
+        style={{
+          background: 'var(--bg-sunken)',
+          borderColor: 'var(--border-subtle)',
+        }}
+      >
+        {/* Left: Node Health Summary */}
+        <div className="flex items-center gap-4 text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <PulseRing online={primaryOnline} size="sm" />
+            <span className="font-medium text-slate-700 dark:text-slate-300">Primary Node:</span>
+            <span className={primaryOnline ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-red-500'}>
+              {primaryOnline ? 'Active' : 'Offline'}
+            </span>
+          </div>
+
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+
+          <div className="flex items-center gap-1.5">
+            <PulseRing online={backupOnline} size="sm" />
+            <span className="font-medium text-slate-700 dark:text-slate-300">Backup Node:</span>
+            <span className={backupOnline ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-amber-500'}>
+              {backupOnline ? 'Standby' : 'Dormant'}
+            </span>
+          </div>
+
+          <span className="text-slate-300 dark:text-slate-700 hidden md:inline">•</span>
+
+          <span className="hidden md:inline text-slate-500 dark:text-slate-400 font-mono text-[10px]">
+            mTLS Tunnel: TCP 9000
+          </span>
+        </div>
+
+        {/* Right: Air-Gap Attestation, Hardware Guard & Sync Time */}
+        <div className="flex items-center gap-3 text-[11px]">
+          {/* Air-Gap Beacon Pill */}
+          <div className="flex items-center gap-1.5">
+            <AirGapBeacon />
+          </div>
+
+          {/* Hardware Breaker */}
+          {hardwareStatus && (
+            <span
+              className="hidden lg:inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                background: 'rgba(168,85,247,0.08)',
+                border: '1px solid rgba(168,85,247,0.25)',
+                color: isDark ? '#c4b5fd' : '#7c3aed',
+              }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+              {hardwareStatus.includes('ARMED') ? 'RISC-V ESP32 Armed' : 'HW Standalone'}
+            </span>
+          )}
+
+          {/* Sync Time */}
+          {lastUpdated && (
+            <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+              Sync: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+
+          {/* Air-Gap Optical Modal Trigger */}
+          {onOpenAirGap && (
+            <button
+              onClick={onOpenAirGap}
+              type="button"
+              className="flex items-center gap-1.5 rounded px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Optical Diode
+            </button>
+          )}
         </div>
       </div>
     </header>

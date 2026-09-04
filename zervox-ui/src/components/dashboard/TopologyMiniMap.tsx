@@ -37,24 +37,28 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
 
   return (
     <div
-      className="rounded-2xl p-4.5 surface-elevated border flex flex-col justify-between h-full font-mono relative overflow-hidden transition-all duration-300"
-      style={{
-        borderColor: simulatedSever ? 'rgba(245,158,11,0.5)' : 'var(--border-medium)',
-      }}
+      className={`rounded-2xl p-6 md:p-8 surface-elevated border transition-all duration-300 relative overflow-hidden ${
+        simulatedSever
+          ? 'border-amber-500/40'
+          : 'border-slate-200 dark:border-slate-800'
+      }`}
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b pb-2.5 mb-2.5" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div className="flex items-center gap-2">
-          <span
-            className="h-2 w-2 rounded-full animate-pulse"
-            style={{
-              background: simulatedSever ? '#fbbf24' : 'var(--status-green)',
-              boxShadow: simulatedSever ? '0 0 8px #fbbf24' : '0 0 8px var(--status-green)',
-            }}
-          />
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.2em]" style={{ color: 'var(--text-primary)' }}>
-            Split-Brain Sentinel // HA Topology
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4 mb-6 gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                simulatedSever ? 'bg-amber-500' : 'bg-emerald-500'
+              }`}
+            />
+            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              Split-Brain Sentinel & Network Topology
+            </h3>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Active routing between dual out-of-band engines and Kubernetes perimeter
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -62,165 +66,171 @@ export function TopologyMiniMap({ primaryOnline, backupOnline, activeRole, peerS
             <button
               type="button"
               onClick={triggerSeverSimulation}
-              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm"
               title="Demonstrate mTLS heartbeat sever and automated leader takeover"
             >
-              ⚡ SEVER HEARTBEAT (CHAOS)
+              ⚡ Sever Heartbeat (Test Failover)
             </button>
           ) : (
             <button
               type="button"
               onClick={restoreHeartbeat}
-              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-emerald-500/40 text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all cursor-pointer"
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all cursor-pointer shadow-sm"
             >
-              RESTORE PRIMARY
+              ✓ Restore Primary Heartbeat
             </button>
           )}
         </div>
       </div>
 
-      {/* Center Visualization */}
-      <div className="relative flex items-center justify-between py-2 px-1 flex-1">
-        {/* Track A: Engines */}
-        <div className="flex flex-col gap-2.5 z-10 w-[150px]">
-          <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300" style={{ color: 'var(--text-secondary)' }}>
-            TRACK A · ENGINES
-          </div>
+      {/* Center Visualization Flow */}
+      <div className="relative flex flex-col md:flex-row items-center justify-between py-4 px-2 gap-6">
+        {/* Left Column: Dual Engines */}
+        <div className="flex flex-col gap-4 z-10 w-full md:w-64">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Out-of-Band Sentinels
+          </span>
 
-          {/* Primary Node */}
+          {/* Primary Node Box */}
           <div
-            className={`rounded-xl border p-2.5 transition-all duration-300 ${
+            className={`rounded-xl border p-4 transition-all duration-200 ${
               !effectivePrimaryOnline
-                ? 'border-red-500/60 bg-red-950/20 shadow-[0_0_16px_rgba(239,68,68,0.2)]'
+                ? 'border-rose-500/50 bg-rose-500/5 dark:bg-rose-950/20'
                 : effectivePrimaryActive
-                ? 'border-emerald-500/50 bg-emerald-950/20'
-                : 'border-white/10'
+                ? 'border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-950/20'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>PRIMARY</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Primary Engine (8080)</span>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  !effectivePrimaryOnline ? 'bg-red-500 animate-ping' : 'bg-emerald-400'
+                  !effectivePrimaryOnline ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
                 }`}
               />
             </div>
-            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: !effectivePrimaryOnline ? '#f87171' : 'var(--status-green)' }}>
-              {!effectivePrimaryOnline ? 'OFFLINE / SEVERED' : 'ACTIVE LEADER'}
+            <p className="text-xs mt-1 font-medium" style={{ color: !effectivePrimaryOnline ? '#ef4444' : 'var(--status-green)' }}>
+              {!effectivePrimaryOnline ? 'Heartbeat Severed' : 'Active Commander'}
             </p>
+            <span className="font-mono text-[10px] text-slate-400 block mt-1">
+              TCP 9000 Heartbeat Broadcast
+            </span>
           </div>
 
-          {/* Backup Node */}
+          {/* Backup Node Box */}
           <div
-            className={`rounded-xl border p-2.5 transition-all duration-300 ${
+            className={`rounded-xl border p-4 transition-all duration-200 ${
               effectiveBackupActive
-                ? 'border-amber-400 bg-amber-950/30 shadow-[0_0_20px_rgba(251,191,36,0.3)] ring-1 ring-amber-400'
+                ? 'border-amber-500/60 bg-amber-500/5 dark:bg-amber-950/30'
                 : !isBackupReachable && !simulatedSever
-                ? 'border-red-500/60 bg-red-950/20 shadow-[0_0_16px_rgba(239,68,68,0.2)]'
-                : 'border-white/10'
+                ? 'border-rose-500/50 bg-rose-500/5 dark:bg-rose-950/20'
+                : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>BACKUP</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Backup Engine (8081)</span>
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
                   effectiveBackupActive
-                    ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]'
+                    ? 'bg-amber-500'
                     : !isBackupReachable && !simulatedSever
-                    ? 'bg-red-500 animate-ping'
-                    : 'bg-slate-500'
+                    ? 'bg-rose-500 animate-pulse'
+                    : 'bg-slate-400'
                 }`}
               />
             </div>
-            <p className="text-[10px] sm:text-[11px] mt-0.5 font-bold" style={{ color: effectiveBackupActive ? '#fbbf24' : !isBackupReachable && !simulatedSever ? '#f87171' : 'var(--text-secondary)' }}>
+            <p className="text-xs mt-1 font-medium" style={{ color: effectiveBackupActive ? '#f59e0b' : !isBackupReachable && !simulatedSever ? '#ef4444' : 'var(--text-secondary)' }}>
               {isElecting
-                ? 'ELECTING LEADER…'
+                ? 'Electing Leader (2.4s)…'
                 : effectiveBackupActive
-                ? '★ ACTIVE PROMOTED LEADER'
+                ? '★ Promoted Active Commander'
                 : isBackupReachable
-                ? 'DORMANT STANDBY (mTLS)'
-                : 'OFFLINE / SEVERED'}
+                ? 'Dormant Standby (mTLS Active)'
+                : 'Unreachable'}
             </p>
+            <span className="font-mono text-[10px] text-slate-400 block mt-1">
+              TCP 9001 Polling Listener
+            </span>
           </div>
         </div>
 
-        {/* Center Dynamic SVG Routing */}
-        <div className="flex-1 h-28 relative mx-3">
+        {/* Center SVG Routing Lines */}
+        <div className="flex-1 w-full h-32 relative hidden md:block mx-4">
           <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 80">
             {/* Primary Path */}
             {!effectivePrimaryOnline ? (
               <>
                 <path
-                  d="M 5,20 C 40,20 40,40 95,40"
+                  d="M 5,20 C 45,20 45,40 95,40"
                   fill="none"
                   stroke="#ef4444"
                   strokeWidth="2"
                   strokeDasharray="4,4"
-                  className="opacity-80 animate-pulse"
+                  className="opacity-70"
                 />
-                <circle cx="50" cy="30" r="7" fill="#450a0a" stroke="#ef4444" strokeWidth="1.5" />
-                <text x="50" y="33" textAnchor="middle" fill="#ef4444" fontSize="8" fontWeight="bold">✕</text>
+                <circle cx="50" cy="30" r="6" fill="var(--bg-elevated)" stroke="#ef4444" strokeWidth="1.5" />
+                <text x="50" y="33" textAnchor="middle" fill="#ef4444" fontSize="7" fontWeight="bold">✕</text>
               </>
             ) : (
               <path
-                d="M 5,20 C 40,20 40,40 95,40"
+                d="M 5,20 C 45,20 45,40 95,40"
                 fill="none"
                 stroke="var(--status-green)"
                 strokeWidth="2.5"
-                strokeDasharray="5,3"
-                className="animate-pulse"
+                strokeDasharray="6,4"
+                className="opacity-90"
               />
             )}
 
             {/* Backup Path */}
             <path
-              d="M 5,60 C 40,60 40,40 95,40"
+              d="M 5,60 C 45,60 45,40 95,40"
               fill="none"
-              stroke={effectiveBackupActive ? '#fbbf24' : 'var(--border-subtle)'}
-              strokeWidth={effectiveBackupActive ? '3' : '1.5'}
-              strokeDasharray={effectiveBackupActive ? '6,3' : '4,4'}
-              className={effectiveBackupActive ? 'animate-pulse' : 'opacity-30'}
+              stroke={effectiveBackupActive ? '#f59e0b' : 'var(--border-subtle)'}
+              strokeWidth={effectiveBackupActive ? '2.5' : '1.5'}
+              strokeDasharray={effectiveBackupActive ? '6,4' : '4,4'}
+              className={effectiveBackupActive ? 'opacity-90' : 'opacity-40'}
             />
           </svg>
 
-          {/* Status Overlay Pill */}
-          <div className="absolute inset-x-0 bottom-[-8px] flex justify-center z-20 pointer-events-none">
+          {/* Center mTLS Status Pill */}
+          <div className="absolute inset-x-0 bottom-[-10px] flex justify-center z-20 pointer-events-none">
             {isElecting ? (
-              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-amber-300 bg-amber-950/95 px-2.5 py-1 rounded-full border border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.4)] animate-pulse">
-                ⏳ ELECTING BACKUP LEADER (2.4s)…
+              <span className="whitespace-nowrap w-fit text-xs font-medium text-amber-700 dark:text-amber-300 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-amber-400/50 shadow-sm">
+                ⏳ Electing Backup Leader (2.4s)…
               </span>
             ) : simulatedSever ? (
-              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-amber-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.5)]">
-                ⚡ BACKUP SEIZED ACTIVE CONTROL · 0 DATA LOSS
+              <span className="whitespace-nowrap w-fit text-xs font-medium text-amber-700 dark:text-amber-300 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-amber-400/50 shadow-sm">
+                ⚡ Backup Seized Active Leadership · 0 Data Loss
               </span>
             ) : !isBackupReachable || !effectivePrimaryOnline ? (
-              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-red-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-red-500/60 shadow-[0_0_14px_rgba(239,68,68,0.35)] tracking-wide">
-                ✕ mTLS HEARTBEAT TUNNEL SEVERED
+              <span className="whitespace-nowrap w-fit text-xs font-medium text-rose-700 dark:text-rose-300 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-rose-500/40 shadow-sm">
+                ✕ mTLS Heartbeat Tunnel Severed
               </span>
             ) : (
-              <span className="whitespace-nowrap w-fit text-[10px] sm:text-[11px] font-extrabold text-emerald-300 bg-slate-950/95 px-2.5 py-1 rounded-full border border-emerald-400/60 shadow-[0_0_14px_rgba(52,211,153,0.35)] tracking-wide">
-                ● mTLS HEARTBEAT TUNNEL HEALTHY (TCP 9000)
+              <span className="whitespace-nowrap w-fit text-xs font-medium text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-emerald-500/40 shadow-sm">
+                ● mTLS Heartbeat Tunnel Healthy (TCP 9000)
               </span>
             )}
           </div>
         </div>
 
-        {/* Track B: k3s Cluster */}
-        <div className="flex flex-col gap-2 z-10 w-[150px]">
-          <div className="text-[10px] font-extrabold uppercase tracking-widest text-slate-300" style={{ color: 'var(--text-secondary)' }}>
-            TRACK B · TARGET
-          </div>
-          <div className="rounded-xl border p-2.5 surface space-y-1.5" style={{ borderColor: 'var(--accent-border)' }}>
+        {/* Right Column: Protected Cluster */}
+        <div className="flex flex-col gap-4 z-10 w-full md:w-64">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Protected Target
+          </span>
+
+          <div className="rounded-xl border border-teal-500/30 dark:border-teal-500/20 bg-teal-50/20 dark:bg-teal-950/10 p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs sm:text-sm font-bold text-slate-100" style={{ color: 'var(--text-primary)' }}>k3s CLUSTER</span>
-              <span className="h-2.5 w-2.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">k3s Cluster Perimeter</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-teal-500" />
             </div>
-            <p className="text-[10px] font-medium text-slate-300" style={{ color: 'var(--text-secondary)' }}>Autonomous Perimeter</p>
-            <div
-              className="text-center rounded py-0.5 text-[9px] font-extrabold tracking-wider uppercase"
-              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent-border)' }}
-            >
-              PODS / DEPLOYMENTS
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Autonomous crisis mitigation boundary
+            </p>
+            <div className="rounded-lg p-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 text-[11px] font-mono text-slate-600 dark:text-slate-400">
+              default / kube-system
             </div>
           </div>
         </div>

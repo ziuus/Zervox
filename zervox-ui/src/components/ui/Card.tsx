@@ -7,11 +7,14 @@ interface CardProps {
   style?: React.CSSProperties
 }
 
-export function Card({ children, className, glow, style }: CardProps) {
+export function Card({ children, className, style }: CardProps) {
   return (
     <div
       style={style}
-      className={cn('rounded-2xl p-5 transition-all duration-300 surface', glow && 'glow-sky', className)}
+      className={cn(
+        'rounded-2xl surface-elevated border border-slate-200 dark:border-slate-800 transition-all duration-200',
+        className
+      )}
     >
       {children}
     </div>
@@ -26,7 +29,10 @@ interface CardLabelProps {
 export function CardLabel({ children, className }: CardLabelProps) {
   return (
     <p
-      className={cn('mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-token-muted', className)}
+      className={cn(
+        'text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wide',
+        className
+      )}
     >
       {children}
     </p>

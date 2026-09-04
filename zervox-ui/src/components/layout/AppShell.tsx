@@ -24,28 +24,8 @@ function InnerShell({ children }: { children: React.ReactNode }) {
   const hardwareStatus = activeInstance.status?.hardware_breaker_status
 
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
-      {/* Noise overlay */}
-      <div className="noise-layer" />
-
-      {/* Background depth auroras */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div
-          className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full blur-[130px]"
-          style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.06) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute top-1/3 -right-20 h-[500px] w-[500px] rounded-full blur-[140px]"
-          style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.04) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute -bottom-32 left-10 h-[450px] w-[450px] rounded-full blur-[120px]"
-          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%)' }}
-        />
-        <div className="bg-grid absolute inset-0" />
-      </div>
-
-      <div className="relative z-10 flex flex-col flex-1">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
+      <div className="flex flex-col flex-1">
         {/* Persistent Header with Navigation */}
         <Header
           primaryOnline={primary.isOnline}

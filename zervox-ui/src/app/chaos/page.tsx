@@ -5,30 +5,12 @@ import { useTelemetry } from '@/context/TelemetryContext'
 import { Card, CardLabel } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 
-function SectionLabel({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="mb-3 flex items-center gap-3">
-      <div className="hr-gradient flex-1" />
-      <div className="text-right shrink-0">
-        <p className="font-mono text-xs font-extrabold uppercase tracking-[0.25em]" style={{ color: 'var(--text-primary)' }}>
-          {title}
-        </p>
-        <p className="font-mono text-[10px] font-medium" style={{ color: 'var(--text-secondary)' }}>
-          {subtitle}
-        </p>
-      </div>
-    </div>
-  )
-}
-
 export default function ChaosSandboxPage() {
   const {
     chaosLoading,
     chaosFeedback,
     setChaosFeedback,
     triggerChaosScenario,
-    activeInstance,
-    engineMode,
     opaStatus,
     k8sStatus,
     totalIncidents,
@@ -41,10 +23,6 @@ export default function ChaosSandboxPage() {
       title: 'Workload Pod Crash & Forensic Freeze',
       badge: 'FORENSIC FREEZE',
       badgeColor: 'purple' as const,
-      color: '#a78bfa',
-      bg: 'rgba(167,139,250,0.10)',
-      border: 'rgba(167,139,250,0.35)',
-      loadingText: 'FREEZING POD STATE…',
       desc: 'Simulates a container memory leak & OOM crash (exit code 137). Zervox captures a pre-remediation snapshot of /proc and open socket descriptors, binds the SHA-256 Merkle root, and restarts the workload safely.',
       judgeVerification: 'Check /forensics or /incidents to verify the dynamic Merkle hash is cryptographically sealed before pod restart.',
     },
@@ -53,11 +31,7 @@ export default function ChaosSandboxPage() {
       number: '02',
       title: 'Malicious RBAC Attack & Policy Block',
       badge: 'OPA / REGO FIREWALL',
-      badgeColor: 'red' as const,
-      color: '#fb7185',
-      bg: 'rgba(251,113,133,0.10)',
-      border: 'rgba(251,113,133,0.35)',
-      loadingText: 'INTERCEPTING THREAT…',
+      badgeColor: 'rose' as const,
       desc: 'Simulates an adversary attempting an unauthorized namespace wipe (kubectl delete namespace default). The unbypassable OPA Rego gate intercepts the action, zero-trust rules trigger, and execution status is locked to BLOCKED_BY_POLICY.',
       judgeVerification: 'OPA Diff Theater launches instantly; verify zero cluster blast radius and BLOCKED status in the timeline.',
     },
@@ -67,10 +41,6 @@ export default function ChaosSandboxPage() {
       title: 'Node Pressure & RISC-V Dual-Key Challenge',
       badge: 'HARDWARE CIRCUIT BREAKER',
       badgeColor: 'indigo' as const,
-      color: '#818cf8',
-      bg: 'rgba(129,140,248,0.10)',
-      border: 'rgba(129,140,248,0.35)',
-      loadingText: 'AUTHORIZING DUAL-KEY…',
       desc: 'Simulates high blast-radius cluster actions (cordoning a master node). Autonomous execution is gated behind a hardware-enforced cryptographic challenge via physical RISC-V ESP32-C3 microcontroller dual-key GPIO interlock.',
       judgeVerification: 'Verify hardware status reflects ARMED and blast radius guardrails prevent unauthorized cluster-wide eviction.',
     },
@@ -80,10 +50,6 @@ export default function ChaosSandboxPage() {
       title: 'Repeated Attack Loop & Adaptive Immune Lock',
       badge: 'ADAPTIVE IMMUNITY',
       badgeColor: 'amber' as const,
-      color: '#fbbf24',
-      bg: 'rgba(251,191,36,0.10)',
-      border: 'rgba(251,191,36,0.35)',
-      loadingText: 'ENFORCING QUARANTINE…',
       desc: 'Simulates rapid brute-force attack vectors targeting the cluster. After repeated OPA violations, Zervox\'s adaptive immune engine enforces a 30-minute quarantine lockdown, blacklisting malicious ingress vectors.',
       judgeVerification: 'Verify the adaptive quarantine locks out the rogue identity across consecutive attack attempts.',
     },
@@ -92,22 +58,17 @@ export default function ChaosSandboxPage() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       {/* ── Page Header ────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl text-base" style={{ background: 'var(--accent-subtle)', border: '1px solid var(--accent-border)' }}>
-              ⚡
-            </span>
-            <h1 className="font-mono text-lg font-black uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-              Judges Chaos Simulation Console
-            </h1>
-          </div>
-          <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Judges Chaos Simulation Console
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Trigger real-world crisis injections to observe autonomous out-of-band resilience, policy blocking, and failover in real time.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 font-mono text-xs">
+        <div className="flex items-center gap-2">
           <Badge variant={opaStatus === 'reachable' ? 'green' : 'amber'} dot>
             OPA {opaStatus ? opaStatus.toUpperCase() : 'STANDBY'}
           </Badge>
@@ -123,28 +84,20 @@ export default function ChaosSandboxPage() {
       {/* ── Live Feedback Notification Banner ──────────────────── */}
       {chaosFeedback && (
         <div
-          className="flex items-start gap-3.5 rounded-2xl p-4 font-mono animate-slide-down"
-          style={{
-            border:
-              chaosFeedback.type === 'blocked'
-                ? '1px solid rgba(251,113,133,0.5)'
-                : chaosFeedback.type === 'info'
-                ? '1px solid rgba(129,140,248,0.5)'
-                : '1px solid rgba(52,211,153,0.5)',
-            background:
-              chaosFeedback.type === 'blocked'
-                ? 'rgba(251,113,133,0.12)'
-                : chaosFeedback.type === 'info'
-                ? 'rgba(129,140,248,0.12)'
-                : 'rgba(52,211,153,0.12)',
-          }}
+          className={`flex items-start gap-4 rounded-xl p-4 border transition-all ${
+            chaosFeedback.type === 'blocked'
+              ? 'bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200'
+              : chaosFeedback.type === 'info'
+              ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-900 dark:text-indigo-200'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+          }`}
         >
           <span className="text-xl">
             {chaosFeedback.type === 'blocked' ? '🛡️' : chaosFeedback.type === 'info' ? '🔐' : '⚡'}
           </span>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <p className="font-bold tracking-wider text-xs uppercase" style={{ color: 'var(--text-primary)' }}>
+              <p className="font-semibold text-xs tracking-wide">
                 {chaosFeedback.title}
               </p>
               <button
@@ -155,14 +108,14 @@ export default function ChaosSandboxPage() {
                 ✕
               </button>
             </div>
-            <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mt-1 text-xs opacity-90 leading-relaxed">
               {chaosFeedback.desc}
             </p>
-            <div className="mt-3 flex items-center gap-3 text-[11px] font-bold">
-              <Link href="/incidents" className="underline hover:opacity-80" style={{ color: 'var(--accent)' }}>
+            <div className="mt-3 flex items-center gap-4 text-xs font-semibold">
+              <Link href="/incidents" className="underline hover:opacity-80">
                 View Recorded Incident in SQLite WAL →
               </Link>
-              <Link href="/forensics" className="underline hover:opacity-80" style={{ color: 'var(--accent)' }}>
+              <Link href="/forensics" className="underline hover:opacity-80">
                 Inspect Forensic Snapshot →
               </Link>
             </div>
@@ -171,64 +124,61 @@ export default function ChaosSandboxPage() {
       )}
 
       {/* ── SECTION 1: 4 CHAOS INJECTION CARDS ─────────────────── */}
-      <section>
-        <SectionLabel
-          title="SIMULATION BENCH"
-          subtitle="One-Click Crisis Injections · Out-of-Band Resilience Validation"
-        />
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Fault Injection Bench
+          </h2>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+            One-click crisis simulations
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {scenarios.map((s) => (
             <Card
               key={s.id}
-              className="p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 shadow-md"
-              style={{
-                borderColor: s.border,
-              }}
+              className="p-6 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-200"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg" style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
-                    SCENARIO {s.number}
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Scenario {s.number}
                   </span>
                   <Badge variant={s.badgeColor} dot>
                     {s.badge}
                   </Badge>
                 </div>
 
-                <h3 className="font-mono text-base font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   {s.title}
                 </h3>
 
-                <p className="font-mono text-xs mt-3 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
                   {s.desc}
                 </p>
 
-                <div className="mt-4 p-3 rounded-xl" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--border-subtle)' }}>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    👀 What Judges Should Observe:
-                  </p>
-                  <p className="font-mono text-xs mt-1" style={{ color: 'var(--text-primary)' }}>
+                <div className="mt-4 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
+                    What Judges Should Observe:
+                  </span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                     {s.judgeVerification}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-subtle)' }}>
-                <span className="font-mono text-[10px] tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                  ENDPOINT: /api/action
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="font-mono text-[10px] text-slate-400">
+                  POST /api/action
                 </span>
                 <button
                   type="button"
                   disabled={chaosLoading !== null}
                   onClick={() => triggerChaosScenario(s.id)}
-                  className="rounded-xl px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 cursor-pointer hover:scale-105 shadow-sm"
-                  style={{
-                    color: s.color,
-                    background: s.bg,
-                    border: `1px solid ${s.border}`,
-                  }}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-all active:scale-95 disabled:opacity-50 cursor-pointer bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 shadow-sm"
                 >
-                  {chaosLoading === s.id ? s.loadingText : `TRIGGER ${s.id.toUpperCase()}`}
+                  {chaosLoading === s.id ? 'Injecting Fault…' : `Trigger Scenario ${s.number}`}
                 </button>
               </div>
             </Card>
@@ -237,31 +187,26 @@ export default function ChaosSandboxPage() {
       </section>
 
       {/* ── SECTION 2: FAILOVER SIMULATION CALLOUT ─────────────── */}
-      <section className="rounded-2xl p-6 surface" style={{ border: '1px solid var(--border-medium)' }}>
+      <section className="rounded-2xl p-6 surface-elevated border border-slate-200 dark:border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">🔀</span>
-              <h3 className="font-mono text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
-                Primary Host Death & Failover Simulation
+              <span className="text-lg">🔀</span>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Primary Host Failure & Failover Simulation
               </h3>
             </div>
-            <p className="font-mono text-xs mt-1 max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-              Looking to test what happens when the primary Zervox responder itself crashes? Test Track A severing directly on the interactive Split-Brain Sentinel map.
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+              Test what happens when the active Zervox orchestrator itself crashes. Sever the heartbeat loop on the interactive network topology map to watch the dormant backup promote to leader with zero data loss.
             </p>
           </div>
 
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-xl px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer self-start md:self-auto"
-            style={{
-              background: 'var(--accent-subtle)',
-              border: '1px solid var(--accent-border)',
-              color: 'var(--text-primary)',
-            }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 hover:bg-teal-100/60 dark:hover:bg-teal-900/40 transition-all cursor-pointer self-start md:self-auto shadow-sm"
           >
             <span>🌐</span>
-            <span>Open Split-Brain Sentinel →</span>
+            <span>Open Sentinel Map →</span>
           </Link>
         </div>
       </section>
